@@ -20,6 +20,9 @@ export type UserItem = {
   id: number;
   username: string;
   role: AdminRole;
+  rechargeAmount: number;
+  bonusAmount: number;
+  totalBalance: number;
   createdAt: string;
 };
 

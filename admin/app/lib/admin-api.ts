@@ -4,6 +4,32 @@ export type AdminSafeUser = {
   id: number;
   username: string;
   role: AdminRole;
+  rechargeAmount: number;
+  bonusAmount: number;
+  totalBalance: number;
+  createdAt: string;
+};
+
+export type PaginatedAdminUsers = {
+  items: AdminSafeUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type FetchAdminUsersParams = {
+  page: number;
+  pageSize: number;
+  role?: AdminRole | "all";
+  keyword?: string;
+};
+
+export type UpdateAdminUserInput = {
+  username: string;
+  role: AdminRole;
+  rechargeAmount: number;
+  bonusAmount: number;
   createdAt: string;
 };
 
@@ -121,24 +147,43 @@ export async function fetchAnnouncements() {
   return requestJson<{ items: string[] }>("/public/announcements");
 }
 
-export async function fetchAdminUsers(accessToken: string) {
-  return requestJson<AdminSafeUser[]>("/admin/users", {
-    method: "GET",
-    accessToken,
-  });
+export async function fetchAdminUsers(
+  accessToken: string,
+  params: FetchAdminUsersParams,
+) {
+  const searchParams = new URLSearchParams();
+
+  searchParams.set("page", String(params.page));
+  searchParams.set("pageSize", String(params.pageSize));
+
+  if (params.role && params.role !== "all") {
+    searchParams.set("role", params.role);
+  }
+
+  if (params.keyword?.trim()) {
+    searchParams.set("keyword", params.keyword.trim());
+  }
+
+  return requestJson<PaginatedAdminUsers>(
+    `/admin/users?${searchParams.toString()}`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  );
 }
 
-export async function updateAdminUserRole(
+export async function updateAdminUser(
   accessToken: string,
   userId: number,
-  role: AdminRole,
+  input: UpdateAdminUserInput,
 ) {
   return requestJson<{ message: string; user: AdminSafeUser }>(
-    `/admin/users/${userId}/role`,
+    `/admin/users/${userId}`,
     {
       method: "PATCH",
       accessToken,
-      body: JSON.stringify({ role }),
+      body: JSON.stringify(input),
     },
   );
 }

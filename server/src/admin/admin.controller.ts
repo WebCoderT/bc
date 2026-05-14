@@ -5,12 +5,12 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -18,13 +18,8 @@ import { Role } from '../common/enums/role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersService } from '../users/users.service';
-import { IsEnum } from 'class-validator';
-
-class UpdateRoleDto {
-  @ApiProperty({ enum: Role, example: Role.Vip })
-  @IsEnum(Role)
-  role: Role;
-}
+import { ListAdminUsersQueryDto } from './dto/list-admin-users-query.dto';
+import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth('JWT-auth')
@@ -35,20 +30,20 @@ export class AdminController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('users')
-  @ApiOperation({ summary: '管理员查看全部用户' })
-  async getUsers() {
-    return this.usersService.listPublicUsers();
+  @ApiOperation({ summary: '管理员分页查看用户并按角色筛选' })
+  async getUsers(@Query() query: ListAdminUsersQueryDto) {
+    return this.usersService.listPublicUsers(query);
   }
 
-  @Patch('users/:id/role')
-  @ApiOperation({ summary: '管理员修改用户角色' })
-  async updateRole(
+  @Patch('users/:id')
+  @ApiOperation({ summary: '管理员修改用户信息' })
+  async updateUser(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateRoleDto: UpdateRoleDto,
+    @Body() updateAdminUserDto: UpdateAdminUserDto,
   ) {
     return {
-      message: '角色更新成功',
-      user: await this.usersService.updateRole(id, updateRoleDto.role),
+      message: '用户信息更新成功',
+      user: await this.usersService.updateUser(id, updateAdminUserDto),
     };
   }
 }

@@ -44,6 +44,22 @@ export class InitialUsersTable2026051400001 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: 'recharge_amount',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            default: 0,
+            isNullable: false,
+          },
+          {
+            name: 'bonus_amount',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            default: 0,
+            isNullable: false,
+          },
+          {
             name: 'created_at',
             type: 'datetime',
             default: 'CURRENT_TIMESTAMP',
