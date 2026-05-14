@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "./theme/theme.css";
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background-image: var(--page-gradient);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    background-image 220ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
