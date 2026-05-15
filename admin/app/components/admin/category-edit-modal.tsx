@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
+import { GameCategoryResponseDtoStatusEnum } from "@/app/lib/admin-api";
 import {
   createEmptyCategoryInput,
   type CategoryFormInput,
 } from "@/app/lib/game-catalog-repository";
-import type { CategoryItem, CategoryStatus } from "@/app/types/ui";
+import type { CategoryItem } from "@/app/types/ui";
 
 function normalizeTags(value: string) {
   return value
@@ -154,14 +155,20 @@ export function CategoryEditModal({
               onChange={(event) =>
                 setFormState((current) => ({
                   ...current,
-                  status: event.target.value as CategoryStatus,
+                  status: event.target.value as CategoryFormInput["status"],
                 }))
               }
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
             >
-              <option value="已启用">已启用</option>
-              <option value="待调整">待调整</option>
-              <option value="已停用">已停用</option>
+              <option value={GameCategoryResponseDtoStatusEnum.Value已启用}>
+                已启用
+              </option>
+              <option value={GameCategoryResponseDtoStatusEnum.Value待调整}>
+                待调整
+              </option>
+              <option value={GameCategoryResponseDtoStatusEnum.Value已停用}>
+                已停用
+              </option>
             </select>
           </label>
 

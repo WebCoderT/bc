@@ -1,3 +1,4 @@
+import { GameCategoryResponseDtoStatusEnum } from "@/app/lib/admin-api";
 import type {
   ActivityItem,
   CategoryItem,
@@ -155,7 +156,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: true,
     heat: 97,
     gameCount: 1,
-    status: "已启用",
+    status: GameCategoryResponseDtoStatusEnum.Value已启用,
+    createdAt: "2026-05-10 09:30",
     updatedAt: "2026-05-14 09:30",
   },
   {
@@ -166,7 +168,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: true,
     heat: 95,
     gameCount: 1,
-    status: "已启用",
+    status: GameCategoryResponseDtoStatusEnum.Value已启用,
+    createdAt: "2026-05-10 10:20",
     updatedAt: "2026-05-14 10:20",
   },
   {
@@ -177,7 +180,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: false,
     heat: 72,
     gameCount: 1,
-    status: "待调整",
+    status: GameCategoryResponseDtoStatusEnum.Value待调整,
+    createdAt: "2026-05-09 16:00",
     updatedAt: "2026-05-13 16:00",
   },
   {
@@ -188,7 +192,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: true,
     heat: 90,
     gameCount: 1,
-    status: "已启用",
+    status: GameCategoryResponseDtoStatusEnum.Value已启用,
+    createdAt: "2026-05-08 08:20",
     updatedAt: "2026-05-14 08:20",
   },
   {
@@ -199,7 +204,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: true,
     heat: 89,
     gameCount: 2,
-    status: "已启用",
+    status: GameCategoryResponseDtoStatusEnum.Value已启用,
+    createdAt: "2026-05-07 11:40",
     updatedAt: "2026-05-14 11:40",
   },
   {
@@ -210,7 +216,8 @@ export const categoryItems: CategoryItem[] = [
     isRecommended: false,
     heat: 76,
     gameCount: 1,
-    status: "待调整",
+    status: GameCategoryResponseDtoStatusEnum.Value待调整,
+    createdAt: "2026-05-06 07:45",
     updatedAt: "2026-05-14 07:45",
   },
 ];

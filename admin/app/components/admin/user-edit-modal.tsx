@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import { UserAvatar } from "@/app/components/admin/ui/user-avatar";
-import type { AdminRole, UpdateAdminUserInput } from "@/app/lib/admin-api";
+import {
+  UpdateAdminUserDtoRoleEnum,
+  type UpdateAdminUserInput,
+} from "@/app/lib/admin-api";
 import type { UserItem } from "@/app/types/ui";
 import { formatCurrency } from "@/app/utils/admin-format";
 
@@ -30,7 +33,7 @@ export function UserEditModal({
   const [formState, setFormState] = useState<UpdateAdminUserInput>({
     username: user.username,
     avatar: user.avatar,
-    role: user.role,
+    role: user.role as unknown as UpdateAdminUserInput["role"],
     rechargeAmount: user.rechargeAmount,
     bonusAmount: user.bonusAmount,
     createdAt: user.createdAt,
@@ -40,7 +43,7 @@ export function UserEditModal({
     setFormState({
       username: user.username,
       avatar: user.avatar,
-      role: user.role,
+      role: user.role as unknown as UpdateAdminUserInput["role"],
       rechargeAmount: user.rechargeAmount,
       bonusAmount: user.bonusAmount,
       createdAt: user.createdAt,
@@ -120,14 +123,14 @@ export function UserEditModal({
               onChange={(event) =>
                 setFormState((current) => ({
                   ...current,
-                  role: event.target.value as AdminRole,
+                  role: event.target.value as UpdateAdminUserInput["role"],
                 }))
               }
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
             >
-              <option value="user">普通用户</option>
-              <option value="vip">VIP</option>
-              <option value="admin">管理员</option>
+              <option value={UpdateAdminUserDtoRoleEnum.User}>普通用户</option>
+              <option value={UpdateAdminUserDtoRoleEnum.Vip}>VIP</option>
+              <option value={UpdateAdminUserDtoRoleEnum.Admin}>管理员</option>
             </select>
           </label>
           <label className="block">

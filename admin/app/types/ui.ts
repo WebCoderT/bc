@@ -1,4 +1,4 @@
-import type { AdminRole } from "@/app/lib/admin-api";
+import type { AdminGameCategory, AdminSafeUser } from "@/app/lib/admin-api";
 
 export type RouteItem = {
   label: string;
@@ -16,20 +16,11 @@ export type StatItem = {
   tone: Tone;
 };
 
-export type UserItem = {
-  id: number;
-  username: string;
-  avatar: string;
-  role: AdminRole;
-  rechargeAmount: number;
-  bonusAmount: number;
-  totalBalance: number;
-  createdAt: string;
-};
+export type UserItem = AdminSafeUser;
 
 export type GameStatus = "运营中" | "预约中" | "已下线";
 
-export type CategoryStatus = "已启用" | "待调整" | "已停用";
+export type CategoryStatus = AdminGameCategory["status"];
 
 export type NavigationItem = {
   id: number;
@@ -53,17 +44,7 @@ export type GameItem = {
   updatedAt: string;
 };
 
-export type CategoryItem = {
-  id: number;
-  name: string;
-  description: string;
-  tags: string[];
-  isRecommended: boolean;
-  heat: number;
-  gameCount: number;
-  status: CategoryStatus;
-  updatedAt: string;
-};
+export type CategoryItem = AdminGameCategory;
 
 export type ActivityItem = {
   title: string;

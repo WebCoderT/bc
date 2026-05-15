@@ -1,26 +1,23 @@
 "use client";
 
 import { categoryItems, gameItems } from "@/app/data/admin-data";
-import type {
-  CategoryItem,
-  CategoryStatus,
-  GameItem,
-  GameStatus,
-} from "@/app/types/ui";
+import {
+  GameCategoryResponseDtoStatusEnum,
+  type GameCategoryResponseDto,
+} from "@/app/generated/admin-api/data-contracts";
+import type { CategoryItem, GameItem, GameStatus } from "@/app/types/ui";
 
 export type GameCatalogState = {
   categories: CategoryItem[];
   games: GameItem[];
 };
 
-export type CategoryFormInput = {
-  name: string;
-  description: string;
-  tags: string[];
-  isRecommended: boolean;
-  heat: number;
-  status: CategoryStatus;
-};
+export type CategoryFormInput = Required<
+  Pick<
+    GameCategoryResponseDto,
+    "name" | "description" | "tags" | "isRecommended" | "heat" | "status"
+  >
+>;
 
 const GAME_CATALOG_STORAGE_KEY = "admin-game-catalog";
 const UNCATEGORIZED_LABEL = "未分类";
@@ -133,7 +130,7 @@ export function createEmptyCategoryInput(): CategoryFormInput {
     tags: [],
     isRecommended: false,
     heat: 0,
-    status: "已启用",
+    status: GameCategoryResponseDtoStatusEnum.Value已启用,
   };
 }
 
@@ -169,6 +166,7 @@ export function upsertCategory(
         id: nextId,
         ...input,
         gameCount: 0,
+        createdAt: now,
         updatedAt: now,
       },
       ...state.categories,

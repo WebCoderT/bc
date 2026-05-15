@@ -1,9 +1,11 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
+import { GameCategoryEntity } from '../game-categories/entities/game-category.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { InitialUsersTable2026051400001 } from './migrations/202605140001-initial-users-table';
 import { AddUserBalanceColumns2026051400002 } from './migrations/202605140002-add-user-balance-columns';
 import { AddUserAvatarColumn2026051500001 } from './migrations/202605150001-add-user-avatar-column';
+import { CreateGameCategoriesTable2026051500002 } from './migrations/202605150002-create-game-categories-table';
 
 const databaseBaseConfig = {
   type: 'mysql' as const,
@@ -14,11 +16,12 @@ const databaseBaseConfig = {
   database: process.env.DB_NAME ?? 'probability_app',
 };
 
-export const databaseEntities = [UserEntity];
+export const databaseEntities = [UserEntity, GameCategoryEntity];
 export const databaseMigrations = [
   InitialUsersTable2026051400001,
   AddUserBalanceColumns2026051400002,
   AddUserAvatarColumn2026051500001,
+  CreateGameCategoriesTable2026051500002,
 ];
 
 export const dataSourceOptions: DataSourceOptions = {

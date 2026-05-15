@@ -1,4 +1,4 @@
-import type { AdminRole } from "@/app/lib/admin-api";
+import type { AdminRole, AdminRoleFilter } from "@/app/lib/admin-api";
 import { routeItems } from "@/app/routes/route-items";
 import type { RouteItem, Tone } from "@/app/types/ui";
 
@@ -29,7 +29,7 @@ export function getCurrentRouteMeta(pathname: string): RouteItem {
   return routeItems.find((item) => item.path === pathname) ?? routeItems[0];
 }
 
-export function formatRole(role: AdminRole) {
+export function formatRole(role: AdminRole | AdminRoleFilter) {
   if (role === "admin") {
     return "管理员";
   }
