@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { useGameUser } from "./game-user-context";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SectionHeading } from "@/app/shared/components/ui/section-heading";
@@ -50,9 +51,7 @@ export default function ProfileHome() {
         <SurfaceCard padding="lg">
           <div className="flex flex-col gap-5 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-[1.8rem] bg-[var(--accent)] text-3xl font-semibold text-white shadow-[0_18px_40px_var(--glow)]">
-                {user.avatar}
-              </div>
+              <UserAvatar src={user.avatar} alt={user.name} size="lg" />
               <div>
                 <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
                   ACCOUNT PROFILE

@@ -7,6 +7,7 @@ import { ThemeToggle } from "../../components/theme-toggle";
 import type { AuthUser } from "../../lib/auth";
 import { getTopRouteByPath, gameTopRoutes } from "../routes";
 import { AppBrand } from "@/app/shared/components/app-brand";
+import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
@@ -73,8 +74,18 @@ export function GameLayoutShell({
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <div className="hidden rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm text-[var(--muted)] lg:block">
-              {user.account}
+            <div className="hidden items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--panel)] px-3 py-2 lg:flex">
+              <UserAvatar
+                src={user.avatar}
+                alt={user.name}
+                className="h-10 w-10 rounded-full"
+              />
+              <div className="text-sm leading-5 text-[var(--muted)]">
+                <p className="font-medium text-[var(--foreground)]">
+                  {user.name}
+                </p>
+                <p>{user.account}</p>
+              </div>
             </div>
             <ActionButton onClick={onLogout}>退出登录</ActionButton>
           </div>

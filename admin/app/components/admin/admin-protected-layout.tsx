@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   clearStoredAdminSession,
+  isAdminTokenExpired,
   readStoredAdminSession,
+  validateAdminSession,
+  writeStoredAdminSession,
 } from "@/app/lib/admin-api";
 import { AdminSessionProvider } from "@/app/components/admin/admin-session-context";
 import { AdminShell } from "@/app/components/admin/admin-shell";
 import { LoadingScreen } from "@/app/components/admin/ui/loading-screen";
+import type { AdminSession } from "@/app/lib/admin-api";
 
 export function AdminProtectedLayout({
   children,
@@ -22,20 +26,71 @@ export function AdminProtectedLayout({
     () => true,
     () => false,
   );
-  const session = isClient ? readStoredAdminSession() : null;
+  const storedSession = isClient ? readStoredAdminSession() : null;
+  const [session, setSession] = useState<AdminSession | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (isClient && !session?.accessToken) {
-      router.replace("/login");
+    let cancelled = false;
+
+    async function checkSession() {
+      if (!isClient) {
+        return;
+      }
+
+      if (
+        !storedSession?.accessToken ||
+        isAdminTokenExpired(storedSession.accessToken)
+      ) {
+        clearStoredAdminSession();
+        if (!cancelled) {
+          setSession(null);
+          setIsChecking(false);
+          router.replace("/login");
+        }
+        return;
+      }
+
+      try {
+        const validatedSession = await validateAdminSession(
+          storedSession.accessToken,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        writeStoredAdminSession(validatedSession);
+        setSession(validatedSession);
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        clearStoredAdminSession();
+        setSession(null);
+        router.replace("/login");
+      } finally {
+        if (!cancelled) {
+          setIsChecking(false);
+        }
+      }
     }
-  }, [isClient, pathname, router, session?.accessToken]);
+
+    void checkSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isClient, pathname, router, storedSession?.accessToken]);
 
   const handleLogout = () => {
     clearStoredAdminSession();
+    setSession(null);
     router.replace("/login");
   };
 
-  if (!isClient) {
+  if (!isClient || isChecking) {
     return <LoadingScreen title="正在校验登录状态..." />;
   }
 

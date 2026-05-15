@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { ProgressRow } from "@/app/components/admin/ui/progress-row";
 import { activityItems, statItems } from "@/app/data/admin-data";
 import {
   fetchAnnouncements,
   fetchServiceStatus,
+  isAdminAuthError,
   type ServiceStatus,
 } from "@/app/lib/admin-api";
 import { toneMap } from "@/app/utils/admin-format";
 
 export function DashboardPage() {
+  const { logout } = useAdminSession();
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus | null>(
     null,
   );
@@ -37,6 +40,11 @@ export function DashboardPage() {
         setLoadError("");
       } catch (error) {
         if (cancelled) {
+          return;
+        }
+
+        if (isAdminAuthError(error)) {
+          logout();
           return;
         }
 
@@ -85,10 +93,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <CardShell
-          title="今日运营动态"
-          description="关键操作、配置变更与发布记录"
-        >
+        <CardShell title="今日运营动态">
           <div className="space-y-4">
             {displayActivities.map((item) => (
               <div
@@ -107,7 +112,7 @@ export function DashboardPage() {
           </div>
         </CardShell>
 
-        <CardShell title="系统健康度" description="当前后台运行与内容配置状态">
+        <CardShell title="系统健康度">
           {loadError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {loadError}

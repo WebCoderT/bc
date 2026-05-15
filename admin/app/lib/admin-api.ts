@@ -3,6 +3,7 @@ export type AdminRole = "user" | "vip" | "admin";
 export type AdminSafeUser = {
   id: number;
   username: string;
+  avatar: string;
   role: AdminRole;
   rechargeAmount: number;
   bonusAmount: number;
@@ -27,6 +28,7 @@ export type FetchAdminUsersParams = {
 
 export type UpdateAdminUserInput = {
   username: string;
+  avatar: string;
   role: AdminRole;
   rechargeAmount: number;
   bonusAmount: number;
@@ -37,6 +39,22 @@ export type AdminSession = {
   accessToken: string;
   user: AdminSafeUser;
 };
+
+type JwtPayload = {
+  exp?: number;
+};
+
+export class AdminApiError extends Error {
+  status: number;
+  isAuthError: boolean;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AdminApiError";
+    this.status = status;
+    this.isAuthError = status === 401 || status === 403;
+  }
+}
 
 export type ServiceStatus = {
   name: string;
@@ -84,7 +102,14 @@ async function requestJson<T>(path: string, options: RequestOptions = {}) {
           : String((data as { message?: unknown }).message)
         : `请求失败：${response.status}`;
 
-    throw new Error(message);
+    if (
+      (response.status === 401 || response.status === 403) &&
+      typeof window !== "undefined"
+    ) {
+      clearStoredAdminSession();
+    }
+
+    throw new AdminApiError(message, response.status);
   }
 
   return data as T;
@@ -106,11 +131,48 @@ export function readStoredAdminSession() {
   }
 
   try {
-    return JSON.parse(raw) as AdminSession;
+    const session = JSON.parse(raw) as AdminSession;
+
+    if (!session?.accessToken || session.user?.role !== "admin") {
+      window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+      return null;
+    }
+
+    return session;
   } catch {
     window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
     return null;
   }
+}
+
+function decodeJwtPayload(token: string) {
+  try {
+    const [, payload] = token.split(".");
+
+    if (!payload) {
+      return null;
+    }
+
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decodedPayload = atob(normalizedPayload);
+    return JSON.parse(decodedPayload) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function isAdminTokenExpired(token: string) {
+  const payload = decodeJwtPayload(token);
+
+  if (!payload?.exp) {
+    return true;
+  }
+
+  return payload.exp * 1000 <= Date.now();
+}
+
+export function isAdminAuthError(error: unknown) {
+  return error instanceof AdminApiError && error.isAuthError;
 }
 
 export function writeStoredAdminSession(session: AdminSession) {
@@ -137,6 +199,26 @@ export async function loginAdmin(username: string, password: string) {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
+}
+
+export async function validateAdminSession(accessToken: string) {
+  const response = await requestJson<{ message: string; user: AdminSafeUser }>(
+    "/auth/profile",
+    {
+      method: "GET",
+      accessToken,
+    },
+  );
+
+  if (response.user.role !== "admin") {
+    clearStoredAdminSession();
+    throw new AdminApiError("当前账号不是管理员", 403);
+  }
+
+  return {
+    accessToken,
+    user: response.user,
+  } satisfies AdminSession;
 }
 
 export async function fetchServiceStatus() {

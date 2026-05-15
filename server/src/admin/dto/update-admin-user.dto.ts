@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsISO8601, IsNumber, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsISO8601,
+  IsNumber,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Role } from '../../common/enums/role.enum';
 
@@ -8,6 +15,10 @@ export class UpdateAdminUserDto {
   @IsString()
   @MaxLength(20)
   username!: string;
+
+  @ApiProperty({ example: 'data:image/svg+xml;utf8,...' })
+  @IsString()
+  avatar!: string;
 
   @ApiProperty({ enum: Role, example: Role.Admin })
   @IsEnum(Role)

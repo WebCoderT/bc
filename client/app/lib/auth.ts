@@ -48,19 +48,6 @@ function createAccount(name: string, email: string) {
 }
 
 /**
- * 从姓名中提取默认头像字符。
- */
-function createAvatar(name: string) {
-  const trimmedName = name.trim();
-
-  if (!trimmedName) {
-    return "竞";
-  }
-
-  return trimmedName.slice(0, 1).toUpperCase();
-}
-
-/**
  * 将不完整的用户输入补齐为完整模型。
  *
  * 这个标准化方法是整个认证模块的公共入口，
@@ -81,7 +68,7 @@ export function normalizeAuthUser(input: AuthUserInput | null) {
     name: safeName,
     email: safeEmail,
     account: input.account?.trim() || createAccount(safeName, safeEmail),
-    avatar: input.avatar?.trim() || createAvatar(safeName),
+    avatar: input.avatar?.trim() || appProfile.defaultUserAvatar,
     wechat: input.wechat?.trim() || "未绑定",
     qq: input.qq?.trim() || "未绑定",
     phone: input.phone?.trim() || "未绑定",

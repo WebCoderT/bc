@@ -7,10 +7,12 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { DataSource, Like, Repository } from 'typeorm';
 import { Role } from '../common/enums/role.enum';
+import { DEFAULT_USER_AVATAR } from './default-avatar';
 import { UserEntity } from './entities/user.entity';
 
 type UpdateUserInput = {
   username: string;
+  avatar: string;
   role: Role;
   rechargeAmount: number;
   bonusAmount: number;
@@ -46,6 +48,7 @@ export class UsersService implements OnModuleInit {
 
     const user = this.usersRepository.create({
       username,
+      avatar: DEFAULT_USER_AVATAR,
       passwordHash: await bcrypt.hash(password, 10),
       role: Role.User,
       rechargeAmount: 0,
@@ -112,6 +115,7 @@ export class UsersService implements OnModuleInit {
     }
 
     user.username = input.username;
+    user.avatar = input.avatar?.trim() || DEFAULT_USER_AVATAR;
     user.role = input.role;
     user.rechargeAmount = input.rechargeAmount;
     user.bonusAmount = input.bonusAmount;
@@ -130,6 +134,7 @@ export class UsersService implements OnModuleInit {
     return {
       id: user.id,
       username: user.username,
+      avatar: user.avatar?.trim() || DEFAULT_USER_AVATAR,
       role: user.role,
       rechargeAmount: Number(user.rechargeAmount ?? 0),
       bonusAmount: Number(user.bonusAmount ?? 0),
@@ -144,6 +149,7 @@ export class UsersService implements OnModuleInit {
       {
         username: 'normal_demo',
         password: 'User@123',
+        avatar: DEFAULT_USER_AVATAR,
         role: Role.User,
         rechargeAmount: 688,
         bonusAmount: 120,
@@ -151,6 +157,7 @@ export class UsersService implements OnModuleInit {
       {
         username: 'vip_demo',
         password: 'Vip@123',
+        avatar: DEFAULT_USER_AVATAR,
         role: Role.Vip,
         rechargeAmount: 1588,
         bonusAmount: 300,
@@ -158,6 +165,7 @@ export class UsersService implements OnModuleInit {
       {
         username: 'admin_root',
         password: 'Admin@123',
+        avatar: DEFAULT_USER_AVATAR,
         role: Role.Admin,
         rechargeAmount: 3888,
         bonusAmount: 888,
@@ -182,6 +190,11 @@ export class UsersService implements OnModuleInit {
           shouldSave = true;
         }
 
+        if (!existingUser.avatar?.trim()) {
+          existingUser.avatar = defaultUser.avatar;
+          shouldSave = true;
+        }
+
         if (shouldSave) {
           await this.usersRepository.save(existingUser);
         }
@@ -191,6 +204,7 @@ export class UsersService implements OnModuleInit {
 
       const user = this.usersRepository.create({
         username: defaultUser.username,
+        avatar: defaultUser.avatar,
         passwordHash: await bcrypt.hash(defaultUser.password, 10),
         role: defaultUser.role,
         rechargeAmount: defaultUser.rechargeAmount,

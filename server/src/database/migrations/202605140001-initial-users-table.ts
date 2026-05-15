@@ -31,6 +31,13 @@ export class InitialUsersTable2026051400001 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: 'avatar',
+            type: 'varchar',
+            length: '2048',
+            default: "''",
+            isNullable: false,
+          },
+          {
             name: 'password_hash',
             type: 'varchar',
             length: '255',

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
+import { UserAvatar } from "@/app/components/admin/ui/user-avatar";
 import type { AdminRole, UpdateAdminUserInput } from "@/app/lib/admin-api";
 import type { UserItem } from "@/app/types/ui";
 import { formatCurrency } from "@/app/utils/admin-format";
@@ -28,6 +29,7 @@ export function UserEditModal({
 }) {
   const [formState, setFormState] = useState<UpdateAdminUserInput>({
     username: user.username,
+    avatar: user.avatar,
     role: user.role,
     rechargeAmount: user.rechargeAmount,
     bonusAmount: user.bonusAmount,
@@ -37,6 +39,7 @@ export function UserEditModal({
   useEffect(() => {
     setFormState({
       username: user.username,
+      avatar: user.avatar,
       role: user.role,
       rechargeAmount: user.rechargeAmount,
       bonusAmount: user.bonusAmount,
@@ -54,7 +57,7 @@ export function UserEditModal({
   return (
     <ModalShell
       title={`编辑用户 #${user.id}`}
-      description="可修改除 ID 外的用户信息，其中总余额由充值额度与赠送额度自动计算。"
+      description="总余额自动计算。"
       onClose={onClose}
     >
       <form
@@ -64,6 +67,17 @@ export function UserEditModal({
           void onSubmit(formState);
         }}
       >
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <UserAvatar
+            src={formState.avatar}
+            alt={formState.username}
+            size="lg"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-slate-500">头像预览</p>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-600">
@@ -75,6 +89,22 @@ export function UserEditModal({
                 setFormState((current) => ({
                   ...current,
                   username: event.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+              required
+            />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              头像地址
+            </span>
+            <input
+              value={formState.avatar}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  avatar: event.target.value,
                 }))
               }
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"

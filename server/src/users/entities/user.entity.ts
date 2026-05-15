@@ -1,8 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Role } from '../../common/enums/role.enum';
 
 const decimalTransformer = {
@@ -17,6 +13,9 @@ export class UserEntity {
 
   @Column({ unique: true, length: 20 })
   username!: string;
+
+  @Column({ length: 2048, default: '' })
+  avatar!: string;
 
   @Column({ name: 'password_hash', length: 255 })
   passwordHash!: string;

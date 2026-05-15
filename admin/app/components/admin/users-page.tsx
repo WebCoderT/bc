@@ -5,9 +5,11 @@ import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
 import { StatusPill } from "@/app/components/admin/ui/status-pill";
 import { TableShell } from "@/app/components/admin/ui/table-shell";
+import { UserAvatar } from "@/app/components/admin/ui/user-avatar";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import {
   fetchAdminUsers,
+  isAdminAuthError,
   type AdminRole,
   updateAdminUser,
   type UpdateAdminUserInput,
@@ -23,7 +25,7 @@ import { UserEditModal } from "@/app/components/admin/user-edit-modal";
 const PAGE_SIZE = 5;
 
 export function UsersPage() {
-  const { session } = useAdminSession();
+  const { session, logout } = useAdminSession();
   const [keyword, setKeyword] = useState("");
   const [roleFilter, setRoleFilter] = useState<AdminRole | "all">("all");
   const [page, setPage] = useState(1);
@@ -59,6 +61,11 @@ export function UsersPage() {
       });
       setLoadError("");
     } catch (error) {
+      if (isAdminAuthError(error)) {
+        logout();
+        return;
+      }
+
       setLoadError(error instanceof Error ? error.message : "读取用户列表失败");
     } finally {
       setIsLoading(false);
@@ -90,6 +97,11 @@ export function UsersPage() {
       await loadUsers();
       setSelectedUser(null);
     } catch (error) {
+      if (isAdminAuthError(error)) {
+        logout();
+        return;
+      }
+
       setSubmitError(error instanceof Error ? error.message : "更新用户失败");
     } finally {
       setIsSubmitting(false);
@@ -98,10 +110,7 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <CardShell
-        title="用户管理"
-        description="支持分页查询、角色筛选、余额展示以及弹窗修改用户信息"
-      >
+      <CardShell title="用户管理">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex w-full flex-col gap-3 md:max-w-2xl md:flex-row">
             <input
@@ -128,7 +137,7 @@ export function UsersPage() {
             </select>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            筛选结果：
+            共
             <span className="font-semibold text-slate-900">
               {" "}
               {pagination.total}{" "}
@@ -145,7 +154,7 @@ export function UsersPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">账号</th>
+                <th className="px-4 py-3 font-medium">用户</th>
                 <th className="px-4 py-3 font-medium">角色</th>
                 <th className="px-4 py-3 font-medium">充值额度</th>
                 <th className="px-4 py-3 font-medium">赠送额度</th>
@@ -171,13 +180,20 @@ export function UsersPage() {
                   className="border-t border-slate-100 text-slate-700"
                 >
                   <td className="px-4 py-4">
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {item.username}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        ID: {item.id}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        src={item.avatar}
+                        alt={item.username}
+                        size="sm"
+                      />
+                      <div>
+                        <p className="font-medium text-slate-900">
+                          {item.username}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          ID: {item.id}
+                        </p>
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-4">

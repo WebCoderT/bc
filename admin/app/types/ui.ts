@@ -19,6 +19,7 @@ export type StatItem = {
 export type UserItem = {
   id: number;
   username: string;
+  avatar: string;
   role: AdminRole;
   rechargeAmount: number;
   bonusAmount: number;

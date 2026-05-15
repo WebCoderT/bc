@@ -3,6 +3,7 @@ import { DataSourceOptions } from 'typeorm';
 import { UserEntity } from '../users/entities/user.entity';
 import { InitialUsersTable2026051400001 } from './migrations/202605140001-initial-users-table';
 import { AddUserBalanceColumns2026051400002 } from './migrations/202605140002-add-user-balance-columns';
+import { AddUserAvatarColumn2026051500001 } from './migrations/202605150001-add-user-avatar-column';
 
 const databaseBaseConfig = {
   type: 'mysql' as const,
@@ -17,6 +18,7 @@ export const databaseEntities = [UserEntity];
 export const databaseMigrations = [
   InitialUsersTable2026051400001,
   AddUserBalanceColumns2026051400002,
+  AddUserAvatarColumn2026051500001,
 ];
 
 export const dataSourceOptions: DataSourceOptions = {

@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { InfoCard } from "@/app/components/admin/ui/info-card";
 import { LoadingScreen } from "@/app/components/admin/ui/loading-screen";
 import {
+  clearStoredAdminSession,
+  isAdminTokenExpired,
   loginAdmin,
   readStoredAdminSession,
+  validateAdminSession,
   writeStoredAdminSession,
 } from "@/app/lib/admin-api";
 
@@ -22,11 +25,48 @@ export function LoginPage() {
   const [password, setPassword] = useState("Admin@123");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
-    if (isClient && session?.accessToken) {
-      router.replace("/dashboard");
+    let cancelled = false;
+
+    async function checkSession() {
+      if (!isClient || !session?.accessToken) {
+        setIsCheckingSession(false);
+        return;
+      }
+
+      if (isAdminTokenExpired(session.accessToken)) {
+        clearStoredAdminSession();
+        setIsCheckingSession(false);
+        return;
+      }
+
+      try {
+        const validatedSession = await validateAdminSession(
+          session.accessToken,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        writeStoredAdminSession(validatedSession);
+        router.replace("/dashboard");
+      } catch {
+        clearStoredAdminSession();
+      } finally {
+        if (!cancelled) {
+          setIsCheckingSession(false);
+        }
+      }
     }
+
+    void checkSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isClient, router, session?.accessToken]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -53,7 +93,7 @@ export function LoginPage() {
     }
   };
 
-  if (!isClient || session?.accessToken) {
+  if (!isClient || isCheckingSession) {
     return <LoadingScreen title="正在检查登录状态..." />;
   }
 
@@ -66,25 +106,14 @@ export function LoginPage() {
               Game Admin Console
             </span>
             <h1 className="mt-8 max-w-xl text-5xl font-semibold leading-tight">
-              游戏运营、用户、导航一体化管理后台
+              运营管理后台
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-              面向运营团队的统一工作台，覆盖登录鉴权、用户权限、导航配置、游戏资产与分类管理，适合中后台项目快速起步。
-            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <InfoCard
-              title="登录鉴权"
-              value="真实接口"
-              detail="支持路由守卫与退出登录"
-            />
-            <InfoCard title="模块数量" value="5 个" detail="覆盖常见后台功能" />
-            <InfoCard
-              title="默认账号"
-              value="admin_root"
-              detail="密码：Admin@123"
-            />
+            <InfoCard title="登录鉴权" value="JWT" detail="已启用" />
+            <InfoCard title="模块数量" value="5 个" />
+            <InfoCard title="默认账号" value="admin_root" />
           </div>
         </section>
 
@@ -95,10 +124,6 @@ export function LoginPage() {
                 运营后台
               </p>
               <h2 className="mt-3 text-3xl font-semibold">欢迎登录</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
-                已切换为真实接口登录，请使用 Swagger
-                文档中的管理员账号：`admin_root / Admin@123`
-              </p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -141,25 +166,6 @@ export function LoginPage() {
                 {isSubmitting ? "登录中..." : "登录后台"}
               </button>
             </form>
-
-            <div className="mt-8 grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-              <div className="flex items-center justify-between">
-                <span>推荐入口</span>
-                <span className="font-medium text-slate-900">Dashboard</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>当前框架</span>
-                <span className="font-medium text-slate-900">
-                  Next 16 App Router
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>接口状态</span>
-                <span className="font-medium text-emerald-600">
-                  Swagger 已接入
-                </span>
-              </div>
-            </div>
           </div>
         </section>
       </div>

@@ -28,9 +28,6 @@ export function AdminShell({
               Game Ops
             </p>
             <h1 className="mt-3 text-2xl font-semibold">运营管理后台</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              登录、数据看板、用户、导航、游戏与分类统一管理。
-            </p>
           </div>
 
           <nav className="mt-8 flex-1 space-y-2">
@@ -85,26 +82,14 @@ export function AdminShell({
           <header className="border-b border-slate-200 bg-white/80 px-5 py-4 backdrop-blur sm:px-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-slate-500">
-                  欢迎回来，管理端已接入 Swagger 标注的真实接口。
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                <h2 className="text-2xl font-semibold text-slate-900">
                   {currentRoute.label}
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-500">
-                  当前页面：
-                  <span className="font-medium text-slate-900">
-                    {currentRoute.description}
-                  </span>
+                  {currentRoute.description}
                 </div>
-                <button
-                  type="button"
-                  className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-                >
-                  新建内容
-                </button>
               </div>
             </div>
           </header>

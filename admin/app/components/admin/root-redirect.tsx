@@ -2,7 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { readStoredAdminSession } from "@/app/lib/admin-api";
+import {
+  clearStoredAdminSession,
+  isAdminTokenExpired,
+  readStoredAdminSession,
+} from "@/app/lib/admin-api";
 import { LoadingScreen } from "@/app/components/admin/ui/loading-screen";
 
 export function RootRedirect() {
@@ -10,7 +14,14 @@ export function RootRedirect() {
 
   useEffect(() => {
     const session = readStoredAdminSession();
-    router.replace(session?.accessToken ? "/dashboard" : "/login");
+
+    if (!session?.accessToken || isAdminTokenExpired(session.accessToken)) {
+      clearStoredAdminSession();
+      router.replace("/login");
+      return;
+    }
+
+    router.replace("/dashboard");
   }, [router]);
 
   return <LoadingScreen title="正在进入后台..." />;
