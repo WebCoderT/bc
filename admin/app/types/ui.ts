@@ -27,6 +27,10 @@ export type UserItem = {
   createdAt: string;
 };
 
+export type GameStatus = "运营中" | "预约中" | "已下线";
+
+export type CategoryStatus = "已启用" | "待调整" | "已停用";
+
 export type NavigationItem = {
   id: number;
   name: string;
@@ -39,9 +43,13 @@ export type NavigationItem = {
 export type GameItem = {
   id: number;
   name: string;
+  categoryId: number | null;
   category: string;
-  status: "运营中" | "预约中" | "已下线";
+  status: GameStatus;
   players: string;
+  tags: string[];
+  isRecommended: boolean;
+  heat: number;
   updatedAt: string;
 };
 
@@ -49,8 +57,12 @@ export type CategoryItem = {
   id: number;
   name: string;
   description: string;
+  tags: string[];
+  isRecommended: boolean;
+  heat: number;
   gameCount: number;
-  status: "已启用" | "待调整";
+  status: CategoryStatus;
+  updatedAt: string;
 };
 
 export type ActivityItem = {
