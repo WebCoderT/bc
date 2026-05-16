@@ -3,84 +3,18 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiOkResponse,
-  getSchemaPath,
 } from '@nestjs/swagger';
+import {
+  createEnvelopeSchema,
+  createListDataSchema,
+  createModelSchema,
+  createPaginatedDataSchema,
+} from './response-schema.factory';
 
 type ResponseOptions = {
   description?: string;
   messageExample?: string;
 };
-
-function createEnvelopeSchema(
-  dataSchema: Record<string, unknown>,
-  messageExample = 'success',
-) {
-  return {
-    type: 'object',
-    properties: {
-      code: {
-        type: 'number',
-        example: 0,
-      },
-      message: {
-        type: 'string',
-        example: messageExample,
-      },
-      data: dataSchema,
-    },
-    required: ['code', 'message', 'data'],
-  };
-}
-
-function createListDataSchema(itemSchema: Record<string, unknown>) {
-  return {
-    type: 'object',
-    properties: {
-      items: {
-        type: 'array',
-        items: itemSchema,
-      },
-      total: {
-        type: 'number',
-        example: 1,
-      },
-    },
-    required: ['items', 'total'],
-  };
-}
-
-function createPaginatedDataSchema(itemSchema: Record<string, unknown>) {
-  return {
-    type: 'object',
-    properties: {
-      items: {
-        type: 'array',
-        items: itemSchema,
-      },
-      total: {
-        type: 'number',
-        example: 20,
-      },
-      page: {
-        type: 'number',
-        example: 1,
-      },
-      pageSize: {
-        type: 'number',
-        example: 10,
-      },
-      totalPages: {
-        type: 'number',
-        example: 2,
-      },
-    },
-    required: ['items', 'total', 'page', 'pageSize', 'totalPages'],
-  };
-}
-
-function createModelSchema(model: Type<unknown>) {
-  return { $ref: getSchemaPath(model) };
-}
 
 export function ApiOkDataResponse(
   model: Type<unknown>,

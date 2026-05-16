@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
+import { KeywordQueryDto } from '../../common/dto/keyword-query.dto';
 import { GameCategoryStatus } from '../enums/game-category-status.enum';
 
 function transformOptionalBoolean(value: unknown) {
@@ -19,12 +20,7 @@ function transformOptionalBoolean(value: unknown) {
   return undefined;
 }
 
-export class ListGameCategoriesQueryDto {
-  @ApiPropertyOptional({ example: '策略' })
-  @IsOptional()
-  @IsString()
-  keyword?: string;
-
+export class ListGameCategoriesQueryDto extends KeywordQueryDto {
   @ApiPropertyOptional({
     enum: GameCategoryStatus,
     example: GameCategoryStatus.Enabled,

@@ -7,6 +7,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { DataSource, Like, Repository } from 'typeorm';
 import { Role } from '../common/enums/role.enum';
+import { createPaginatedResult } from '../common/utils/pagination.util';
 import { DEFAULT_USER_AVATAR } from './default-avatar';
 import { UserEntity } from './entities/user.entity';
 
@@ -88,13 +89,12 @@ export class UsersService implements OnModuleInit {
       take: pageSize,
     });
 
-    return {
-      items: users.map((user) => this.toSafeUser(user)),
+    return createPaginatedResult(
+      users.map((user) => this.toSafeUser(user)),
       total,
       page,
       pageSize,
-      totalPages: Math.max(1, Math.ceil(total / pageSize)),
-    };
+    );
   }
 
   async updateUser(id: number, input: UpdateUserInput) {

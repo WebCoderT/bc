@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
+import { createPaginatedResult } from '../common/utils/pagination.util';
 import { CreateGameDto } from './dto/create-game.dto';
 import { ListGamesQueryDto } from './dto/list-games-query.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
@@ -49,13 +50,12 @@ export class GameService {
       take: pageSize,
     });
 
-    return {
-      items: games.map((game) => this.toGameResponse(game)),
+    return createPaginatedResult(
+      games.map((game) => this.toGameResponse(game)),
       total,
       page,
       pageSize,
-      totalPages: Math.max(1, Math.ceil(total / pageSize)),
-    };
+    );
   }
 
   async findOne(id: number) {

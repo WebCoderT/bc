@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
+import { createListResult } from '../common/utils/pagination.util';
 import { CreateGameCategoryDto } from './dto/create-game-category.dto';
 import { ListGameCategoriesQueryDto } from './dto/list-game-categories-query.dto';
 import { UpdateGameCategoryDto } from './dto/update-game-category.dto';
@@ -64,10 +65,7 @@ export class GameCategoriesService implements OnModuleInit {
 
     const items = categories.map((item) => this.toSafeCategory(item));
 
-    return {
-      items,
-      total: items.length,
-    };
+    return createListResult(items);
   }
 
   async createCategory(input: CreateGameCategoryDto) {
