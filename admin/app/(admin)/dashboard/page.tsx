@@ -6,9 +6,9 @@ import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { ProgressRow } from "@/app/components/admin/ui/progress-row";
 import { activityItems, statItems } from "@/app/data/admin-data";
 import {
+  executeAdminRequest,
   fetchAnnouncements,
   fetchServiceStatus,
-  isAdminAuthError,
   type ServiceStatus,
 } from "@/app/lib/admin-api";
 import { toneMap } from "@/app/utils/admin-format";
@@ -25,33 +25,34 @@ export default function DashboardRoute() {
     let cancelled = false;
 
     async function loadDashboardData() {
-      try {
-        const [statusResponse, announcementsResponse] = await Promise.all([
-          fetchServiceStatus(),
-          fetchAnnouncements(),
-        ]);
+      await executeAdminRequest({
+        request: () =>
+          Promise.all([fetchServiceStatus(), fetchAnnouncements()]),
+        fallbackMessage: "读取后端状态失败",
+        onSuccess: ([statusResponse, announcementsResponse]) => {
+          if (cancelled) {
+            return;
+          }
 
-        if (cancelled) {
-          return;
-        }
+          setServiceStatus(statusResponse);
+          setAnnouncements(announcementsResponse.items);
+          setLoadError("");
+        },
+        onError: (message) => {
+          if (cancelled) {
+            return;
+          }
 
-        setServiceStatus(statusResponse);
-        setAnnouncements(announcementsResponse.items);
-        setLoadError("");
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
+          setLoadError(message);
+        },
+        onAuthError: () => {
+          if (cancelled) {
+            return;
+          }
 
-        if (isAdminAuthError(error)) {
           logout();
-          return;
-        }
-
-        setLoadError(
-          error instanceof Error ? error.message : "读取后端状态失败",
-        );
-      }
+        },
+      });
     }
 
     void loadDashboardData();
@@ -75,7 +76,7 @@ export default function DashboardRoute() {
         {statItems.map((item) => (
           <section
             key={item.label}
-            className={`overflow-hidden rounded-3xl bg-gradient-to-br ${toneMap[item.tone]} ring-1`}
+            className={`overflow-hidden rounded-3xl bg-linear-to-br ${toneMap[item.tone]} ring-1`}
           >
             <div className="rounded-3xl border border-white/10 bg-slate-950 px-5 py-5">
               <p className="text-sm text-slate-400">{item.label}</p>

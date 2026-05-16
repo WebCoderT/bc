@@ -64,6 +64,12 @@ export interface GameResponseDto {
   description: string;
   /** @example "https://example.com/game-icon.png" */
   iconUrl: string;
+  /** @example 1 */
+  category: number;
+  /** @example "运营中" */
+  status: string;
+  /** @example 60 */
+  drawInterval: number;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */

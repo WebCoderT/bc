@@ -20,6 +20,9 @@ export class GameResponseDto {
   @ApiProperty({ enum: GameType, example: GameType.ONLINE })
   status!: GameType;
 
+  @ApiProperty({ example: 60, description: '开奖间隔时间，单位秒' })
+  drawInterval!: number;
+
   @ApiProperty({ example: '2026-05-16T06:30:00.000Z' })
   createdAt!: string;
 

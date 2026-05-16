@@ -128,6 +128,10 @@ export class GameService {
         typeof input.category === 'number'
           ? input.category
           : Number(fallback?.category ?? 0),
+      drawInterval:
+        typeof input.drawInterval === 'number'
+          ? input.drawInterval
+          : Number(fallback?.drawInterval ?? 0),
       status: input.status || fallback?.status || GameType.ONLINE,
     };
   }
@@ -158,6 +162,7 @@ export class GameService {
       iconUrl: game.iconUrl || '',
       category: Number(game.category ?? 0),
       status: game.status,
+      drawInterval: Number(game.drawInterval ?? 0),
       createdAt:
         game.createdAt instanceof Date
           ? game.createdAt.toISOString()

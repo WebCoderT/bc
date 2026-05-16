@@ -30,6 +30,10 @@ export class Game {
   @Column({ name: 'status', type: 'enum', enum: GameType, default: GameType.ONLINE })
   status!: GameType;
 
+  @ApiProperty({ description: '开奖间隔时间(秒)', example: 60 })
+  @Column({ name: 'draw_interval', type: 'int', nullable: false })
+  drawInterval!: number;
+
   @ApiProperty({ description: '创建时间' })
   @Column({
     name: 'created_at',

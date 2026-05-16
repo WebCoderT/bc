@@ -9,10 +9,10 @@ import { TableShell } from "@/app/components/admin/ui/table-shell";
 import {
   createAdminGame,
   deleteAdminGame,
+  executeAdminRequest,
   fetchAdminNavigations,
   fetchAdminGames,
   GameResponseDtoStatusEnum,
-  isAdminAuthError,
   NavigationResponseDtoTypeEnum,
   type AdminGame,
   type AdminNavigation,
@@ -90,24 +90,21 @@ export default function GamesRoute() {
    * 页面只关心导航 id 和名称的对应关系，不需要保留树结构层级。
    */
   const loadCategoryOptions = useCallback(async () => {
-    try {
+    await executeAdminRequest({
       // 这里读取的是侧边导航类型，因为游戏分类当前挂在该导航体系下。
-      const response = await fetchAdminNavigations(session.accessToken, {});
-
-      // 顶级和子级导航都可能作为游戏分类，因此统一打平成单层数组。
-      // 打平后既能给编辑弹窗复用，也能给表格映射分类名。
-      const flattened = response.items.flatMap((item) => [item, ...item.children]);
-      setCategoryOptions(flattened);
-    } catch (error) {
-      // 鉴权错误统一走登出，让会话层处理跳转和凭证清理。
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
+      request: () => fetchAdminNavigations(session.accessToken, {}),
+      fallbackMessage: "读取游戏分类导航失败",
+      onSuccess: (response) => {
+        // 顶级和子级导航都可能作为游戏分类，因此统一打平成单层数组。
+        // 打平后既能给编辑弹窗复用，也能给表格映射分类名。
+        const flattened = response.items.flatMap((item) => [item, ...item.children]);
+        setCategoryOptions(flattened);
+      },
       // 分类读取失败时复用页面级错误提示区域。
-      setLoadError(error instanceof Error ? error.message : "读取游戏分类导航失败");
-    }
+      onError: (message) => setLoadError(message),
+      // 鉴权错误统一走登出，让会话层处理跳转和凭证清理。
+      onAuthError: logout,
+    });
   }, [logout, session.accessToken]);
 
   /**
@@ -115,40 +112,37 @@ export default function GamesRoute() {
    * 这个函数会被初次加载、搜索和翻页三个入口共用。
    */
   const loadGames = useCallback(async () => {
-    try {
+    await executeAdminRequest({
       // 每次重新请求前进入加载态，保证表格内容与查询条件同步。
-      setIsLoading(true);
+      onStart: () => setIsLoading(true),
       // 服务端分页参数由页面状态直接生成，避免本地再维护额外查询对象。
-      const response = await fetchAdminGames(session.accessToken, {
-        page,
-        pageSize: PAGE_SIZE,
-        keyword,
-      });
-
-      // items 和分页元信息来自同一次响应，需要一起更新。
-      // 先落地列表数据，再写分页信息，阅读时更符合结果结构。
-      setGames(response.items);
-      setPagination({
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      });
-      // 请求成功后清掉旧错误，避免旧提示残留在新结果上方。
-      setLoadError("");
-    } catch (error) {
-      // 会话失效时不再展示普通错误文案，直接交给登出流程处理。
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
+      request: () =>
+        fetchAdminGames(session.accessToken, {
+          page,
+          pageSize: PAGE_SIZE,
+          keyword,
+        }),
+      fallbackMessage: "读取游戏列表失败",
+      onSuccess: (response) => {
+        // items 和分页元信息来自同一次响应，需要一起更新。
+        // 先落地列表数据，再写分页信息，阅读时更符合结果结构。
+        setGames(response.items);
+        setPagination({
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        });
+        // 请求成功后清掉旧错误，避免旧提示残留在新结果上方。
+        setLoadError("");
+      },
       // 其余错误保留原始消息，便于后台排查接口返回内容。
-      setLoadError(error instanceof Error ? error.message : "读取游戏列表失败");
-    } finally {
+      onError: (message) => setLoadError(message),
+      // 会话失效时不再展示普通错误文案，直接交给登出流程处理。
+      onAuthError: logout,
       // 无论成功失败都退出加载态，确保空态或错误态可以正常显示。
-      setIsLoading(false);
-    }
+      onFinally: () => setIsLoading(false),
+    });
   }, [keyword, logout, page, session.accessToken]);
 
   // 把首次加载和条件变更后的请求放进 effect，保持页面数据自动同步。
@@ -184,35 +178,34 @@ export default function GamesRoute() {
   const handleSaveGame = async (
     input: SaveAdminGameInput | UpdateAdminGameInput,
   ) => {
-    try {
+    await executeAdminRequest({
       // 提交前先锁定按钮并清空旧错误，避免重复点击和误导性提示。
-      setIsSubmitting(true);
-      setSubmitError("");
+      onStart: () => {
+        setIsSubmitting(true);
+        setSubmitError("");
+      },
+      request: () => {
+        // 编辑场景携带现有 id，新建场景直接创建新记录。
+        if (selectedGame) {
+          return updateAdminGame(session.accessToken, selectedGame.id, input);
+        }
 
-      // 编辑场景携带现有 id，新建场景直接创建新记录。
-      if (selectedGame) {
-        await updateAdminGame(session.accessToken, selectedGame.id, input);
-      } else {
-        await createAdminGame(session.accessToken, input as SaveAdminGameInput);
-      }
-
-      // 保存成功后直接刷新列表，让表格与服务端状态保持一致。
-      await loadGames();
-      // 只有请求成功时才关闭弹窗，失败时保留用户输入和错误提示。
-      setSelectedGame(null);
-      setIsCreating(false);
-    } catch (error) {
+        return createAdminGame(session.accessToken, input as SaveAdminGameInput);
+      },
+      fallbackMessage: "保存游戏失败",
+      onSuccess: async () => {
+        // 保存成功后直接刷新列表，让表格与服务端状态保持一致。
+        await loadGames();
+        // 只有请求成功时才关闭弹窗，失败时保留用户输入和错误提示。
+        setSelectedGame(null);
+        setIsCreating(false);
+      },
+      onError: (message) => setSubmitError(message),
       // 保存失败同样要优先判断鉴权问题，避免界面停留在失效会话中。
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
-      setSubmitError(error instanceof Error ? error.message : "保存游戏失败");
-    } finally {
+      onAuthError: logout,
       // finally 中解锁按钮，确保异常路径也能再次提交。
-      setIsSubmitting(false);
-    }
+      onFinally: () => setIsSubmitting(false),
+    });
   };
 
   /**
@@ -229,26 +222,23 @@ export default function GamesRoute() {
 
     // 事件处理器内部用自执行异步函数，避免把 onClick 改成 async 后遗漏错误处理。
     void (async () => {
-      try {
-        await deleteAdminGame(session.accessToken, gameId);
+      await executeAdminRequest({
+        request: () => deleteAdminGame(session.accessToken, gameId),
+        fallbackMessage: "删除游戏失败",
+        onSuccess: async () => {
+          // 当前页只剩一条且不是第一页时，先退回上一页再由 effect 触发重载。
+          if (games.length === 1 && page > 1) {
+            setPage((current) => current - 1);
+            return;
+          }
 
-        // 当前页只剩一条且不是第一页时，先退回上一页再由 effect 触发重载。
-        if (games.length === 1 && page > 1) {
-          setPage((current) => current - 1);
-          return;
-        }
-
-        // 其余情况直接原地刷新列表，维持当前分页位置。
-        await loadGames();
-      } catch (error) {
+          // 其余情况直接原地刷新列表，维持当前分页位置。
+          await loadGames();
+        },
         // 删除失败沿用页面错误区域，让用户在列表上方直接看到反馈。
-        if (isAdminAuthError(error)) {
-          logout();
-          return;
-        }
-
-        setLoadError(error instanceof Error ? error.message : "删除游戏失败");
-      }
+        onError: (message) => setLoadError(message),
+        onAuthError: logout,
+      });
     })();
   };
 
@@ -331,6 +321,7 @@ export default function GamesRoute() {
               <tr>
                 <th className="px-4 py-3 font-medium">游戏</th>
                 <th className="px-4 py-3 font-medium">分类</th>
+                <th className="px-4 py-3 font-medium">开奖间隔</th>
                 <th className="px-4 py-3 font-medium">状态</th>
                 <th className="px-4 py-3 font-medium">简介</th>
                 <th className="px-4 py-3 font-medium">图标</th>
@@ -346,7 +337,7 @@ export default function GamesRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={8}
+                    colSpan={9}
                   >
                     {/* 加载提示占满全部列，避免列宽跳动。 */}
                     正在读取游戏列表...
@@ -358,7 +349,7 @@ export default function GamesRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={8}
+                    colSpan={9}
                   >
                     {/* 空态只在请求完成后出现，语义上与加载态清晰分离。 */}
                     当前筛选条件下暂无游戏。
@@ -384,11 +375,14 @@ export default function GamesRoute() {
                     {/* 分类名优先走映射表；缺失时回退到导航编号，避免空白。 */}
                     {categoryNameMap.get(item.category) ?? `导航 #${item.category}`}
                   </td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {item.drawInterval} 秒
+                  </td>
                   <td className="px-4 py-4">
                     {/* 状态颜色只区分运营中与其他状态，保持列表视觉简单。 */}
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 ${
-                        item.status === GameResponseDtoStatusEnum.Value运营中
+                        item.status === GameResponseDtoStatusEnum.Online
                           ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                           : "bg-slate-100 text-slate-600 ring-slate-200"
                       }`}

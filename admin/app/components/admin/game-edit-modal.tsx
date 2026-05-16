@@ -18,6 +18,7 @@ type GameFormState = {
   description: string;
   iconUrl: string;
   category: string;
+  drawInterval: string;
   status: AdminGameStatus;
 };
 
@@ -27,7 +28,8 @@ function createEmptyGameInput(): GameFormState {
     description: "",
     iconUrl: "",
     category: "",
-    status: GameResponseDtoStatusEnum.Value运营中,
+    drawInterval: "60",
+    status: GameResponseDtoStatusEnum.Online,
   };
 }
 
@@ -61,6 +63,7 @@ export function GameEditModal({
       description: game.description,
       iconUrl: game.iconUrl,
       category: String(game.category),
+      drawInterval: String(game.drawInterval),
       status: game.status,
     });
   }, [game]);
@@ -79,8 +82,13 @@ export function GameEditModal({
           event.preventDefault();
 
           const category = Number(formState.category);
+          const drawInterval = Number(formState.drawInterval);
 
           if (!Number.isInteger(category) || category < 1) {
+            return;
+          }
+
+          if (!Number.isInteger(drawInterval) || drawInterval < 1) {
             return;
           }
 
@@ -90,6 +98,7 @@ export function GameEditModal({
             description: formState.description.trim(),
             iconUrl: formState.iconUrl.trim(),
             category,
+            drawInterval,
             status: formState.status,
           });
         }}
@@ -105,6 +114,9 @@ export function GameEditModal({
             {formState.category
               ? `分类 ID：${formState.category}`
               : "未选择所属左侧导航"}
+          </p>
+          <p className="mt-2 text-slate-500">
+            开奖间隔：{formState.drawInterval || "未设置"} 秒
           </p>
         </div>
 
@@ -186,6 +198,26 @@ export function GameEditModal({
                 </option>
               ))}
             </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              开奖间隔（秒）
+            </span>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={formState.drawInterval}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  drawInterval: event.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+              required
+            />
           </label>
 
           <label className="block">

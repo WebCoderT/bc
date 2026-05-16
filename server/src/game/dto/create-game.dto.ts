@@ -43,6 +43,14 @@ export class CreateGameDto {
   @Min(1)
   category!: number;
 
+  @ApiProperty({
+    description: '开奖间隔时间，单位秒',
+    example: 60,
+  })
+  @IsInt()
+  @Min(1)
+  drawInterval!: number;
+
   @ApiPropertyOptional({
     description: '游戏状态',
     enum: GameType,

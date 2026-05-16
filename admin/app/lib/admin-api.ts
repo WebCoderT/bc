@@ -413,6 +413,45 @@ export function isAdminAuthError(error: unknown) {
   return error instanceof AdminApiError && error.isAuthError;
 }
 
+type AdminRequestLifecycle<T> = {
+  request: () => Promise<T>;
+  fallbackMessage: string;
+  onStart?: () => void | Promise<void>;
+  onSuccess?: (result: T) => void | Promise<void>;
+  onError?: (message: string, error: unknown) => void | Promise<void>;
+  onAuthError: () => void | Promise<void>;
+  onFinally?: () => void | Promise<void>;
+};
+
+export async function executeAdminRequest<T>({
+  request,
+  fallbackMessage,
+  onStart,
+  onSuccess,
+  onError,
+  onAuthError,
+  onFinally,
+}: AdminRequestLifecycle<T>) {
+  await onStart?.();
+
+  try {
+    const result = await request();
+    await onSuccess?.(result);
+    return result;
+  } catch (error) {
+    if (isAdminAuthError(error)) {
+      await onAuthError();
+      return null;
+    }
+
+    const message = error instanceof Error ? error.message : fallbackMessage;
+    await onError?.(message, error);
+    return null;
+  } finally {
+    await onFinally?.();
+  }
+}
+
 export function writeStoredAdminSession(session: AdminSession) {
   if (typeof window === "undefined") {
     return;

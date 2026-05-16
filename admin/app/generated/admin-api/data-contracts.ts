@@ -64,11 +64,6 @@ export interface UpdateAdminUserDto {
   createdAt: string;
 }
 
-export interface IdDataDto {
-  /** @example 1 */
-  id: number;
-}
-
 export interface GameResponseDto {
   /** @example 1 */
   id: number;
@@ -78,10 +73,18 @@ export interface GameResponseDto {
   description: string;
   /** @example "https://example.com/game-icon.png" */
   iconUrl: string;
-  /** @example 1 */
+  /**
+   * 所属左侧导航 ID
+   * @example 1
+   */
   category: number;
-  /** @example "运营中" */
+  /** @example "online" */
   status: GameResponseDtoStatusEnum;
+  /**
+   * 开奖间隔时间，单位秒
+   * @example 60
+   */
+  drawInterval: number;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */
@@ -110,11 +113,16 @@ export interface CreateGameDto {
    */
   category: number;
   /**
-   * 游戏状态
-   * @default "运营中"
-   * @example "运营中"
+   * 开奖间隔时间，单位秒
+   * @example 60
    */
-  status?: GameResponseDtoStatusEnum;
+  drawInterval: number;
+  /**
+   * 游戏状态
+   * @default "online"
+   * @example "online"
+   */
+  status?: CreateGameDtoStatusEnum;
 }
 
 export interface UpdateGameDto {
@@ -138,8 +146,22 @@ export interface UpdateGameDto {
    * @example 1
    */
   category?: number;
-  /** @example "运营中" */
-  status?: GameResponseDtoStatusEnum;
+  /**
+   * 开奖间隔时间，单位秒
+   * @example 60
+   */
+  drawInterval?: number;
+  /**
+   * 游戏状态
+   * @default "online"
+   * @example "online"
+   */
+  status?: UpdateGameDtoStatusEnum;
+}
+
+export interface IdDataDto {
+  /** @example 1 */
+  id: number;
 }
 
 export interface NavigationResponseDto {
@@ -160,7 +182,7 @@ export interface NavigationResponseDto {
   /** @example 10 */
   sort: number;
   /** @example null */
-  parentId: object | null;
+  parentId: number | null;
   /**
    * 1 为一级导航，2 为二级导航
    * @example 1
@@ -196,7 +218,7 @@ export interface CreateNavigatorDto {
    * 所属一级导航 ID
    * @example 1
    */
-  parentId?: object;
+  parentId?: number | null;
 }
 
 export interface UpdateNavigatorDto {
@@ -221,7 +243,7 @@ export interface UpdateNavigatorDto {
    * 所属一级导航 ID
    * @example 1
    */
-  parentId?: object;
+  parentId?: number | null;
 }
 
 /** @example "admin" */
@@ -238,22 +260,30 @@ export enum UpdateAdminUserDtoRoleEnum {
   Admin = "admin",
 }
 
-/** @example "运营中" */
+/** @example "online" */
 export enum GameResponseDtoStatusEnum {
-  Value运营中 = "运营中",
-  Value下线 = "下线",
+  Online = "online",
+  Offline = "offline",
 }
 
-/** @example "运营中" */
+/**
+ * 游戏状态
+ * @default "online"
+ * @example "online"
+ */
 export enum CreateGameDtoStatusEnum {
-  Value运营中 = "运营中",
-  Value下线 = "下线",
+  Online = "online",
+  Offline = "offline",
 }
 
-/** @example "运营中" */
+/**
+ * 游戏状态
+ * @default "online"
+ * @example "online"
+ */
 export enum UpdateGameDtoStatusEnum {
-  Value运营中 = "运营中",
-  Value下线 = "下线",
+  Online = "online",
+  Offline = "offline",
 }
 
 /** @example "顶部导航" */
@@ -356,10 +386,16 @@ export interface AdminGameControllerDeleteGameParams {
 export interface AdminNavigationsControllerGetNavigationsParams {
   /** @example "关键词" */
   keyword?: string;
-  /** @example "顶部导航" */
+  /**
+   * 按导航类型筛选
+   * @example "顶部导航"
+   */
   type?: TypeEnum;
-  /** @example "展示中" */
-  status?: StatusEnum1;
+  /**
+   * 按导航状态筛选
+   * @example "展示中"
+   */
+  status?: StatusEnum;
   /**
    * 按父级导航筛选
    * @example 1
@@ -367,27 +403,39 @@ export interface AdminNavigationsControllerGetNavigationsParams {
   parentId?: number;
 }
 
-/** @example "顶部导航" */
+/**
+ * 按导航类型筛选
+ * @example "顶部导航"
+ */
 export enum TypeEnum {
   Value顶部导航 = "顶部导航",
   Value侧边导航 = "侧边导航",
   Value快捷入口 = "快捷入口",
 }
 
-/** @example "展示中" */
-export enum StatusEnum1 {
+/**
+ * 按导航状态筛选
+ * @example "展示中"
+ */
+export enum StatusEnum {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",
 }
 
-/** @example "顶部导航" */
+/**
+ * 按导航类型筛选
+ * @example "顶部导航"
+ */
 export enum AdminNavigationsControllerGetNavigationsParams1TypeEnum {
   Value顶部导航 = "顶部导航",
   Value侧边导航 = "侧边导航",
   Value快捷入口 = "快捷入口",
 }
 
-/** @example "展示中" */
+/**
+ * 按导航状态筛选
+ * @example "展示中"
+ */
 export enum AdminNavigationsControllerGetNavigationsParams1StatusEnum {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",

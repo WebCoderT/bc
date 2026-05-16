@@ -9,8 +9,8 @@ import { StatusPill } from "@/app/components/admin/ui/status-pill";
 import { TableShell } from "@/app/components/admin/ui/table-shell";
 import { UserAvatar } from "@/app/components/admin/ui/user-avatar";
 import {
+  executeAdminRequest,
   fetchAdminUsers,
-  isAdminAuthError,
   RoleEnum,
   type AdminRoleFilter,
   updateAdminUser,
@@ -44,33 +44,30 @@ export default function UsersRoute() {
   const [submitError, setSubmitError] = useState("");
 
   const loadUsers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchAdminUsers(session.accessToken, {
-        page,
-        pageSize: PAGE_SIZE,
-        role: roleFilter,
-        keyword,
-      });
-
-      setUsers(response.items);
-      setPagination({
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        totalPages: response.totalPages,
-      });
-      setLoadError("");
-    } catch (error) {
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
-      setLoadError(error instanceof Error ? error.message : "读取用户列表失败");
-    } finally {
-      setIsLoading(false);
-    }
+    await executeAdminRequest({
+      onStart: () => setIsLoading(true),
+      request: () =>
+        fetchAdminUsers(session.accessToken, {
+          page,
+          pageSize: PAGE_SIZE,
+          role: roleFilter,
+          keyword,
+        }),
+      fallbackMessage: "读取用户列表失败",
+      onSuccess: (response) => {
+        setUsers(response.items);
+        setPagination({
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize,
+          totalPages: response.totalPages,
+        });
+        setLoadError("");
+      },
+      onError: (message) => setLoadError(message),
+      onAuthError: logout,
+      onFinally: () => setIsLoading(false),
+    });
   }, [keyword, logout, page, roleFilter, session.accessToken]);
 
   useEffect(() => {
@@ -96,23 +93,21 @@ export default function UsersRoute() {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      setSubmitError("");
-
-      await updateAdminUser(session.accessToken, selectedUser.id, input);
-      await loadUsers();
-      setSelectedUser(null);
-    } catch (error) {
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
-      setSubmitError(error instanceof Error ? error.message : "更新用户失败");
-    } finally {
-      setIsSubmitting(false);
-    }
+    await executeAdminRequest({
+      onStart: () => {
+        setIsSubmitting(true);
+        setSubmitError("");
+      },
+      request: () => updateAdminUser(session.accessToken, selectedUser.id, input),
+      fallbackMessage: "更新用户失败",
+      onSuccess: async () => {
+        await loadUsers();
+        setSelectedUser(null);
+      },
+      onError: (message) => setSubmitError(message),
+      onAuthError: logout,
+      onFinally: () => setIsSubmitting(false),
+    });
   };
 
   return (

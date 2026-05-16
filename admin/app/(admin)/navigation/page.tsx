@@ -11,8 +11,8 @@ import {
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
   deleteAdminNavigation,
+  executeAdminRequest,
   fetchAdminNavigations,
-  isAdminAuthError,
   type AdminNavigation,
   NavigationResponseDtoStatusEnum,
   updateAdminNavigation,
@@ -65,26 +65,23 @@ export default function NavigationRoute() {
   );
 
   const loadNavigations = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchAdminNavigations(session.accessToken, {
-        keyword,
-        type: typeFilter,
-        status: statusFilter,
-      });
-
-      setNavigations(response.items);
-      setLoadError("");
-    } catch (error) {
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
-      setLoadError(error instanceof Error ? error.message : "读取导航失败");
-    } finally {
-      setIsLoading(false);
-    }
+    await executeAdminRequest({
+      onStart: () => setIsLoading(true),
+      request: () =>
+        fetchAdminNavigations(session.accessToken, {
+          keyword,
+          type: typeFilter,
+          status: statusFilter,
+        }),
+      fallbackMessage: "读取导航失败",
+      onSuccess: (response) => {
+        setNavigations(response.items);
+        setLoadError("");
+      },
+      onError: (message) => setLoadError(message),
+      onAuthError: logout,
+      onFinally: () => setIsLoading(false),
+    });
   }, [keyword, logout, session.accessToken, statusFilter, typeFilter]);
 
   useEffect(() => {
@@ -117,53 +114,52 @@ export default function NavigationRoute() {
   };
 
   const handleSaveNavigation = async (input: NavigationFormInput) => {
-    setIsSubmitting(true);
-    setSubmitError("");
+    await executeAdminRequest({
+      onStart: () => {
+        setIsSubmitting(true);
+        setSubmitError("");
+      },
+      request: async () => {
+        const payload = {
+          ...input,
+          name: input.name?.trim() || "",
+          path: input.path?.trim() || "",
+          description: input.description?.trim() || "",
+          icon: input.icon?.trim() || "",
+          sort: Number(input.sort ?? 0),
+          parentId: input.parentId ?? null,
+        };
 
-    try {
-      const payload = {
-        ...input,
-        name: input.name?.trim() || "",
-        path: input.path?.trim() || "",
-        description: input.description?.trim() || "",
-        icon: input.icon?.trim() || "",
-        sort: Number(input.sort ?? 0),
-        parentId: input.parentId ?? null,
-      };
+        if (!payload.name) {
+          throw new Error("导航名称不能为空");
+        }
 
-      if (!payload.name) {
-        throw new Error("导航名称不能为空");
-      }
+        if (!payload.path) {
+          throw new Error("导航路径不能为空");
+        }
 
-      if (!payload.path) {
-        throw new Error("导航路径不能为空");
-      }
+        if (editingNavigation) {
+          return updateAdminNavigation(
+            session.accessToken,
+            editingNavigation.id,
+            payload,
+          );
+        }
 
-      if (editingNavigation) {
-        await updateAdminNavigation(
-          session.accessToken,
-          editingNavigation.id,
-          payload,
-        );
-      } else {
-        await createAdminNavigation(
+        return createAdminNavigation(
           session.accessToken,
           payload as SaveAdminNavigationInput,
         );
-      }
-
-      await loadNavigations();
-      closeModal();
-    } catch (error) {
-      if (isAdminAuthError(error)) {
-        logout();
-        return;
-      }
-
-      setSubmitError(error instanceof Error ? error.message : "保存导航失败");
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      fallbackMessage: "保存导航失败",
+      onSuccess: async () => {
+        await loadNavigations();
+        closeModal();
+      },
+      onError: (message) => setSubmitError(message),
+      onAuthError: logout,
+      onFinally: () => setIsSubmitting(false),
+    });
   };
 
   const handleDeleteNavigation = (navigation: AdminNavigation) => {
@@ -179,17 +175,15 @@ export default function NavigationRoute() {
     }
 
     void (async () => {
-      try {
-        await deleteAdminNavigation(session.accessToken, navigation.id);
-        await loadNavigations();
-      } catch (error) {
-        if (isAdminAuthError(error)) {
-          logout();
-          return;
-        }
-
-        setLoadError(error instanceof Error ? error.message : "删除导航失败");
-      }
+      await executeAdminRequest({
+        request: () => deleteAdminNavigation(session.accessToken, navigation.id),
+        fallbackMessage: "删除导航失败",
+        onSuccess: async () => {
+          await loadNavigations();
+        },
+        onError: (message) => setLoadError(message),
+        onAuthError: logout,
+      });
     })();
   };
 
