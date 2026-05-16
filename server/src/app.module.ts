@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { typeOrmModuleOptions } from './database/typeorm.config';
-import { GameCategoriesModule } from './game-categories/game-categories.module';
 import { MemberModule } from './member/member.module';
 import { PublicModule } from './public/public.module';
 import { UsersModule } from './users/users.module';
@@ -17,7 +16,6 @@ import { NavigatorModule } from './navigator/navigator.module';
   imports: [
     TypeOrmModule.forRoot(typeOrmModuleOptions),
     UsersModule,
-    GameCategoriesModule,
     AuthModule,
     PublicModule,
     MemberModule,
@@ -29,4 +27,4 @@ import { NavigatorModule } from './navigator/navigator.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { GameType } from '../enums/game-type.enum';
 
 export class GameResponseDto {
   @ApiProperty({ example: 1 })
@@ -12,6 +13,12 @@ export class GameResponseDto {
 
   @ApiProperty({ example: 'https://example.com/game-icon.png' })
   iconUrl!: string;
+
+  @ApiProperty({ example: 1, description: '所属左侧导航 ID' })
+  category!: number;
+
+  @ApiProperty({ enum: GameType, example: GameType.ONLINE })
+  status!: GameType;
 
   @ApiProperty({ example: '2026-05-16T06:30:00.000Z' })
   createdAt!: string;

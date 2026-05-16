@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
+import { GameType } from '../enums/game-type.enum';
 
 export class CreateGameDto {
   @ApiProperty({ description: '游戏名称', example: '星穹远征' })
@@ -25,4 +34,22 @@ export class CreateGameDto {
   @IsString()
   @MaxLength(500)
   iconUrl?: string;
+
+  @ApiProperty({
+    description: '游戏分类，表示游戏所属的左侧导航 ID',
+    example: 1,
+  })
+  @IsInt()
+  @Min(1)
+  category!: number;
+
+  @ApiPropertyOptional({
+    description: '游戏状态',
+    enum: GameType,
+    example: GameType.ONLINE,
+    default: GameType.ONLINE,
+  })
+  @IsOptional()
+  @IsEnum(GameType)
+  status?: GameType;
 }

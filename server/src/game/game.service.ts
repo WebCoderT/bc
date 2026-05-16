@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -10,16 +11,22 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { ListGamesQueryDto } from './dto/list-games-query.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
+import { GameType } from './enums/game-type.enum';
+import { NavigationEntity } from '../navigator/entities/navigator.entity';
+import { NavigationType } from '../navigator/enums/navigation-type.enum';
 
 @Injectable()
 export class GameService {
   constructor(
     @InjectRepository(Game)
     private readonly gameRepository: Repository<Game>,
-  ) {}
+    @InjectRepository(NavigationEntity)
+    private readonly navigationRepository: Repository<NavigationEntity>,
+  ) { }
 
   async create(createGameDto: CreateGameDto) {
     const normalizedInput = this.normalizeInput(createGameDto);
+    await this.ensureCategoryIsValid(normalizedInput.category);
     const existingGame = await this.gameRepository.findOne({
       where: { label: normalizedInput.label },
     });
@@ -76,6 +83,7 @@ export class GameService {
     }
 
     const normalizedInput = this.normalizeInput(updateGameDto, game);
+    await this.ensureCategoryIsValid(normalizedInput.category);
 
     if (normalizedInput.label !== game.label) {
       const existingGame = await this.gameRepository.findOne({
@@ -116,7 +124,30 @@ export class GameService {
       label: input.label?.trim() || fallback?.label || '',
       description: input.description?.trim() || fallback?.description || '',
       iconUrl: input.iconUrl?.trim() || fallback?.iconUrl || '',
+      category:
+        typeof input.category === 'number'
+          ? input.category
+          : Number(fallback?.category ?? 0),
+      status: input.status || fallback?.status || GameType.ONLINE,
     };
+  }
+
+  private async ensureCategoryIsValid(categoryId: number) {
+    if (!Number.isInteger(categoryId) || categoryId < 1) {
+      throw new BadRequestException('游戏分类不能为空');
+    }
+
+    const navigation = await this.navigationRepository.findOne({
+      where: { id: categoryId },
+    });
+
+    if (!navigation) {
+      throw new NotFoundException('游戏分类对应的导航不存在');
+    }
+
+    if (navigation.type !== NavigationType.Side) {
+      throw new BadRequestException('游戏分类必须选择侧边导航');
+    }
   }
 
   private toGameResponse(game: Game) {
@@ -125,6 +156,8 @@ export class GameService {
       label: game.label,
       description: game.description,
       iconUrl: game.iconUrl || '',
+      category: Number(game.category ?? 0),
+      status: game.status,
       createdAt:
         game.createdAt instanceof Date
           ? game.createdAt.toISOString()
