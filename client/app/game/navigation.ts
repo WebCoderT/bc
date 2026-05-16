@@ -20,7 +20,7 @@ function createRootNavigationItem(
   return {
     label: navigation.name,
     href: navigation.path,
-    badge: "主",
+    badge: "",
     pageTitle: navigation.name,
   };
 }
@@ -31,7 +31,7 @@ function createChildNavigationItem(
   return {
     label: navigation.name,
     href: navigation.path,
-    badge: "子",
+    badge: "",
     pageTitle: navigation.name,
   };
 }
