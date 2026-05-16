@@ -11,6 +11,7 @@ import { PublicModule } from './public/public.module';
 import { UsersModule } from './users/users.module';
 import { VipModule } from './vip/vip.module';
 import { GameModule } from './game/game.module';
+import { NavigatorModule } from './navigator/navigator.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { GameModule } from './game/game.module';
     VipModule,
     AdminModule,
     GameModule,
+    NavigatorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

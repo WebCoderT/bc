@@ -10,26 +10,26 @@
  * ---------------------------------------------------------------
  */
 
-import { VipInsightsDataDto } from "./data-contracts";
+import { MemberDashboardDataDto } from "./data-contracts";
 
-export namespace Vip {
+export namespace 用户中心 {
   /**
  * No description
- * @tags vip
- * @name VipControllerGetInsights
- * @summary VIP 专属内容
- * @request GET:/api/vip/insights
+ * @tags 用户中心
+ * @name MemberDashboardControllerGetDashboard
+ * @summary 普通登录用户可访问的个人面板
+ * @request GET:/api/member/dashboard
  * @secure
  * @response `200` `{
   /** @example 0 *\/
     code: number,
-  /** @example "VIP 内容访问成功" *\/
+  /** @example "欢迎进入用户中心" *\/
     message: string,
-    data: VipInsightsDataDto,
+    data: MemberDashboardDataDto,
 
 }`
 */
-  export namespace VipControllerGetInsights {
+  export namespace MemberDashboardControllerGetDashboard {
     export type RequestParams = {};
     export type RequestQuery = {};
     export type RequestBody = never;
@@ -37,9 +37,9 @@ export namespace Vip {
     export type ResponseBody = {
       /** @example 0 */
       code: number;
-      /** @example "VIP 内容访问成功" */
+      /** @example "欢迎进入用户中心" */
       message: string;
-      data: VipInsightsDataDto;
+      data: MemberDashboardDataDto;
     };
   }
 }

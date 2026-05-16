@@ -7,7 +7,7 @@ const currentDirectoryPath = path.dirname(currentFilePath);
 const projectRoot = path.resolve(currentDirectoryPath, "..");
 
 const swaggerUrl =
-  process.env.CLIENT_SWAGGER_URL ?? "http://127.0.0.1:8014/docs/member-json";
+  process.env.CLIENT_SWAGGER_URL ?? "http://127.0.0.1:8000/docs/member-json";
 
 async function main() {
   await generateApi({

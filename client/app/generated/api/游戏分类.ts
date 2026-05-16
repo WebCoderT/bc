@@ -10,10 +10,13 @@
  * ---------------------------------------------------------------
  */
 
-import { VipInsightsDataDto } from "./data-contracts";
+import {
+  GameCategoryResponseDto,
+  MemberGameCategoriesControllerGetGameCategoriesParams,
+} from "./data-contracts";
 import { HttpClient, RequestParams } from "./http-client";
 
-export class Vip<SecurityDataType = unknown> {
+export class 游戏分类<SecurityDataType = unknown> {
   http: HttpClient<SecurityDataType>;
 
   constructor(http: HttpClient<SecurityDataType>) {
@@ -23,33 +26,46 @@ export class Vip<SecurityDataType = unknown> {
   /**
  * No description
  *
- * @tags vip
- * @name VipControllerGetInsights
- * @summary VIP 专属内容
- * @request GET:/api/vip/insights
+ * @tags 游戏分类
+ * @name MemberGameCategoriesControllerGetGameCategories
+ * @summary 登录用户查看游戏分类列表
+ * @request GET:/api/member/game-categories
  * @secure
  * @response `200` `{
   /** @example 0 *\/
     code: number,
-  /** @example "VIP 内容访问成功" *\/
+  /** @example "success" *\/
     message: string,
-    data: VipInsightsDataDto,
+    data: {
+    items: (GameCategoryResponseDto)[],
+  /** @example 1 *\/
+    total: number,
+
+},
 
 }`
  */
-  vipControllerGetInsights = (params: RequestParams = {}) =>
+  memberGameCategoriesControllerGetGameCategories = (
+    query: MemberGameCategoriesControllerGetGameCategoriesParams,
+    params: RequestParams = {},
+  ) =>
     this.http.request<
       {
         /** @example 0 */
         code: number;
-        /** @example "VIP 内容访问成功" */
+        /** @example "success" */
         message: string;
-        data: VipInsightsDataDto;
+        data: {
+          items: GameCategoryResponseDto[];
+          /** @example 1 */
+          total: number;
+        };
       },
       any
     >({
-      path: `/api/vip/insights`,
+      path: `/api/member/game-categories`,
       method: "GET",
+      query: query,
       secure: true,
       format: "json",
       ...params,

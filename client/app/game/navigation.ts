@@ -1,4 +1,20 @@
-export const gameNavigationSections = [
+import { type ClientNavigation } from "@/app/lib/client-api";
+
+export type GameNavigationItem = {
+  label: string;
+  href: string;
+  badge: string;
+  pageTitle: string;
+};
+
+export type GameNavigationSection = {
+  label: string;
+  href: string;
+  title: string;
+  items: GameNavigationItem[];
+};
+
+export const gameNavigationSections: GameNavigationSection[] = [
   {
     label: "个人中心",
     href: "/game",
@@ -131,15 +147,59 @@ export const gameNavigationSections = [
   },
 ] as const;
 
-export function getGameSectionByPath(pathname: string | null) {
+function createRootNavigationItem(
+  navigation: ClientNavigation,
+): GameNavigationItem {
+  return {
+    label: navigation.name,
+    href: navigation.path,
+    badge: "主",
+    pageTitle: navigation.name,
+  };
+}
+
+function createChildNavigationItem(
+  navigation: ClientNavigation,
+): GameNavigationItem {
+  return {
+    label: navigation.name,
+    href: navigation.path,
+    badge: "子",
+    pageTitle: navigation.name,
+  };
+}
+
+export function mapNavigationsToGameSections(
+  navigations: ClientNavigation[],
+): GameNavigationSection[] {
+  const sections = navigations
+    .filter((item) => item.level === 1)
+    .map((item) => {
+      const children = item.children.map(createChildNavigationItem);
+
+      return {
+        label: item.name,
+        href: item.path,
+        title: `${item.name}导航`,
+        items: [createRootNavigationItem(item), ...children],
+      } satisfies GameNavigationSection;
+    });
+
+  return sections.length > 0 ? sections : gameNavigationSections;
+}
+
+export function getGameSectionByPath(
+  pathname: string | null,
+  sections: GameNavigationSection[] = gameNavigationSections,
+) {
   const currentPathname = pathname ?? "/game";
 
   return (
-    gameNavigationSections.find(
+    sections.find(
       (section) =>
         currentPathname === section.href ||
         currentPathname.startsWith(`${section.href}/`),
-    ) ?? gameNavigationSections[0]
+    ) ?? sections[0]
   );
 }
 

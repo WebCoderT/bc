@@ -10,10 +10,10 @@
  * ---------------------------------------------------------------
  */
 
-import { VipInsightsDataDto } from "./data-contracts";
+import { MemberDashboardDataDto } from "./data-contracts";
 import { HttpClient, RequestParams } from "./http-client";
 
-export class Vip<SecurityDataType = unknown> {
+export class 用户中心<SecurityDataType = unknown> {
   http: HttpClient<SecurityDataType>;
 
   constructor(http: HttpClient<SecurityDataType>) {
@@ -23,32 +23,32 @@ export class Vip<SecurityDataType = unknown> {
   /**
  * No description
  *
- * @tags vip
- * @name VipControllerGetInsights
- * @summary VIP 专属内容
- * @request GET:/api/vip/insights
+ * @tags 用户中心
+ * @name MemberDashboardControllerGetDashboard
+ * @summary 普通登录用户可访问的个人面板
+ * @request GET:/api/member/dashboard
  * @secure
  * @response `200` `{
   /** @example 0 *\/
     code: number,
-  /** @example "VIP 内容访问成功" *\/
+  /** @example "欢迎进入用户中心" *\/
     message: string,
-    data: VipInsightsDataDto,
+    data: MemberDashboardDataDto,
 
 }`
  */
-  vipControllerGetInsights = (params: RequestParams = {}) =>
+  memberDashboardControllerGetDashboard = (params: RequestParams = {}) =>
     this.http.request<
       {
         /** @example 0 */
         code: number;
-        /** @example "VIP 内容访问成功" */
+        /** @example "欢迎进入用户中心" */
         message: string;
-        data: VipInsightsDataDto;
+        data: MemberDashboardDataDto;
       },
       any
     >({
-      path: `/api/vip/insights`,
+      path: `/api/member/dashboard`,
       method: "GET",
       secure: true,
       format: "json",

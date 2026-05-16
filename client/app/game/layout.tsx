@@ -12,7 +12,8 @@ import { useGameSession } from "./hooks/use-game-session";
  * 展示结构交给共享壳组件处理。
  */
 export default function GameLayout({ children }: { children: ReactNode }) {
-  const { isReady, user, walletSummary, logout } = useGameSession();
+  const { isReady, navigationSections, user, walletSummary, logout } =
+    useGameSession();
 
   if (!isReady || !user) {
     return (
@@ -33,6 +34,7 @@ export default function GameLayout({ children }: { children: ReactNode }) {
   return (
     <GameUserProvider user={user}>
       <GameLayoutShell
+        navigationSections={navigationSections}
         user={user}
         walletSummary={walletSummary}
         onLogout={logout}

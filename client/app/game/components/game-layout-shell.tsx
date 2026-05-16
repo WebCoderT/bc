@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "../../components/theme-toggle";
 import { formatAuthUserRole, type AuthUser } from "../../lib/auth";
 import {
-  gameNavigationSections,
   getGameSectionByPath,
   isGameLinkActive,
+  type GameNavigationSection,
 } from "../navigation";
 import { AppBrand } from "@/app/shared/components/app-brand";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
@@ -18,6 +18,7 @@ import { getAppProfileSync } from "@/app/shared/repositories/app-profile-reposit
 
 type GameLayoutShellProps = {
   children: ReactNode;
+  navigationSections: GameNavigationSection[];
   user: AuthUser;
   walletSummary: Array<{ label: string; value: string }>;
   onLogout: () => void;
@@ -31,6 +32,7 @@ type GameLayoutShellProps = {
  */
 export function GameLayoutShell({
   children,
+  navigationSections,
   user,
   walletSummary,
   onLogout,
@@ -41,7 +43,7 @@ export function GameLayoutShell({
   /**
    * 根据当前路径推断顶部一级导航，并拿到对应二级导航列表。
    */
-  const activeSection = getGameSectionByPath(pathname);
+  const activeSection = getGameSectionByPath(pathname, navigationSections);
   const sideRoutes = activeSection.items;
 
   return (
@@ -58,7 +60,7 @@ export function GameLayoutShell({
           </div>
 
           <nav className="hidden items-center gap-2 xl:flex">
-            {gameNavigationSections.map((item) => (
+            {navigationSections.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

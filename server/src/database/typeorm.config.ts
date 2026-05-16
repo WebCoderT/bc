@@ -2,6 +2,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
 import { GameCategoryEntity } from '../game-categories/entities/game-category.entity';
 import { Game } from '../game/entities/game.entity';
+import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { UserEntity } from '../users/entities/user.entity';
 
 const databaseBaseConfig = {
@@ -13,7 +14,12 @@ const databaseBaseConfig = {
   database: process.env.DB_NAME ?? 'probability_app',
 };
 
-export const databaseEntities = [UserEntity, GameCategoryEntity, Game];
+export const databaseEntities = [
+  UserEntity,
+  GameCategoryEntity,
+  Game,
+  NavigationEntity,
+];
 export const databaseMigrations: DataSourceOptions['migrations'] = [];
 
 export const dataSourceOptions: DataSourceOptions = {

@@ -2,20 +2,31 @@ import { Auth as SwaggerAuthApi } from "@/app/generated/admin-api/Auth";
 import { 用户管理 as SwaggerUsersApi } from "@/app/generated/admin-api/用户管理";
 import { 游戏分类管理 as SwaggerGameCategoriesApi } from "@/app/generated/admin-api/游戏分类管理";
 import { 游戏管理 as SwaggerGamesApi } from "@/app/generated/admin-api/游戏管理";
+import { 导航管理 as SwaggerNavigationsApi } from "@/app/generated/admin-api/导航管理";
 import {
+  type AdminNavigationsControllerGetNavigationsParams,
   type AdminGameCategoriesControllerGetGameCategoriesParams,
   type AdminGameControllerGetGamesParams,
   type AdminUsersControllerGetUsersParams,
+  CreateNavigatorDtoStatusEnum,
+  CreateNavigatorDtoTypeEnum,
   type CreateGameCategoryDto,
   type CreateGameDto,
+  type CreateNavigatorDto,
   type GameCategoryResponseDto,
   type GameResponseDto,
   type LoginResponseDto,
+  type NavigationResponseDto,
+  NavigationResponseDtoStatusEnum,
+  NavigationResponseDtoTypeEnum,
   RoleEnum,
   type SafeUserDto,
   type UpdateAdminUserDto,
   type UpdateGameCategoryDto,
   type UpdateGameDto,
+  type UpdateNavigatorDto,
+  UpdateNavigatorDtoStatusEnum,
+  UpdateNavigatorDtoTypeEnum,
   GameCategoryResponseDtoStatusEnum,
   UpdateAdminUserDtoRoleEnum,
 } from "@/app/generated/admin-api/data-contracts";
@@ -71,11 +82,50 @@ export type SaveAdminGameInput = CreateGameDto;
 
 export type UpdateAdminGameInput = UpdateGameDto;
 
+type SwaggerAdminNavigation = NavigationResponseDto;
+
+export type AdminNavigation = Omit<
+  SwaggerAdminNavigation,
+  "parentId" | "children"
+> & {
+  parentId: number | null;
+  children: AdminNavigation[];
+};
+
+export type SaveAdminNavigationInput = Omit<
+  CreateNavigatorDto,
+  "parentId" | "type" | "status"
+> & {
+  parentId?: number | null;
+  type: SwaggerAdminNavigation["type"];
+  status?: SwaggerAdminNavigation["status"];
+};
+
+export type UpdateAdminNavigationInput = Omit<
+  UpdateNavigatorDto,
+  "parentId" | "type" | "status"
+> & {
+  parentId?: number | null;
+  type?: SwaggerAdminNavigation["type"];
+  status?: SwaggerAdminNavigation["status"];
+};
+
+export type AdminNavigationList = {
+  items: AdminNavigation[];
+  total: number;
+};
+
 export type AdminSession = LoginResponseDto;
 
 export {
+  CreateNavigatorDtoStatusEnum,
+  CreateNavigatorDtoTypeEnum,
   GameCategoryResponseDtoStatusEnum,
+  NavigationResponseDtoStatusEnum,
+  NavigationResponseDtoTypeEnum,
   RoleEnum,
+  UpdateNavigatorDtoStatusEnum,
+  UpdateNavigatorDtoTypeEnum,
   UpdateAdminUserDtoRoleEnum,
 };
 
@@ -158,12 +208,54 @@ function createSwaggerClients(accessToken?: string) {
     users: new SwaggerUsersApi(httpClient),
     gameCategories: new SwaggerGameCategoriesApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
+    navigations: new SwaggerNavigationsApi(httpClient),
   };
 }
 
 function normalizeOptionalKeyword(keyword?: string) {
   const normalizedKeyword = keyword?.trim();
   return normalizedKeyword ? normalizedKeyword : undefined;
+}
+
+function normalizeAdminNavigation(
+  navigation: NavigationResponseDto,
+): AdminNavigation {
+  return {
+    ...navigation,
+    parentId:
+      typeof navigation.parentId === "number" ? navigation.parentId : null,
+    children: Array.isArray(navigation.children)
+      ? navigation.children.map(normalizeAdminNavigation)
+      : [],
+  };
+}
+
+function toSwaggerCreateNavigationInput(
+  input: SaveAdminNavigationInput,
+): CreateNavigatorDto {
+  return {
+    ...input,
+    type: input.type as unknown as CreateNavigatorDto["type"],
+    status: input.status as unknown as CreateNavigatorDto["status"],
+    parentId:
+      input.parentId === null || input.parentId === undefined
+        ? undefined
+        : (input.parentId as unknown as CreateNavigatorDto["parentId"]),
+  };
+}
+
+function toSwaggerUpdateNavigationInput(
+  input: UpdateAdminNavigationInput,
+): UpdateNavigatorDto {
+  return {
+    ...input,
+    type: input.type as unknown as UpdateNavigatorDto["type"],
+    status: input.status as unknown as UpdateNavigatorDto["status"],
+    parentId:
+      input.parentId === null || input.parentId === undefined
+        ? undefined
+        : (input.parentId as unknown as UpdateNavigatorDto["parentId"]),
+  };
 }
 
 function extractErrorMessage(payload: unknown) {
@@ -532,6 +624,86 @@ export async function deleteAdminGame(accessToken: string, gameId: number) {
   return requestFromSwagger(() =>
     games.adminGameControllerDeleteGame({
       id: gameId,
+    }),
+  );
+}
+
+export async function fetchAdminNavigations(
+  accessToken: string,
+  params: Omit<
+    AdminNavigationsControllerGetNavigationsParams,
+    "type" | "status"
+  > & {
+    type?: AdminNavigation["type"] | "all";
+    status?: AdminNavigation["status"] | "all";
+  } = {},
+) {
+  const { navigations } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    navigations.adminNavigationsControllerGetNavigations({
+      keyword: normalizeOptionalKeyword(params.keyword),
+      type:
+        params.type && params.type !== "all"
+          ? (params.type as unknown as AdminNavigationsControllerGetNavigationsParams["type"])
+          : undefined,
+      status:
+        params.status && params.status !== "all"
+          ? (params.status as unknown as AdminNavigationsControllerGetNavigationsParams["status"])
+          : undefined,
+      parentId: params.parentId,
+    }),
+  );
+
+  return {
+    total: response.total,
+    items: response.items.map(normalizeAdminNavigation),
+  } satisfies AdminNavigationList;
+}
+
+export async function createAdminNavigation(
+  accessToken: string,
+  input: SaveAdminNavigationInput,
+) {
+  const { navigations } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    navigations.adminNavigationsControllerCreateNavigation(
+      toSwaggerCreateNavigationInput(input),
+    ),
+  );
+
+  return normalizeAdminNavigation(response);
+}
+
+export async function updateAdminNavigation(
+  accessToken: string,
+  navigationId: number,
+  input: UpdateAdminNavigationInput,
+) {
+  const { navigations } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    navigations.adminNavigationsControllerUpdateNavigation(
+      {
+        id: navigationId,
+      },
+      toSwaggerUpdateNavigationInput(input),
+    ),
+  );
+
+  return normalizeAdminNavigation(response);
+}
+
+export async function deleteAdminNavigation(
+  accessToken: string,
+  navigationId: number,
+) {
+  const { navigations } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    navigations.adminNavigationsControllerDeleteNavigation({
+      id: navigationId,
     }),
   );
 }

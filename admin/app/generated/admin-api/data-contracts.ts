@@ -185,6 +185,88 @@ export interface UpdateGameDto {
   iconUrl?: string;
 }
 
+export interface NavigationResponseDto {
+  /** @example 1 */
+  id: number;
+  /** @example "电子竞技" */
+  name: string;
+  /** @example "/game/esports" */
+  path: string;
+  /** @example "前台电子竞技业务导航入口" */
+  description: string;
+  /** @example "🎮" */
+  icon: string;
+  /** @example "顶部导航" */
+  type: NavigationResponseDtoTypeEnum;
+  /** @example "展示中" */
+  status: NavigationResponseDtoStatusEnum;
+  /** @example 10 */
+  sort: number;
+  /** @example null */
+  parentId: object | null;
+  /**
+   * 1 为一级导航，2 为二级导航
+   * @example 1
+   */
+  level: number;
+  /** 二级导航列表，仅一级导航返回非空数组 */
+  children: NavigationResponseDto[];
+  /** @example "2026-05-16T08:00:00.000Z" */
+  createdAt: string;
+  /** @example "2026-05-16T09:00:00.000Z" */
+  updatedAt: string;
+}
+
+export interface CreateNavigatorDto {
+  /** @example "电子竞技" */
+  name: string;
+  /** @example "/game/esports" */
+  path: string;
+  /** @example "前台电子竞技业务导航入口" */
+  description?: string;
+  /** @example "🎮" */
+  icon?: string;
+  /** @example "顶部导航" */
+  type: CreateNavigatorDtoTypeEnum;
+  /** @example "展示中" */
+  status?: CreateNavigatorDtoStatusEnum;
+  /**
+   * @default 0
+   * @example 10
+   */
+  sort?: number;
+  /**
+   * 所属一级导航 ID
+   * @example 1
+   */
+  parentId?: object;
+}
+
+export interface UpdateNavigatorDto {
+  /** @example "电子竞技" */
+  name?: string;
+  /** @example "/game/esports" */
+  path?: string;
+  /** @example "前台电子竞技业务导航入口" */
+  description?: string;
+  /** @example "🎮" */
+  icon?: string;
+  /** @example "顶部导航" */
+  type?: UpdateNavigatorDtoTypeEnum;
+  /** @example "展示中" */
+  status?: UpdateNavigatorDtoStatusEnum;
+  /**
+   * @default 0
+   * @example 10
+   */
+  sort?: number;
+  /**
+   * 所属一级导航 ID
+   * @example 1
+   */
+  parentId?: object;
+}
+
 /** @example "admin" */
 export enum SafeUserDtoRoleEnum {
   User = "user",
@@ -218,6 +300,45 @@ export enum UpdateGameCategoryDtoStatusEnum {
   Value已启用 = "已启用",
   Value待调整 = "待调整",
   Value已停用 = "已停用",
+}
+
+/** @example "顶部导航" */
+export enum NavigationResponseDtoTypeEnum {
+  Value顶部导航 = "顶部导航",
+  Value侧边导航 = "侧边导航",
+  Value快捷入口 = "快捷入口",
+}
+
+/** @example "展示中" */
+export enum NavigationResponseDtoStatusEnum {
+  Value展示中 = "展示中",
+  Value隐藏中 = "隐藏中",
+}
+
+/** @example "顶部导航" */
+export enum CreateNavigatorDtoTypeEnum {
+  Value顶部导航 = "顶部导航",
+  Value侧边导航 = "侧边导航",
+  Value快捷入口 = "快捷入口",
+}
+
+/** @example "展示中" */
+export enum CreateNavigatorDtoStatusEnum {
+  Value展示中 = "展示中",
+  Value隐藏中 = "隐藏中",
+}
+
+/** @example "顶部导航" */
+export enum UpdateNavigatorDtoTypeEnum {
+  Value顶部导航 = "顶部导航",
+  Value侧边导航 = "侧边导航",
+  Value快捷入口 = "快捷入口",
+}
+
+/** @example "展示中" */
+export enum UpdateNavigatorDtoStatusEnum {
+  Value展示中 = "展示中",
+  Value隐藏中 = "隐藏中",
 }
 
 export interface AdminUsersControllerGetUsersParams {
@@ -306,5 +427,57 @@ export interface AdminGameControllerUpdateGameParams {
 }
 
 export interface AdminGameControllerDeleteGameParams {
+  id: number;
+}
+
+export interface AdminNavigationsControllerGetNavigationsParams {
+  /** @example "关键词" */
+  keyword?: string;
+  /** @example "顶部导航" */
+  type?: TypeEnum;
+  /** @example "展示中" */
+  status?: StatusEnum1;
+  /**
+   * 按父级导航筛选
+   * @example 1
+   */
+  parentId?: number;
+}
+
+/** @example "顶部导航" */
+export enum TypeEnum {
+  Value顶部导航 = "顶部导航",
+  Value侧边导航 = "侧边导航",
+  Value快捷入口 = "快捷入口",
+}
+
+/** @example "展示中" */
+export enum StatusEnum1 {
+  Value展示中 = "展示中",
+  Value隐藏中 = "隐藏中",
+}
+
+/** @example "顶部导航" */
+export enum AdminNavigationsControllerGetNavigationsParams1TypeEnum {
+  Value顶部导航 = "顶部导航",
+  Value侧边导航 = "侧边导航",
+  Value快捷入口 = "快捷入口",
+}
+
+/** @example "展示中" */
+export enum AdminNavigationsControllerGetNavigationsParams1StatusEnum {
+  Value展示中 = "展示中",
+  Value隐藏中 = "隐藏中",
+}
+
+export interface AdminNavigationsControllerGetNavigationParams {
+  id: number;
+}
+
+export interface AdminNavigationsControllerUpdateNavigationParams {
+  id: number;
+}
+
+export interface AdminNavigationsControllerDeleteNavigationParams {
   id: number;
 }

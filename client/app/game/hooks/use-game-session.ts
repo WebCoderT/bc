@@ -10,6 +10,12 @@ import {
   type AuthUser,
   writeStoredSession,
 } from "../../lib/auth";
+import { fetchMemberNavigations } from "../../lib/client-api";
+import {
+  gameNavigationSections,
+  mapNavigationsToGameSections,
+  type GameNavigationSection,
+} from "../navigation";
 
 /**
  * 统一处理 `/game` 区域的登录态读取和退出逻辑。
@@ -21,6 +27,9 @@ export function useGameSession() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [navigationSections, setNavigationSections] = useState<
+    GameNavigationSection[]
+  >(gameNavigationSections);
 
   useEffect(() => {
     /**
@@ -38,9 +47,17 @@ export function useGameSession() {
 
         try {
           const refreshedSession = await refreshStoredSession(storedSession);
+          const navigationResult = await fetchMemberNavigations(
+            storedSession.accessToken,
+          ).catch(() => null);
 
           writeStoredSession(refreshedSession);
           setUser(refreshedSession.user);
+          setNavigationSections(
+            navigationResult
+              ? mapNavigationsToGameSections(navigationResult.items)
+              : gameNavigationSections,
+          );
           setIsReady(true);
         } catch {
           clearStoredSession();
@@ -77,6 +94,7 @@ export function useGameSession() {
 
   return {
     isReady,
+    navigationSections,
     user,
     walletSummary,
     logout,
