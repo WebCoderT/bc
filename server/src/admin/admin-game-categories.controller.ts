@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IdDataDto } from '../common/dto/id-data.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -44,6 +44,7 @@ export class AdminGameCategoriesController {
 
   @Post()
   @ApiOperation({ summary: '管理员新增游戏分类' })
+  @ApiBody({ type: CreateGameCategoryDto, description: '新增游戏分类参数' })
   @ApiCreatedDataResponse(GameCategoryResponseDto, {
     messageExample: '游戏分类创建成功',
   })
@@ -60,6 +61,7 @@ export class AdminGameCategoriesController {
 
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改游戏分类' })
+  @ApiBody({ type: UpdateGameCategoryDto, description: '修改游戏分类参数' })
   @ApiOkDataResponse(GameCategoryResponseDto, {
     messageExample: '游戏分类更新成功',
   })

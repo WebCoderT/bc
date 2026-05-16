@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IdDataDto } from '../common/dto/id-data.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -44,6 +44,7 @@ export class AdminGameController {
 
   @Post()
   @ApiOperation({ summary: '管理员新增游戏' })
+  @ApiBody({ type: CreateGameDto, description: '新增游戏参数' })
   @ApiCreatedDataResponse(GameResponseDto, { messageExample: '游戏创建成功' })
   async createGame(@Body() createGameDto: CreateGameDto) {
     return {
@@ -54,6 +55,7 @@ export class AdminGameController {
 
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改游戏' })
+  @ApiBody({ type: UpdateGameDto, description: '修改游戏参数' })
   @ApiOkDataResponse(GameResponseDto, { messageExample: '游戏更新成功' })
   async updateGame(
     @Param('id', ParseIntPipe) id: number,

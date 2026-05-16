@@ -8,7 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -39,6 +39,7 @@ export class AdminUsersController {
 
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改用户信息' })
+  @ApiBody({ type: UpdateAdminUserDto, description: '修改用户参数' })
   @ApiOkDataResponse(SafeUserDto, { messageExample: '用户信息更新成功' })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,

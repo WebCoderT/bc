@@ -10,13 +10,6 @@
  * ---------------------------------------------------------------
  */
 
-export interface RegisterDto {
-  /** @example "new_user" */
-  username: string;
-  /** @example "StrongPass123" */
-  password: string;
-}
-
 export interface SafeUserDto {
   /** @example 1 */
   id: number;
@@ -36,16 +29,10 @@ export interface SafeUserDto {
   createdAt: string;
 }
 
-export interface RegisterResponseDto {
-  /** @example "注册成功" */
-  message: string;
-  user: SafeUserDto;
-}
-
-export interface LoginDto {
-  /** @example "admin_root" */
+export interface RegisterDto {
+  /** @example "new_user" */
   username: string;
-  /** @example "Admin@123" */
+  /** @example "StrongPass123" */
   password: string;
 }
 
@@ -55,22 +42,11 @@ export interface LoginResponseDto {
   user: SafeUserDto;
 }
 
-export interface ProfileResponseDto {
-  /** @example "JWT 校验通过" */
-  message: string;
-  user: SafeUserDto;
-}
-
-export interface PaginatedAdminUsersResponseDto {
-  items: SafeUserDto[];
-  /** @example 20 */
-  total: number;
-  /** @example 1 */
-  page: number;
-  /** @example 10 */
-  pageSize: number;
-  /** @example 2 */
-  totalPages: number;
+export interface LoginDto {
+  /** @example "admin_root" */
+  username: string;
+  /** @example "Admin@123" */
+  password: string;
 }
 
 export interface UpdateAdminUserDto {
@@ -86,12 +62,6 @@ export interface UpdateAdminUserDto {
   bonusAmount: number;
   /** @example "2026-05-14T08:30:00.000Z" */
   createdAt: string;
-}
-
-export interface UpdateAdminUserResponseDto {
-  /** @example "用户信息更新成功" */
-  message: string;
-  user: SafeUserDto;
 }
 
 export interface GameCategoryResponseDto {
@@ -117,12 +87,6 @@ export interface GameCategoryResponseDto {
   updatedAt: string;
 }
 
-export interface GameCategoryListResponseDto {
-  items: GameCategoryResponseDto[];
-  /** @example 4 */
-  total: number;
-}
-
 export interface CreateGameCategoryDto {
   /** @example "卡牌策略" */
   name: string;
@@ -142,12 +106,6 @@ export interface CreateGameCategoryDto {
   heat?: number;
   /** @example "已启用" */
   status?: CreateGameCategoryDtoStatusEnum;
-}
-
-export interface GameCategoryMutationResponseDto {
-  /** @example "游戏分类更新成功" */
-  message: string;
-  category: GameCategoryResponseDto;
 }
 
 export interface UpdateGameCategoryDto {
@@ -171,11 +129,60 @@ export interface UpdateGameCategoryDto {
   status?: UpdateGameCategoryDtoStatusEnum;
 }
 
-export interface DeleteGameCategoryResponseDto {
+export interface IdDataDto {
   /** @example 1 */
   id: number;
-  /** @example "游戏分类删除成功" */
-  message: string;
+}
+
+export interface GameResponseDto {
+  /** @example 1 */
+  id: number;
+  /** @example "星穹远征" */
+  label: string;
+  /** @example "高沉浸叙事与多人协作玩法结合的太空冒险游戏。" */
+  description: string;
+  /** @example "https://example.com/game-icon.png" */
+  iconUrl: string;
+  /** @example "2026-05-16T06:30:00.000Z" */
+  createdAt: string;
+  /** @example "2026-05-16T08:00:00.000Z" */
+  updatedAt: string;
+}
+
+export interface CreateGameDto {
+  /**
+   * 游戏名称
+   * @example "星穹远征"
+   */
+  label: string;
+  /**
+   * 游戏描述
+   * @example "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+   */
+  description: string;
+  /**
+   * 游戏图标 URL
+   * @example "https://example.com/game-icon.png"
+   */
+  iconUrl?: string;
+}
+
+export interface UpdateGameDto {
+  /**
+   * 游戏名称
+   * @example "星穹远征"
+   */
+  label?: string;
+  /**
+   * 游戏描述
+   * @example "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+   */
+  description?: string;
+  /**
+   * 游戏图标 URL
+   * @example "https://example.com/game-icon.png"
+   */
+  iconUrl?: string;
 }
 
 /** @example "admin" */
@@ -213,7 +220,7 @@ export enum UpdateGameCategoryDtoStatusEnum {
   Value已停用 = "已停用",
 }
 
-export interface AdminControllerGetUsersParams {
+export interface AdminUsersControllerGetUsersParams {
   /**
    * @default 1
    * @example 1
@@ -224,10 +231,10 @@ export interface AdminControllerGetUsersParams {
    * @example 10
    */
   pageSize?: number;
+  /** @example "关键词" */
+  keyword?: string;
   /** @example "admin" */
   role?: RoleEnum;
-  /** @example "admin" */
-  keyword?: string;
 }
 
 /** @example "admin" */
@@ -238,18 +245,18 @@ export enum RoleEnum {
 }
 
 /** @example "admin" */
-export enum AdminControllerGetUsersParams1RoleEnum {
+export enum AdminUsersControllerGetUsersParams1RoleEnum {
   User = "user",
   Vip = "vip",
   Admin = "admin",
 }
 
-export interface AdminControllerUpdateUserParams {
+export interface AdminUsersControllerUpdateUserParams {
   id: number;
 }
 
-export interface AdminControllerGetGameCategoriesParams {
-  /** @example "策略" */
+export interface AdminGameCategoriesControllerGetGameCategoriesParams {
+  /** @example "关键词" */
   keyword?: string;
   /** @example "已启用" */
   status?: StatusEnum;
@@ -265,16 +272,39 @@ export enum StatusEnum {
 }
 
 /** @example "已启用" */
-export enum AdminControllerGetGameCategoriesParams1StatusEnum {
+export enum AdminGameCategoriesControllerGetGameCategoriesParams1StatusEnum {
   Value已启用 = "已启用",
   Value待调整 = "待调整",
   Value已停用 = "已停用",
 }
 
-export interface AdminControllerUpdateGameCategoryParams {
+export interface AdminGameCategoriesControllerUpdateGameCategoryParams {
   id: number;
 }
 
-export interface AdminControllerDeleteGameCategoryParams {
+export interface AdminGameCategoriesControllerDeleteGameCategoryParams {
+  id: number;
+}
+
+export interface AdminGameControllerGetGamesParams {
+  /**
+   * @default 1
+   * @example 1
+   */
+  page?: number;
+  /**
+   * @default 10
+   * @example 10
+   */
+  pageSize?: number;
+  /** @example "星穹" */
+  keyword?: string;
+}
+
+export interface AdminGameControllerUpdateGameParams {
+  id: number;
+}
+
+export interface AdminGameControllerDeleteGameParams {
   id: number;
 }

@@ -4,11 +4,17 @@ import { GameCategoriesModule } from '../game-categories/game-categories.module'
 import { GameModule } from '../game/game.module';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersModule } from '../users/users.module';
-import { MemberController } from './member.controller';
+import { MemberDashboardController } from './member-dashboard.controller';
+import { MemberGameCategoriesController } from './member-game-categories.controller';
+import { MemberGamesController } from './member-games.controller';
 
 @Module({
   imports: [AuthModule, UsersModule, GameCategoriesModule, GameModule],
-  controllers: [MemberController],
+  controllers: [
+    MemberDashboardController,
+    MemberGameCategoriesController,
+    MemberGamesController,
+  ],
   providers: [RolesGuard],
 })
 export class MemberModule {}

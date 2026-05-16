@@ -60,8 +60,8 @@ export default function DashboardRoute() {
       cancelled = true;
     };
   }, [logout]);
-
-  const displayActivities = announcements.length
+  console.log(announcements);
+  const displayActivities = announcements?.length
     ? announcements.map((item, index) => ({
         title: item,
         time: "来自公开公告接口",
@@ -143,7 +143,7 @@ export default function DashboardRoute() {
               <p className="mt-2">
                 管理文档：
                 <span className="font-medium text-slate-900">
-                  {serviceStatus.swagger.admin}
+                  {serviceStatus.swagger?.admin}
                 </span>
               </p>
             </div>

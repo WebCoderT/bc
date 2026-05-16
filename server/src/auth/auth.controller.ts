@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -19,6 +19,7 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: '普通用户注册' })
+  @ApiBody({ type: RegisterDto, description: '注册参数' })
   @ApiCreatedDataResponse(SafeUserDto, { messageExample: '注册成功' })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -26,6 +27,7 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: '用户登录并获取 JWT' })
+  @ApiBody({ type: LoginDto, description: '登录参数' })
   @ApiCreatedDataResponse(LoginResponseDto)
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
