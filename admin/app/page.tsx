@@ -23,6 +23,5 @@ export default function Home() {
 
     router.replace("/dashboard");
   }, [router]);
-
   return <LoadingScreen title="正在进入后台..." />;
 }

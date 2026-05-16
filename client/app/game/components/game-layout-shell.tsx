@@ -45,7 +45,6 @@ export function GameLayoutShell({
    */
   const activeSection = getGameSectionByPath(pathname, navigationSections);
   const sideRoutes = activeSection.items;
-
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_84%,transparent)] backdrop-blur-xl">
@@ -99,10 +98,7 @@ export function GameLayoutShell({
         <aside className="hidden w-[248px] shrink-0 lg:block">
           <SurfaceCard className="sticky top-24 p-5" tone="card" padding="md">
             <div className="border-b border-[var(--border)] pb-4">
-              <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
-                LEFT NAV
-              </p>
-              <h2 className="mt-3 text-xl font-semibold">
+              <h2 className="text-xl font-semibold">
                 {activeSection.title}
               </h2>
             </div>

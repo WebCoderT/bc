@@ -2,15 +2,12 @@ import { Auth as SwaggerAuthApi } from "@/app/generated/api/Auth";
 import { Vip as SwaggerVipApi } from "@/app/generated/api/Vip";
 import { 导航查询 as SwaggerNavigationQueryApi } from "@/app/generated/api/导航查询";
 import { 用户中心 as SwaggerMemberDashboardApi } from "@/app/generated/api/用户中心";
-import { 游戏分类 as SwaggerGameCategoriesApi } from "@/app/generated/api/游戏分类";
 import { 游戏浏览 as SwaggerGamesApi } from "@/app/generated/api/游戏浏览";
 import {
-  type GameCategoryResponseDto,
   type GameResponseDto,
   type LoginDto,
   type LoginResponseDto,
   type MemberDashboardDataDto,
-  type MemberGameCategoriesControllerGetGameCategoriesParams,
   type MemberGamesControllerGetGameParams,
   type MemberGamesControllerGetGamesParams,
   type MemberNavigationsControllerGetNavigationsParams,
@@ -40,12 +37,9 @@ export type LoginInput = LoginDto;
 export type RegisterInput = RegisterDto;
 export type ClientMemberDashboard = MemberDashboardDataDto;
 export type ClientGame = GameResponseDto;
-export type ClientGameCategory = GameCategoryResponseDto;
 export type ClientVipInsights = VipInsightsDataDto;
 export type ClientGamesQuery = MemberGamesControllerGetGamesParams;
 export type ClientGameDetailQuery = MemberGamesControllerGetGameParams;
-export type ClientGameCategoriesQuery =
-  MemberGameCategoriesControllerGetGameCategoriesParams;
 export type ClientNavigation = Omit<
   NavigationResponseDto,
   "parentId" | "children"
@@ -117,7 +111,6 @@ function createSwaggerClients(accessToken?: string) {
   return {
     auth: new SwaggerAuthApi(httpClient),
     memberDashboard: new SwaggerMemberDashboardApi(httpClient),
-    gameCategories: new SwaggerGameCategoriesApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
     navigationQuery: new SwaggerNavigationQueryApi(httpClient),
     vip: new SwaggerVipApi(httpClient),
@@ -166,9 +159,9 @@ function normalizeClientApiError(error: unknown) {
 
   const status =
     typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    typeof (error as { status?: unknown }).status === "number"
+      error !== null &&
+      "status" in error &&
+      typeof (error as { status?: unknown }).status === "number"
       ? (error as { status: number }).status
       : 500;
 
@@ -344,22 +337,6 @@ export async function fetchMemberGame(accessToken: string, gameId: number) {
         format: "json",
       },
     ),
-  );
-}
-
-export async function fetchMemberGameCategories(
-  accessToken: string,
-  query: ClientGameCategoriesQuery = {},
-) {
-  const { gameCategories } = createSwaggerClients(accessToken);
-
-  return requestFromSwagger<{
-    items: GameCategoryResponseDto[];
-    total: number;
-  }>(() =>
-    gameCategories.memberGameCategoriesControllerGetGameCategories(query, {
-      format: "json",
-    }),
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { GameEditModal } from "@/app/components/admin/game-edit-modal";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
@@ -9,9 +9,13 @@ import { TableShell } from "@/app/components/admin/ui/table-shell";
 import {
   createAdminGame,
   deleteAdminGame,
+  fetchAdminNavigations,
   fetchAdminGames,
+  GameResponseDtoStatusEnum,
   isAdminAuthError,
+  NavigationResponseDtoTypeEnum,
   type AdminGame,
+  type AdminNavigation,
   type SaveAdminGameInput,
   type UpdateAdminGameInput,
   updateAdminGame,
@@ -31,6 +35,7 @@ export default function GamesRoute() {
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(1);
   const [games, setGames] = useState<AdminGame[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<AdminNavigation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [selectedGame, setSelectedGame] = useState<AdminGame | null>(null);
@@ -43,6 +48,31 @@ export default function GamesRoute() {
     pageSize: PAGE_SIZE,
     totalPages: 1,
   });
+
+  const categoryNameMap = useMemo(
+    () =>
+      new Map(categoryOptions.map((item) => [item.id, item.name] as const)),
+    [categoryOptions],
+  );
+
+  const loadCategoryOptions = useCallback(async () => {
+    try {
+      const response = await fetchAdminNavigations(session.accessToken, {
+        type: NavigationResponseDtoTypeEnum.Value侧边导航,
+        status: "all",
+      });
+
+      const flattened = response.items.flatMap((item) => [item, ...item.children]);
+      setCategoryOptions(flattened);
+    } catch (error) {
+      if (isAdminAuthError(error)) {
+        logout();
+        return;
+      }
+
+      setLoadError(error instanceof Error ? error.message : "读取游戏分类导航失败");
+    }
+  }, [logout, session.accessToken]);
 
   const loadGames = useCallback(async () => {
     try {
@@ -82,6 +112,16 @@ export default function GamesRoute() {
       window.clearTimeout(timeoutId);
     };
   }, [loadGames]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadCategoryOptions();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadCategoryOptions]);
 
   const handleSaveGame = async (
     input: SaveAdminGameInput | UpdateAdminGameInput,
@@ -202,6 +242,8 @@ export default function GamesRoute() {
             <thead className="bg-slate-50 text-slate-500">
               <tr>
                 <th className="px-4 py-3 font-medium">游戏</th>
+                <th className="px-4 py-3 font-medium">分类</th>
+                <th className="px-4 py-3 font-medium">状态</th>
                 <th className="px-4 py-3 font-medium">简介</th>
                 <th className="px-4 py-3 font-medium">图标</th>
                 <th className="px-4 py-3 font-medium">创建时间</th>
@@ -214,7 +256,7 @@ export default function GamesRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={6}
+                    colSpan={8}
                   >
                     正在读取游戏列表...
                   </td>
@@ -224,7 +266,7 @@ export default function GamesRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={6}
+                    colSpan={8}
                   >
                     当前筛选条件下暂无游戏。
                   </td>
@@ -242,6 +284,20 @@ export default function GamesRoute() {
                         ID: {item.id}
                       </p>
                     </div>
+                  </td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {categoryNameMap.get(item.category) ?? `导航 #${item.category}`}
+                  </td>
+                  <td className="px-4 py-4">
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+                        item.status === GameResponseDtoStatusEnum.Value运营中
+                          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                          : "bg-slate-100 text-slate-600 ring-slate-200"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
                   </td>
                   <td className="px-4 py-4 text-slate-600">
                     {getGamePreviewText(item)}
@@ -298,6 +354,7 @@ export default function GamesRoute() {
       {selectedGame || isCreating ? (
         <GameEditModal
           game={selectedGame}
+          categoryOptions={categoryOptions}
           isSubmitting={isSubmitting}
           submitError={submitError}
           onClose={closeModal}

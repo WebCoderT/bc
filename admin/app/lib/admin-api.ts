@@ -1,20 +1,17 @@
 import { Auth as SwaggerAuthApi } from "@/app/generated/admin-api/Auth";
 import { 用户管理 as SwaggerUsersApi } from "@/app/generated/admin-api/用户管理";
-import { 游戏分类管理 as SwaggerGameCategoriesApi } from "@/app/generated/admin-api/游戏分类管理";
 import { 游戏管理 as SwaggerGamesApi } from "@/app/generated/admin-api/游戏管理";
 import { 导航管理 as SwaggerNavigationsApi } from "@/app/generated/admin-api/导航管理";
 import {
   type AdminNavigationsControllerGetNavigationsParams,
-  type AdminGameCategoriesControllerGetGameCategoriesParams,
   type AdminGameControllerGetGamesParams,
   type AdminUsersControllerGetUsersParams,
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
-  type CreateGameCategoryDto,
   type CreateGameDto,
   type CreateNavigatorDto,
-  type GameCategoryResponseDto,
   type GameResponseDto,
+  GameResponseDtoStatusEnum,
   type LoginResponseDto,
   type NavigationResponseDto,
   NavigationResponseDtoStatusEnum,
@@ -22,12 +19,10 @@ import {
   RoleEnum,
   type SafeUserDto,
   type UpdateAdminUserDto,
-  type UpdateGameCategoryDto,
   type UpdateGameDto,
   type UpdateNavigatorDto,
   UpdateNavigatorDtoStatusEnum,
   UpdateNavigatorDtoTypeEnum,
-  GameCategoryResponseDtoStatusEnum,
   UpdateAdminUserDtoRoleEnum,
 } from "@/app/generated/admin-api/data-contracts";
 import {
@@ -47,10 +42,10 @@ type SwaggerMethod = (
 
 type SwaggerEnvelopeData<TMethod extends SwaggerMethod> =
   Awaited<ReturnType<TMethod>> extends HttpResponse<infer TData, unknown>
-    ? TData extends SwaggerEnvelope<infer TEnvelopeData>
-      ? TEnvelopeData
-      : never
-    : never;
+  ? TData extends SwaggerEnvelope<infer TEnvelopeData>
+  ? TEnvelopeData
+  : never
+  : never;
 
 export type AdminRole = SafeUserDto["role"];
 
@@ -64,23 +59,21 @@ export type PaginatedAdminUsers = SwaggerEnvelopeData<
 
 export type UpdateAdminUserInput = UpdateAdminUserDto;
 
-export type AdminCategoryStatus = GameCategoryResponseDto["status"];
-
-export type AdminGameCategory = GameCategoryResponseDto;
-
 export type AdminGame = GameResponseDto;
 
-export type SaveAdminGameCategoryInput = CreateGameCategoryDto;
-
-export type UpdateGameCategoryInput = UpdateGameCategoryDto;
+export type AdminGameStatus = GameResponseDto["status"];
 
 export type PaginatedAdminGames = SwaggerEnvelopeData<
   SwaggerGamesApi["adminGameControllerGetGames"]
 >;
 
-export type SaveAdminGameInput = CreateGameDto;
+export type SaveAdminGameInput = Omit<CreateGameDto, "status"> & {
+  status?: AdminGameStatus;
+};
 
-export type UpdateAdminGameInput = UpdateGameDto;
+export type UpdateAdminGameInput = Omit<UpdateGameDto, "status"> & {
+  status?: AdminGameStatus;
+};
 
 type SwaggerAdminNavigation = NavigationResponseDto;
 
@@ -120,7 +113,7 @@ export type AdminSession = LoginResponseDto;
 export {
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
-  GameCategoryResponseDtoStatusEnum,
+  GameResponseDtoStatusEnum,
   NavigationResponseDtoStatusEnum,
   NavigationResponseDtoTypeEnum,
   RoleEnum,
@@ -206,7 +199,6 @@ function createSwaggerClients(accessToken?: string) {
   return {
     auth: new SwaggerAuthApi(httpClient),
     users: new SwaggerUsersApi(httpClient),
-    gameCategories: new SwaggerGameCategoriesApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
     navigations: new SwaggerNavigationsApi(httpClient),
   };
@@ -287,9 +279,9 @@ function normalizeAdminApiError(error: unknown) {
 
   const status =
     typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    typeof (error as { status?: unknown }).status === "number"
+      error !== null &&
+      "status" in error &&
+      typeof (error as { status?: unknown }).status === "number"
       ? (error as { status: number }).status
       : 500;
 
@@ -506,74 +498,6 @@ export async function updateAdminUser(
       },
       input,
     ),
-  );
-}
-
-export async function fetchAdminGameCategories(
-  accessToken: string,
-  params: Omit<
-    AdminGameCategoriesControllerGetGameCategoriesParams,
-    "status"
-  > & {
-    status?:
-      | AdminGameCategoriesControllerGetGameCategoriesParams["status"]
-      | "all";
-    isRecommended?: boolean | "all";
-  } = {},
-) {
-  const { gameCategories } = createSwaggerClients(accessToken);
-
-  return requestFromSwagger(() =>
-    gameCategories.adminGameCategoriesControllerGetGameCategories({
-      keyword: normalizeOptionalKeyword(params.keyword),
-      status:
-        params.status && params.status !== "all" ? params.status : undefined,
-      isRecommended:
-        typeof params.isRecommended === "boolean"
-          ? params.isRecommended
-          : undefined,
-    }),
-  );
-}
-
-export async function createAdminGameCategory(
-  accessToken: string,
-  input: SaveAdminGameCategoryInput,
-) {
-  const { gameCategories } = createSwaggerClients(accessToken);
-
-  return requestFromSwagger(() =>
-    gameCategories.adminGameCategoriesControllerCreateGameCategory(input),
-  );
-}
-
-export async function updateAdminGameCategory(
-  accessToken: string,
-  categoryId: number,
-  input: UpdateGameCategoryDto,
-) {
-  const { gameCategories } = createSwaggerClients(accessToken);
-
-  return requestFromSwagger(() =>
-    gameCategories.adminGameCategoriesControllerUpdateGameCategory(
-      {
-        id: categoryId,
-      },
-      input,
-    ),
-  );
-}
-
-export async function deleteAdminGameCategory(
-  accessToken: string,
-  categoryId: number,
-) {
-  const { gameCategories } = createSwaggerClients(accessToken);
-
-  return requestFromSwagger(() =>
-    gameCategories.adminGameCategoriesControllerDeleteGameCategory({
-      id: categoryId,
-    }),
   );
 }
 

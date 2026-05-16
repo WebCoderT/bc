@@ -7,13 +7,12 @@
 - 用户管理
 - 导航管理
 - 游戏管理
-- 游戏分类管理
 
 ## 技术方案
 
 - 使用 Next App Router 的文件路径直接映射后台路由。
 - 使用 `app/(admin)/layout.tsx` 共享后台布局，不额外增加 URL 路径层级。
-- 使用 Swagger 自动生成前端请求代码，并在 `app/lib/admin-api.ts` 中统一封装登录、鉴权、用户管理和游戏分类管理请求。
+- 使用 Swagger 自动生成前端请求代码，并在 `app/lib/admin-api.ts` 中统一封装登录、鉴权、用户管理、游戏管理与导航管理请求。
 - 使用 `localStorage` 存储管理员会话与 JWT，并通过路由守卫限制未登录访问。
 - 本地开发默认使用 Next 同源代理 `/api` 转发到后端，避免浏览器跨域问题。
 - 可通过 `ADMIN_API_PROXY_TARGET` 配置本地代理目标，默认指向 `http://localhost:8000`。
@@ -47,10 +46,6 @@ npm run build
 - `GET /api/public/announcements`
 - `GET /api/admin/users`
 - `PATCH /api/admin/users/:id`
-- `GET /api/admin/game-categories`
-- `POST /api/admin/game-categories`
-- `PATCH /api/admin/game-categories/:id`
-- `DELETE /api/admin/game-categories/:id`
 
 ## Swagger 文档
 

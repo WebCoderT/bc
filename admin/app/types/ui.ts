@@ -1,4 +1,4 @@
-import type { AdminGameCategory, AdminSafeUser } from "@/app/lib/admin-api";
+import type { AdminSafeUser } from "@/app/lib/admin-api";
 
 export type RouteItem = {
   label: string;
@@ -19,8 +19,6 @@ export type StatItem = {
 export type UserItem = AdminSafeUser;
 
 export type GameStatus = "运营中" | "预约中" | "已下线";
-
-export type CategoryStatus = AdminGameCategory["status"];
 
 export type NavigationItem = {
   id: number;
@@ -43,8 +41,6 @@ export type GameItem = {
   heat: number;
   updatedAt: string;
 };
-
-export type CategoryItem = AdminGameCategory;
 
 export type ActivityItem = {
   title: string;

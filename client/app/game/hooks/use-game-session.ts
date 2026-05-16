@@ -12,7 +12,6 @@ import {
 } from "../../lib/auth";
 import { fetchMemberNavigations } from "../../lib/client-api";
 import {
-  gameNavigationSections,
   mapNavigationsToGameSections,
   type GameNavigationSection,
 } from "../navigation";
@@ -29,7 +28,7 @@ export function useGameSession() {
   const [isReady, setIsReady] = useState(false);
   const [navigationSections, setNavigationSections] = useState<
     GameNavigationSection[]
-  >(gameNavigationSections);
+  >([]);
 
   useEffect(() => {
     /**
@@ -56,7 +55,7 @@ export function useGameSession() {
           setNavigationSections(
             navigationResult
               ? mapNavigationsToGameSections(navigationResult.items)
-              : gameNavigationSections,
+              : [],
           );
           setIsReady(true);
         } catch {

@@ -55,29 +55,6 @@ export interface MemberDashboardDataDto {
   abilities: string[];
 }
 
-export interface GameCategoryResponseDto {
-  /** @example 1 */
-  id: number;
-  /** @example "卡牌策略" */
-  name: string;
-  /** @example "长线养成与对战策略玩法集合" */
-  description: string;
-  /** @example ["养成","策略","回合制"] */
-  tags: string[];
-  /** @example true */
-  isRecommended: boolean;
-  /** @example 95 */
-  heat: number;
-  /** @example "已启用" */
-  status: GameCategoryResponseDtoStatusEnum;
-  /** @example 12 */
-  gameCount: number;
-  /** @example "2026-05-15T08:00:00.000Z" */
-  createdAt: string;
-  /** @example "2026-05-15T08:30:00.000Z" */
-  updatedAt: string;
-}
-
 export interface GameResponseDto {
   /** @example 1 */
   id: number;
@@ -138,13 +115,6 @@ export enum SafeUserDtoRoleEnum {
   Admin = "admin",
 }
 
-/** @example "已启用" */
-export enum GameCategoryResponseDtoStatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
-}
-
 /** @example "顶部导航" */
 export enum NavigationResponseDtoTypeEnum {
   Value顶部导航 = "顶部导航",
@@ -156,29 +126,6 @@ export enum NavigationResponseDtoTypeEnum {
 export enum NavigationResponseDtoStatusEnum {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",
-}
-
-export interface MemberGameCategoriesControllerGetGameCategoriesParams {
-  /** @example "关键词" */
-  keyword?: string;
-  /** @example "已启用" */
-  status?: StatusEnum;
-  /** @example true */
-  isRecommended?: boolean;
-}
-
-/** @example "已启用" */
-export enum StatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
-}
-
-/** @example "已启用" */
-export enum MemberGameCategoriesControllerGetGameCategoriesParams1StatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
 }
 
 export interface MemberGamesControllerGetGamesParams {

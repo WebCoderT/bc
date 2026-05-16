@@ -11,11 +11,8 @@
  */
 
 import {
-  AdminControllerGetGameCategoriesParams1StatusEnum,
   AdminControllerGetUsersParams1RoleEnum,
-  CreateGameCategoryDto,
   UpdateAdminUserDto,
-  UpdateGameCategoryDto,
 } from "./data-contracts";
 
 export namespace Admin {
@@ -66,85 +63,6 @@ export namespace Admin {
     };
     export type RequestQuery = {};
     export type RequestBody = UpdateAdminUserDto;
-    export type RequestHeaders = {};
-    export type ResponseBody = void;
-  }
-
-  /**
-   * No description
-   * @tags admin
-   * @name AdminControllerGetGameCategories
-   * @summary 管理员查看游戏分类列表
-   * @request GET:/api/admin/game-categories
-   * @secure
-   * @response `200` `void`
-   */
-  export namespace AdminControllerGetGameCategories {
-    export type RequestParams = {};
-    export type RequestQuery = {
-      /** @example "策略" */
-      keyword?: string;
-      /** @example "已启用" */
-      status?: AdminControllerGetGameCategoriesParams1StatusEnum;
-      /** @example true */
-      isRecommended?: boolean;
-    };
-    export type RequestBody = never;
-    export type RequestHeaders = {};
-    export type ResponseBody = void;
-  }
-
-  /**
-   * No description
-   * @tags admin
-   * @name AdminControllerCreateGameCategory
-   * @summary 管理员新增游戏分类
-   * @request POST:/api/admin/game-categories
-   * @secure
-   * @response `201` `void`
-   */
-  export namespace AdminControllerCreateGameCategory {
-    export type RequestParams = {};
-    export type RequestQuery = {};
-    export type RequestBody = CreateGameCategoryDto;
-    export type RequestHeaders = {};
-    export type ResponseBody = void;
-  }
-
-  /**
-   * No description
-   * @tags admin
-   * @name AdminControllerUpdateGameCategory
-   * @summary 管理员修改游戏分类
-   * @request PATCH:/api/admin/game-categories/{id}
-   * @secure
-   * @response `200` `void`
-   */
-  export namespace AdminControllerUpdateGameCategory {
-    export type RequestParams = {
-      id: number;
-    };
-    export type RequestQuery = {};
-    export type RequestBody = UpdateGameCategoryDto;
-    export type RequestHeaders = {};
-    export type ResponseBody = void;
-  }
-
-  /**
-   * No description
-   * @tags admin
-   * @name AdminControllerDeleteGameCategory
-   * @summary 管理员删除游戏分类
-   * @request DELETE:/api/admin/game-categories/{id}
-   * @secure
-   * @response `200` `void`
-   */
-  export namespace AdminControllerDeleteGameCategory {
-    export type RequestParams = {
-      id: number;
-    };
-    export type RequestQuery = {};
-    export type RequestBody = never;
     export type RequestHeaders = {};
     export type ResponseBody = void;
   }

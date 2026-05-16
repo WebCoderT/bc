@@ -64,71 +64,6 @@ export interface UpdateAdminUserDto {
   createdAt: string;
 }
 
-export interface GameCategoryResponseDto {
-  /** @example 1 */
-  id: number;
-  /** @example "卡牌策略" */
-  name: string;
-  /** @example "长线养成与对战策略玩法集合" */
-  description: string;
-  /** @example ["养成","策略","回合制"] */
-  tags: string[];
-  /** @example true */
-  isRecommended: boolean;
-  /** @example 95 */
-  heat: number;
-  /** @example "已启用" */
-  status: GameCategoryResponseDtoStatusEnum;
-  /** @example 12 */
-  gameCount: number;
-  /** @example "2026-05-15T08:00:00.000Z" */
-  createdAt: string;
-  /** @example "2026-05-15T08:30:00.000Z" */
-  updatedAt: string;
-}
-
-export interface CreateGameCategoryDto {
-  /** @example "卡牌策略" */
-  name: string;
-  /** @example "长线养成与对战策略玩法集合" */
-  description: string;
-  /** @example ["养成","策略","回合制"] */
-  tags?: string[];
-  /**
-   * @default false
-   * @example true
-   */
-  isRecommended?: boolean;
-  /**
-   * @default 0
-   * @example 95
-   */
-  heat?: number;
-  /** @example "已启用" */
-  status?: CreateGameCategoryDtoStatusEnum;
-}
-
-export interface UpdateGameCategoryDto {
-  /** @example "卡牌策略" */
-  name?: string;
-  /** @example "长线养成与对战策略玩法集合" */
-  description?: string;
-  /** @example ["养成","策略","回合制"] */
-  tags?: string[];
-  /**
-   * @default false
-   * @example true
-   */
-  isRecommended?: boolean;
-  /**
-   * @default 0
-   * @example 95
-   */
-  heat?: number;
-  /** @example "已启用" */
-  status?: UpdateGameCategoryDtoStatusEnum;
-}
-
 export interface IdDataDto {
   /** @example 1 */
   id: number;
@@ -143,6 +78,10 @@ export interface GameResponseDto {
   description: string;
   /** @example "https://example.com/game-icon.png" */
   iconUrl: string;
+  /** @example 1 */
+  category: number;
+  /** @example "运营中" */
+  status: GameResponseDtoStatusEnum;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */
@@ -165,6 +104,17 @@ export interface CreateGameDto {
    * @example "https://example.com/game-icon.png"
    */
   iconUrl?: string;
+  /**
+   * 游戏分类，表示游戏所属的左侧导航 ID
+   * @example 1
+   */
+  category: number;
+  /**
+   * 游戏状态
+   * @default "运营中"
+   * @example "运营中"
+   */
+  status?: GameResponseDtoStatusEnum;
 }
 
 export interface UpdateGameDto {
@@ -183,6 +133,13 @@ export interface UpdateGameDto {
    * @example "https://example.com/game-icon.png"
    */
   iconUrl?: string;
+  /**
+   * 游戏分类，表示游戏所属的左侧导航 ID
+   * @example 1
+   */
+  category?: number;
+  /** @example "运营中" */
+  status?: GameResponseDtoStatusEnum;
 }
 
 export interface NavigationResponseDto {
@@ -281,25 +238,22 @@ export enum UpdateAdminUserDtoRoleEnum {
   Admin = "admin",
 }
 
-/** @example "已启用" */
-export enum GameCategoryResponseDtoStatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
+/** @example "运营中" */
+export enum GameResponseDtoStatusEnum {
+  Value运营中 = "运营中",
+  Value下线 = "下线",
 }
 
-/** @example "已启用" */
-export enum CreateGameCategoryDtoStatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
+/** @example "运营中" */
+export enum CreateGameDtoStatusEnum {
+  Value运营中 = "运营中",
+  Value下线 = "下线",
 }
 
-/** @example "已启用" */
-export enum UpdateGameCategoryDtoStatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
+/** @example "运营中" */
+export enum UpdateGameDtoStatusEnum {
+  Value运营中 = "运营中",
+  Value下线 = "下线",
 }
 
 /** @example "顶部导航" */
@@ -373,37 +327,6 @@ export enum AdminUsersControllerGetUsersParams1RoleEnum {
 }
 
 export interface AdminUsersControllerUpdateUserParams {
-  id: number;
-}
-
-export interface AdminGameCategoriesControllerGetGameCategoriesParams {
-  /** @example "关键词" */
-  keyword?: string;
-  /** @example "已启用" */
-  status?: StatusEnum;
-  /** @example true */
-  isRecommended?: boolean;
-}
-
-/** @example "已启用" */
-export enum StatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
-}
-
-/** @example "已启用" */
-export enum AdminGameCategoriesControllerGetGameCategoriesParams1StatusEnum {
-  Value已启用 = "已启用",
-  Value待调整 = "待调整",
-  Value已停用 = "已停用",
-}
-
-export interface AdminGameCategoriesControllerUpdateGameCategoryParams {
-  id: number;
-}
-
-export interface AdminGameCategoriesControllerDeleteGameCategoryParams {
   id: number;
 }
 

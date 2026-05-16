@@ -4,34 +4,49 @@ import { useEffect, useState } from "react";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import type {
   AdminGame,
+  AdminGameStatus,
+  AdminNavigation,
   SaveAdminGameInput,
   UpdateAdminGameInput,
 } from "@/app/lib/admin-api";
+import { GameResponseDtoStatusEnum } from "@/app/lib/admin-api";
 
 type GameFormInput = SaveAdminGameInput | UpdateAdminGameInput;
 
-function createEmptyGameInput(): SaveAdminGameInput {
+type GameFormState = {
+  label: string;
+  description: string;
+  iconUrl: string;
+  category: string;
+  status: AdminGameStatus;
+};
+
+function createEmptyGameInput(): GameFormState {
   return {
     label: "",
     description: "",
     iconUrl: "",
+    category: "",
+    status: GameResponseDtoStatusEnum.Value运营中,
   };
 }
 
 export function GameEditModal({
   game,
+  categoryOptions,
   isSubmitting,
   submitError,
   onClose,
   onSubmit,
 }: {
   game?: AdminGame | null;
+  categoryOptions: AdminNavigation[];
   isSubmitting: boolean;
   submitError: string;
   onClose: () => void;
   onSubmit: (input: GameFormInput) => Promise<void>;
 }) {
-  const [formState, setFormState] = useState<GameFormInput>(
+  const [formState, setFormState] = useState<GameFormState>(
     createEmptyGameInput(),
   );
 
@@ -45,6 +60,8 @@ export function GameEditModal({
       label: game.label,
       description: game.description,
       iconUrl: game.iconUrl,
+      category: String(game.category),
+      status: game.status,
     });
   }, [game]);
 
@@ -60,11 +77,20 @@ export function GameEditModal({
         className="space-y-5"
         onSubmit={(event) => {
           event.preventDefault();
+
+          const category = Number(formState.category);
+
+          if (!Number.isInteger(category) || category < 1) {
+            return;
+          }
+
           void onSubmit({
             ...formState,
-            label: formState.label?.trim() || "",
-            description: formState.description?.trim() || "",
-            iconUrl: formState.iconUrl?.trim() || "",
+            label: formState.label.trim(),
+            description: formState.description.trim(),
+            iconUrl: formState.iconUrl.trim(),
+            category,
+            status: formState.status,
           });
         }}
       >
@@ -74,6 +100,11 @@ export function GameEditModal({
           </p>
           <p className="mt-2 break-all text-slate-500">
             {formState.iconUrl || "未设置图标地址"}
+          </p>
+          <p className="mt-2 text-slate-500">
+            {formState.category
+              ? `分类 ID：${formState.category}`
+              : "未选择所属左侧导航"}
           </p>
         </div>
 
@@ -131,6 +162,52 @@ export function GameEditModal({
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
               maxLength={500}
             />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              所属左侧导航
+            </span>
+            <select
+              value={formState.category}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+              required
+            >
+              <option value="">请选择左侧导航</option>
+              {categoryOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.level === 2 ? `二级 / ${item.name}` : `一级 / ${item.name}`}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              游戏状态
+            </span>
+            <select
+              value={formState.status}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  status: event.target.value as AdminGameStatus,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+            >
+              {Object.values(GameResponseDtoStatusEnum).map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 

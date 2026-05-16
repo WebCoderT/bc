@@ -25,10 +25,4 @@ export const routeItems: RouteItem[] = [
     path: "/games",
     icon: "▣",
   },
-  {
-    label: "游戏分类管理",
-    description: "分类标签与内容归类维护",
-    path: "/game-categories",
-    icon: "◈",
-  },
 ];
