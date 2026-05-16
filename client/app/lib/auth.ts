@@ -1,85 +1,154 @@
-import { getAppProfileSync } from "../shared/repositories/app-profile-repository";
+import { Auth as SwaggerAuthApi } from "@/app/generated/api/Auth";
+import {
+  type LoginDto,
+  type LoginResponseDto,
+  type ProfileResponseDto,
+  type RegisterDto,
+  type RegisterResponseDto,
+  type SafeUserDto,
+  SafeUserDtoRoleEnum,
+} from "@/app/generated/api/data-contracts";
+import { HttpClient, type HttpResponse } from "@/app/generated/api/http-client";
 
 export type AuthMode = "login" | "register";
+export type AuthUser = SafeUserDto;
+export type AuthSession = LoginResponseDto;
+export type LoginInput = LoginDto;
+export type RegisterInput = RegisterDto;
 
-const appProfile = getAppProfileSync();
+export { SafeUserDtoRoleEnum };
 
-/**
- * 系统内部使用的登录用户模型。
- *
- * 该模型面向前端展示，允许在没有真实后端接口时
- * 也能生成完整的个人中心与控制台页面。
- */
-export type AuthUser = {
-  companyName: string;
-  name: string;
-  email: string;
-  account: string;
-  avatar: string;
-  wechat: string;
-  qq: string;
-  phone: string;
-  balance: number;
-};
+export const AUTH_STORAGE_KEY = "game-portal-auth-session";
 
-type AuthUserInput = Partial<AuthUser> & {
-  companyName?: string;
-  name?: string;
-  email?: string;
-};
+const LEGACY_AUTH_STORAGE_KEY = "game-portal-auth-user";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
+const SWAGGER_API_BASE_URL = resolveSwaggerBaseUrl(API_BASE_URL);
 
-/**
- * 本地登录态存储键。
- */
-export const AUTH_STORAGE_KEY = "game-portal-auth-user";
+function resolveSwaggerBaseUrl(apiBaseUrl: string) {
+  const normalizedApiBaseUrl = apiBaseUrl.endsWith("/")
+    ? apiBaseUrl.slice(0, -1)
+    : apiBaseUrl;
 
-/**
- * 根据姓名和邮箱生成演示账号编号。
- */
-function createAccount(name: string, email: string) {
-  const accountSeed = email.split("@")[0] || name;
+  if (normalizedApiBaseUrl === "/api") {
+    return "";
+  }
 
-  return `PP-${
-    accountSeed
-      .replace(/[^a-zA-Z0-9]/g, "")
-      .toUpperCase()
-      .slice(0, 10) || "USER001"
-  }`;
+  if (normalizedApiBaseUrl.endsWith("/api")) {
+    return normalizedApiBaseUrl.slice(0, -4);
+  }
+
+  return normalizedApiBaseUrl;
 }
 
-/**
- * 将不完整的用户输入补齐为完整模型。
- *
- * 这个标准化方法是整个认证模块的公共入口，
- * 所有读写本地登录态的操作都会经过这里。
- */
-export function normalizeAuthUser(input: AuthUserInput | null) {
-  if (!input) {
+function createSwaggerClient(accessToken?: string) {
+  const httpClient = new HttpClient<string>({
+    baseUrl: SWAGGER_API_BASE_URL,
+    securityWorker: (token: string | null) => {
+      if (!token) {
+        return undefined;
+      }
+
+      return {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+    },
+  });
+
+  httpClient.setSecurityData(accessToken ?? null);
+
+  return new SwaggerAuthApi(httpClient);
+}
+
+function extractErrorMessage(payload: unknown) {
+  if (typeof payload === "string") {
+    return payload;
+  }
+
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("message" in payload)
+  ) {
     return null;
   }
 
-  const safeName = input.name?.trim() || "竞技用户";
-  const safeEmail =
-    input.email?.trim() || `player@${appProfile.defaultEmailDomain}`;
+  const message = (payload as { message?: unknown }).message;
 
-  return {
-    companyName:
-      input.companyName?.trim() || appProfile.defaultOrganizationName,
-    name: safeName,
-    email: safeEmail,
-    account: input.account?.trim() || createAccount(safeName, safeEmail),
-    avatar: input.avatar?.trim() || appProfile.defaultUserAvatar,
-    wechat: input.wechat?.trim() || "未绑定",
-    qq: input.qq?.trim() || "未绑定",
-    phone: input.phone?.trim() || "未绑定",
-    balance: typeof input.balance === "number" ? input.balance : 1288,
-  } satisfies AuthUser;
+  if (Array.isArray(message)) {
+    return message.join("，");
+  }
+
+  return typeof message === "string" ? message : null;
 }
 
-/**
- * 从本地存储读取登录用户并立即标准化。
- */
-export function readStoredUser() {
+export class AuthApiError extends Error {
+  status: number;
+  isAuthError: boolean;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AuthApiError";
+    this.status = status;
+    this.isAuthError = status === 401 || status === 403;
+  }
+}
+
+function normalizeAuthApiError(error: unknown) {
+  if (error instanceof AuthApiError) {
+    return error;
+  }
+
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
+      ? (error as { status: number }).status
+      : 500;
+
+  const message =
+    (typeof error === "object" && error !== null && "error" in error
+      ? extractErrorMessage((error as { error?: unknown }).error)
+      : null) ??
+    extractErrorMessage(error) ??
+    (error instanceof Error ? error.message : null) ??
+    `请求失败：${status}`;
+
+  if ((status === 401 || status === 403) && typeof window !== "undefined") {
+    clearStoredSession();
+  }
+
+  return new AuthApiError(message, status);
+}
+
+async function requestFromSwagger<T>(requestFactory: () => Promise<unknown>) {
+  try {
+    const response = (await requestFactory()) as HttpResponse<
+      T,
+      { message?: string | string[] }
+    >;
+
+    return response.data;
+  } catch (error) {
+    throw normalizeAuthApiError(error);
+  }
+}
+
+function isStoredSession(value: unknown) {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "accessToken" in value &&
+    typeof (value as { accessToken?: unknown }).accessToken === "string" &&
+    "user" in value &&
+    typeof (value as { user?: unknown }).user === "object" &&
+    (value as { user?: unknown }).user !== null
+  );
+}
+
+export function readStoredSession() {
   if (typeof window === "undefined") {
     return null;
   }
@@ -87,41 +156,121 @@ export function readStoredUser() {
   const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
 
   if (!raw) {
+    window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
     return null;
   }
 
   try {
-    return normalizeAuthUser(JSON.parse(raw));
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!isStoredSession(parsed)) {
+      clearStoredSession();
+      return null;
+    }
+
+    return parsed as AuthSession;
   } catch {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    clearStoredSession();
     return null;
   }
 }
 
-/**
- * 写入登录用户到本地存储。
- */
-export function writeStoredUser(user: AuthUserInput) {
+export function writeStoredSession(session: AuthSession) {
   if (typeof window === "undefined") {
     return;
   }
 
-  const normalizedUser = normalizeAuthUser(user);
-
-  if (!normalizedUser) {
-    return;
-  }
-
-  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalizedUser));
+  window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
 }
 
-/**
- * 清理登录态。
- */
-export function clearStoredUser() {
+export function clearStoredSession() {
   if (typeof window === "undefined") {
     return;
   }
 
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+}
+
+export async function loginGameSession(input: LoginInput) {
+  const auth = createSwaggerClient();
+
+  return requestFromSwagger<LoginResponseDto>(() =>
+    auth.authControllerLogin(input, {
+      format: "json",
+    }),
+  );
+}
+
+export async function registerGameUser(input: RegisterInput) {
+  const auth = createSwaggerClient();
+
+  return requestFromSwagger<RegisterResponseDto>(() =>
+    auth.authControllerRegister(input, {
+      format: "json",
+    }),
+  );
+}
+
+export async function registerAndLoginGameSession(input: RegisterInput) {
+  await registerGameUser(input);
+
+  return loginGameSession({
+    username: input.username,
+    password: input.password,
+  });
+}
+
+export async function fetchCurrentUserProfile(accessToken: string) {
+  const auth = createSwaggerClient(accessToken);
+
+  return requestFromSwagger<ProfileResponseDto>(() =>
+    auth.authControllerGetProfile({
+      format: "json",
+    }),
+  );
+}
+
+export async function refreshStoredSession(session: AuthSession) {
+  const profile = await fetchCurrentUserProfile(session.accessToken);
+
+  return {
+    accessToken: session.accessToken,
+    user: profile.user,
+  } satisfies AuthSession;
+}
+
+export function formatAuthUserRole(role: AuthUser["role"]) {
+  if (role === SafeUserDtoRoleEnum.Admin) {
+    return "管理员";
+  }
+
+  if (role === SafeUserDtoRoleEnum.Vip) {
+    return "VIP 用户";
+  }
+
+  return "普通用户";
+}
+
+export function formatAuthCurrency(value: number) {
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    minimumFractionDigits: 2,
+  }).format(value);
+}
+
+export function formatAuthDate(value: string) {
+  try {
+    return new Date(value).toLocaleString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
 }

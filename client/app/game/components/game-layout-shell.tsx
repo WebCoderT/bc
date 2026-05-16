@@ -2,10 +2,14 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { NavLink, useLocation } from "react-router-dom";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "../../components/theme-toggle";
-import type { AuthUser } from "../../lib/auth";
-import { getTopRouteByPath, gameTopRoutes } from "../routes";
+import { formatAuthUserRole, type AuthUser } from "../../lib/auth";
+import {
+  gameNavigationSections,
+  getGameSectionByPath,
+  isGameLinkActive,
+} from "../navigation";
 import { AppBrand } from "@/app/shared/components/app-brand";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
@@ -32,13 +36,13 @@ export function GameLayoutShell({
   onLogout,
 }: GameLayoutShellProps) {
   const appProfile = getAppProfileSync();
-  const location = useLocation();
+  const pathname = usePathname();
 
   /**
    * 根据当前路径推断顶部一级导航，并拿到对应二级导航列表。
    */
-  const activeTopRoute = getTopRouteByPath(location.pathname);
-  const sideRoutes = activeTopRoute.children;
+  const activeSection = getGameSectionByPath(pathname);
+  const sideRoutes = activeSection.items;
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
@@ -48,27 +52,24 @@ export function GameLayoutShell({
             <Link href="/" className="flex items-center gap-3">
               <AppBrand
                 caption={appProfile.consoleLabel}
-                secondaryText={`当前组织：${user.companyName}`}
+                secondaryText={`当前角色：${formatAuthUserRole(user.role)}`}
               />
             </Link>
           </div>
 
           <nav className="hidden items-center gap-2 xl:flex">
-            {gameTopRoutes.map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  `rounded-full border px-4 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
-                      : "border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  }`
-                }
+            {gameNavigationSections.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  isGameLinkActive(pathname, item.href)
+                    ? "border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
+                    : "border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                }`}
               >
                 {item.label}
-              </NavLink>
+              </Link>
             ))}
           </nav>
 
@@ -77,14 +78,14 @@ export function GameLayoutShell({
             <div className="hidden items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--panel)] px-3 py-2 lg:flex">
               <UserAvatar
                 src={user.avatar}
-                alt={user.name}
+                alt={user.username}
                 className="h-10 w-10 rounded-full"
               />
               <div className="text-sm leading-5 text-[var(--muted)]">
                 <p className="font-medium text-[var(--foreground)]">
-                  {user.name}
+                  {user.username}
                 </p>
-                <p>{user.account}</p>
+                <p>ID：{user.id}</p>
               </div>
             </div>
             <ActionButton onClick={onLogout}>退出登录</ActionButton>
@@ -100,27 +101,24 @@ export function GameLayoutShell({
                 LEFT NAV
               </p>
               <h2 className="mt-3 text-xl font-semibold">
-                {activeTopRoute.sectionTitle}
+                {activeSection.title}
               </h2>
             </div>
 
             <nav className="mt-4 space-y-2">
               {sideRoutes.map((item) => (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  end={item.to === "/" || item.to === activeTopRoute.to}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
-                      isActive
-                        ? "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
-                        : "bg-[var(--panel)] text-[var(--foreground)] hover:text-[var(--accent)]"
-                    }`
-                  }
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
+                    isGameLinkActive(pathname, item.href)
+                      ? "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
+                      : "bg-[var(--panel)] text-[var(--foreground)] hover:text-[var(--accent)]"
+                  }`}
                 >
                   <span className="font-medium">{item.label}</span>
                   <span className="text-xs text-inherit/80">{item.badge}</span>
-                </NavLink>
+                </Link>
               ))}
             </nav>
           </SurfaceCard>

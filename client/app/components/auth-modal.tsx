@@ -2,7 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthMode, writeStoredUser } from "../lib/auth";
+import {
+  AuthMode,
+  loginGameSession,
+  registerAndLoginGameSession,
+  writeStoredSession,
+} from "../lib/auth";
 import { AppBrand } from "@/app/shared/components/app-brand";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
@@ -25,32 +30,45 @@ export function AuthModal({
 }) {
   const appProfile = getAppProfileSync();
   const router = useRouter();
-  const [companyName, setCompanyName] = useState(
-    appProfile.defaultOrganizationName,
-  );
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   /**
-   * 提交后写入本地登录态，并进入 `/game` 已登录区域。
+   * 提交后调用服务端认证接口，写入 JWT 会话，并进入 `/game` 已登录区域。
    */
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const safeName = name.trim() || "竞技用户";
-    const user = {
-      companyName: companyName.trim() || appProfile.defaultOrganizationName,
-      name: safeName,
-      email:
-        email.trim() ||
-        `${safeName.toLowerCase()}@${appProfile.defaultEmailDomain}`,
-    };
+    try {
+      setIsSubmitting(true);
+      setSubmitError("");
 
-    writeStoredUser(user);
-    setPassword("");
-    onClose();
-    router.push("/game");
+      const trimmedUsername = username.trim();
+
+      const session =
+        mode === "login"
+          ? await loginGameSession({
+              username: trimmedUsername,
+              password,
+            })
+          : await registerAndLoginGameSession({
+              username: trimmedUsername,
+              password,
+            });
+
+      writeStoredSession(session);
+      setPassword("");
+      onClose();
+      router.push("/game");
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "认证失败，请稍后重试",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,8 +85,8 @@ export function AuthModal({
           </h2>
           <p className="mt-2 text-sm text-white/80">
             {mode === "login"
-              ? "登录成功后进入 `/game` 已登录模块。"
-              : "注册成功后自动进入 `/game` 首页。"}
+              ? "使用服务端 JWT 登录后进入 `/game` 已登录模块。"
+              : "当前服务端注册接口仅接收用户名与密码，注册成功后自动登录。"}
           </p>
         </div>
 
@@ -78,6 +96,7 @@ export function AuthModal({
               onClick={() => onModeChange("login")}
               type="button"
               variant="soft"
+              disabled={isSubmitting}
               className={`rounded-full px-4 py-2 font-medium transition ${
                 mode === "login"
                   ? "bg-[var(--accent)] text-white"
@@ -90,6 +109,7 @@ export function AuthModal({
               onClick={() => onModeChange("register")}
               type="button"
               variant="soft"
+              disabled={isSubmitting}
               className={`rounded-full px-4 py-2 font-medium transition ${
                 mode === "register"
                   ? "bg-[var(--accent)] text-white"
@@ -101,44 +121,20 @@ export function AuthModal({
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {mode === "register" ? (
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--foreground)]">
-                  战队 / 公司名称
-                </span>
-                <input
-                  value={companyName}
-                  onChange={(event) => setCompanyName(event.target.value)}
-                  className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                  placeholder="请输入组织名称"
-                  required
-                />
-              </label>
-            ) : null}
-
             <label className="block space-y-2">
               <span className="text-sm font-medium text-[var(--foreground)]">
-                昵称
+                用户名
               </span>
               <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                placeholder="请输入昵称"
-                required
-              />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
-                邮箱
-              </span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                placeholder={`team@${appProfile.defaultEmailDomain}`}
+                placeholder="请输入用户名，仅支持字母、数字和下划线"
+                pattern="[A-Za-z0-9_]+"
+                minLength={3}
+                maxLength={20}
+                autoComplete="username"
+                disabled={isSubmitting}
                 required
               />
             </label>
@@ -152,24 +148,47 @@ export function AuthModal({
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
-                placeholder="至少 6 位"
+                placeholder="请输入密码"
                 minLength={6}
+                maxLength={32}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                disabled={isSubmitting}
                 required
               />
             </label>
+
+            {submitError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {submitError}
+              </div>
+            ) : null}
 
             <div className="flex gap-3 pt-2">
               <ActionButton
                 onClick={onClose}
                 type="button"
                 variant="outline"
+                disabled={isSubmitting}
                 fullWidth
                 className="flex-1"
               >
                 取消
               </ActionButton>
-              <ActionButton type="submit" fullWidth className="flex-1">
-                {mode === "login" ? "进入 /game" : "注册并进入"}
+              <ActionButton
+                type="submit"
+                disabled={isSubmitting}
+                fullWidth
+                className="flex-1"
+              >
+                {isSubmitting
+                  ? mode === "login"
+                    ? "登录中..."
+                    : "注册中..."
+                  : mode === "login"
+                    ? "进入 /game"
+                    : "注册并进入"}
               </ActionButton>
             </div>
           </form>

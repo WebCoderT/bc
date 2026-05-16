@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { BrowserRouter } from "react-router-dom";
 import { GameUserProvider } from "./game-user-context";
 import { GameLayoutShell } from "./components/game-layout-shell";
 import { useGameSession } from "./hooks/use-game-session";
@@ -32,16 +31,14 @@ export default function GameLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <BrowserRouter basename="/game">
-      <GameUserProvider user={user}>
-        <GameLayoutShell
-          user={user}
-          walletSummary={walletSummary}
-          onLogout={logout}
-        >
-          {children}
-        </GameLayoutShell>
-      </GameUserProvider>
-    </BrowserRouter>
+    <GameUserProvider user={user}>
+      <GameLayoutShell
+        user={user}
+        walletSummary={walletSummary}
+        onLogout={logout}
+      >
+        {children}
+      </GameLayoutShell>
+    </GameUserProvider>
   );
 }
