@@ -1,14 +1,12 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { ApiOkDataResponse } from '../common/swagger/success-response.decorators';
+import { VipInsightsDataDto } from './dto/vip-insights-data.dto';
 
 @ApiTags('vip')
 @ApiBearerAuth('JWT-auth')
@@ -18,6 +16,7 @@ export class VipController {
   @Get('insights')
   @Roles(Role.Vip, Role.Admin)
   @ApiOperation({ summary: 'VIP 专属内容' })
+  @ApiOkDataResponse(VipInsightsDataDto, { messageExample: 'VIP 内容访问成功' })
   getInsights(@Req() request: Request) {
     return {
       message: 'VIP 内容访问成功',

@@ -10,6 +10,7 @@ import { MemberModule } from './member/member.module';
 import { PublicModule } from './public/public.module';
 import { UsersModule } from './users/users.module';
 import { VipModule } from './vip/vip.module';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { VipModule } from './vip/vip.module';
     MemberModule,
     VipModule,
     AdminModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { setupSwagger } from './swagger/swagger.config';
 
 export function configureApp(app: INestApplication) {
@@ -15,6 +16,7 @@ export function configureApp(app: INestApplication) {
       forbidNonWhitelisted: true,
     }),
   );
+  app.useGlobalInterceptors(new TransformResponseInterceptor());
 
   setupSwagger(app);
 }

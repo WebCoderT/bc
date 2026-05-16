@@ -10,26 +10,24 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { PaginatedAdminUsersResponseDto } from './dto/paginated-admin-users-response.dto';
-import { UpdateAdminUserResponseDto } from './dto/update-admin-user-response.dto';
+import {
+  ApiCreatedDataResponse,
+  ApiOkDataResponse,
+  ApiOkListResponse,
+  ApiOkPaginatedResponse,
+} from '../common/swagger/success-response.decorators';
 import { CreateGameCategoryDto } from '../game-categories/dto/create-game-category.dto';
-import { DeleteGameCategoryResponseDto } from '../game-categories/dto/delete-game-category-response.dto';
-import { GameCategoryListResponseDto } from '../game-categories/dto/game-category-list-response.dto';
-import { GameCategoryMutationResponseDto } from '../game-categories/dto/game-category-mutation-response.dto';
 import { ListGameCategoriesQueryDto } from '../game-categories/dto/list-game-categories-query.dto';
+import { GameCategoryResponseDto } from '../game-categories/dto/game-category-response.dto';
 import { UpdateGameCategoryDto } from '../game-categories/dto/update-game-category.dto';
 import { GameCategoriesService } from '../game-categories/game-categories.service';
+import { IdDataDto } from '../common/dto/id-data.dto';
+import { SafeUserDto } from '../users/dto/safe-user.dto';
 import { UsersService } from '../users/users.service';
 import { ListAdminUsersQueryDto } from './dto/list-admin-users-query.dto';
 import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
@@ -47,14 +45,14 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: '管理员分页查看用户并按角色筛选' })
-  @ApiOkResponse({ type: PaginatedAdminUsersResponseDto })
+  @ApiOkPaginatedResponse(SafeUserDto)
   async getUsers(@Query() query: ListAdminUsersQueryDto) {
     return this.usersService.listPublicUsers(query);
   }
 
   @Patch('users/:id')
   @ApiOperation({ summary: '管理员修改用户信息' })
-  @ApiOkResponse({ type: UpdateAdminUserResponseDto })
+  @ApiOkDataResponse(SafeUserDto, { messageExample: '用户信息更新成功' })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAdminUserDto: UpdateAdminUserDto,
@@ -67,14 +65,16 @@ export class AdminController {
 
   @Get('game-categories')
   @ApiOperation({ summary: '管理员查看游戏分类列表' })
-  @ApiOkResponse({ type: GameCategoryListResponseDto })
+  @ApiOkListResponse(GameCategoryResponseDto)
   async getGameCategories(@Query() query: ListGameCategoriesQueryDto) {
     return this.gameCategoriesService.listCategories(query);
   }
 
   @Post('game-categories')
   @ApiOperation({ summary: '管理员新增游戏分类' })
-  @ApiCreatedResponse({ type: GameCategoryMutationResponseDto })
+  @ApiCreatedDataResponse(GameCategoryResponseDto, {
+    messageExample: '游戏分类创建成功',
+  })
   async createGameCategory(
     @Body() createGameCategoryDto: CreateGameCategoryDto,
   ) {
@@ -88,7 +88,9 @@ export class AdminController {
 
   @Patch('game-categories/:id')
   @ApiOperation({ summary: '管理员修改游戏分类' })
-  @ApiOkResponse({ type: GameCategoryMutationResponseDto })
+  @ApiOkDataResponse(GameCategoryResponseDto, {
+    messageExample: '游戏分类更新成功',
+  })
   async updateGameCategory(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateGameCategoryDto: UpdateGameCategoryDto,
@@ -104,7 +106,7 @@ export class AdminController {
 
   @Delete('game-categories/:id')
   @ApiOperation({ summary: '管理员删除游戏分类' })
-  @ApiOkResponse({ type: DeleteGameCategoryResponseDto })
+  @ApiOkDataResponse(IdDataDto, { messageExample: '游戏分类删除成功' })
   async deleteGameCategory(@Param('id', ParseIntPipe) id: number) {
     return this.gameCategoriesService.deleteCategory(id);
   }
