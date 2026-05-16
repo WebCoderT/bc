@@ -18,6 +18,7 @@ export class ListNavigationsQueryDto extends KeywordQueryDto {
   @ApiPropertyOptional({
     enum: NavigationType,
     example: NavigationType.Top,
+    description: '按导航类型筛选',
   })
   @IsOptional()
   @IsEnum(NavigationType)
@@ -26,6 +27,7 @@ export class ListNavigationsQueryDto extends KeywordQueryDto {
   @ApiPropertyOptional({
     enum: NavigationStatus,
     example: NavigationStatus.Visible,
+    description: '按导航状态筛选',
   })
   @IsOptional()
   @IsEnum(NavigationStatus)

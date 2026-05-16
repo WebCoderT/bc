@@ -21,7 +21,7 @@ export class Game {
   @Column({ name: 'icon_url', nullable: true })
   iconUrl!: string;
 
-  @ApiProperty({ description: '游戏分类，表示游戏所属的类别，具体为左侧导航栏' })
+  @ApiProperty({ description: '游戏分类，表示游戏所属的类别，必须选择左侧导航栏中的一个分类' })
   @ManyToOne(() => NavigationEntity, (n) => n.id)
   @Column({ name: 'category' })
   category!: number;
