@@ -2,7 +2,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { createListResult } from '../common/utils/pagination.util';
@@ -13,22 +12,12 @@ import { GameCategoryEntity } from './entities/game-category.entity';
 import { GameCategoryStatus } from './enums/game-category-status.enum';
 
 @Injectable()
-export class GameCategoriesService implements OnModuleInit {
-  private static seedPromise: Promise<void> | null = null;
-
+export class GameCategoriesService {
   private readonly gameCategoriesRepository: Repository<GameCategoryEntity>;
 
   constructor(private readonly dataSource: DataSource) {
     this.gameCategoriesRepository =
       this.dataSource.getRepository<GameCategoryEntity>(GameCategoryEntity);
-  }
-
-  async onModuleInit() {
-    if (!GameCategoriesService.seedPromise) {
-      GameCategoriesService.seedPromise = this.seedDefaultCategories();
-    }
-
-    await GameCategoriesService.seedPromise;
   }
 
   async listCategories(query?: ListGameCategoriesQueryDto) {
@@ -175,58 +164,6 @@ export class GameCategoriesService implements OnModuleInit {
     return [...new Set(tags.map((item) => item.trim()).filter(Boolean))].slice(
       0,
       10,
-    );
-  }
-
-  private async seedDefaultCategories() {
-    const count = await this.gameCategoriesRepository.count();
-
-    if (count > 0) {
-      return;
-    }
-
-    const defaultCategories = [
-      {
-        name: '角色扮演',
-        description: '高沉浸叙事与角色成长型游戏',
-        tags: ['成长', '剧情', '开放世界'],
-        isRecommended: true,
-        heat: 97,
-        status: GameCategoryStatus.Enabled,
-      },
-      {
-        name: '卡牌策略',
-        description: '长线养成与对战策略玩法集合',
-        tags: ['养成', '策略', '回合制'],
-        isRecommended: true,
-        heat: 95,
-        status: GameCategoryStatus.Enabled,
-      },
-      {
-        name: '模拟经营',
-        description: '轻中度经营、建造与模拟体验',
-        tags: ['经营', '建造', '轻度'],
-        isRecommended: false,
-        heat: 72,
-        status: GameCategoryStatus.Pending,
-      },
-      {
-        name: '动作冒险',
-        description: '动作闯关、多人挑战与剧情探索',
-        tags: ['动作', '副本', '合作'],
-        isRecommended: true,
-        heat: 90,
-        status: GameCategoryStatus.Enabled,
-      },
-    ];
-
-    await this.gameCategoriesRepository.save(
-      defaultCategories.map((item) =>
-        this.gameCategoriesRepository.create({
-          ...item,
-          gameCount: 0,
-        }),
-      ),
     );
   }
 }

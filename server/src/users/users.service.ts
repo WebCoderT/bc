@@ -2,7 +2,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, Like, Repository } from 'typeorm';
@@ -21,21 +20,11 @@ type UpdateUserInput = {
 };
 
 @Injectable()
-export class UsersService implements OnModuleInit {
-  private static seedPromise: Promise<void> | null = null;
-
+export class UsersService {
   private readonly usersRepository: Repository<UserEntity>;
 
   constructor(private readonly dataSource: DataSource) {
     this.usersRepository = this.dataSource.getRepository<UserEntity>('users');
-  }
-
-  async onModuleInit() {
-    if (!UsersService.seedPromise) {
-      UsersService.seedPromise = this.seedDefaultUsers();
-    }
-
-    await UsersService.seedPromise;
   }
 
   async create(username: string, password: string): Promise<UserEntity> {
@@ -142,76 +131,5 @@ export class UsersService implements OnModuleInit {
         Number(user.rechargeAmount ?? 0) + Number(user.bonusAmount ?? 0),
       createdAt,
     };
-  }
-
-  private async seedDefaultUsers() {
-    const defaultUsers = [
-      {
-        username: 'normal_demo',
-        password: 'User@123',
-        avatar: DEFAULT_USER_AVATAR,
-        role: Role.User,
-        rechargeAmount: 688,
-        bonusAmount: 120,
-      },
-      {
-        username: 'vip_demo',
-        password: 'Vip@123',
-        avatar: DEFAULT_USER_AVATAR,
-        role: Role.Vip,
-        rechargeAmount: 1588,
-        bonusAmount: 300,
-      },
-      {
-        username: 'admin_root',
-        password: 'Admin@123',
-        avatar: DEFAULT_USER_AVATAR,
-        role: Role.Admin,
-        rechargeAmount: 3888,
-        bonusAmount: 888,
-      },
-    ];
-
-    for (const defaultUser of defaultUsers) {
-      const existingUser = await this.usersRepository.findOne({
-        where: { username: defaultUser.username },
-      });
-
-      if (existingUser) {
-        let shouldSave = false;
-
-        if ((existingUser.rechargeAmount ?? 0) === 0) {
-          existingUser.rechargeAmount = defaultUser.rechargeAmount;
-          shouldSave = true;
-        }
-
-        if ((existingUser.bonusAmount ?? 0) === 0) {
-          existingUser.bonusAmount = defaultUser.bonusAmount;
-          shouldSave = true;
-        }
-
-        if (!existingUser.avatar?.trim()) {
-          existingUser.avatar = defaultUser.avatar;
-          shouldSave = true;
-        }
-
-        if (shouldSave) {
-          await this.usersRepository.save(existingUser);
-        }
-
-        continue;
-      }
-
-      const user = this.usersRepository.create({
-        username: defaultUser.username,
-        avatar: defaultUser.avatar,
-        passwordHash: await bcrypt.hash(defaultUser.password, 10),
-        role: defaultUser.role,
-        rechargeAmount: defaultUser.rechargeAmount,
-        bonusAmount: defaultUser.bonusAmount,
-      });
-
-      await this.usersRepository.save(user);
-    }
   }
 }
