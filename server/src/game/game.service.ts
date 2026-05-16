@@ -3,7 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, Like, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Like, Repository } from 'typeorm';
 import { CreateGameDto } from './dto/create-game.dto';
 import { ListGamesQueryDto } from './dto/list-games-query.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
@@ -12,7 +13,7 @@ import { Game } from './entities/game.entity';
 @Injectable()
 export class GameService {
   constructor(
-    private readonly dataSource: DataSource,
+    @InjectRepository(Game)
     private readonly gameRepository: Repository<Game>,
   ) {}
 

@@ -1,6 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
 import { GameCategoryEntity } from '../game-categories/entities/game-category.entity';
+import { Game } from '../game/entities/game.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { InitialUsersTable2026051400001 } from './migrations/202605140001-initial-users-table';
 import { AddUserBalanceColumns2026051400002 } from './migrations/202605140002-add-user-balance-columns';
@@ -16,7 +17,7 @@ const databaseBaseConfig = {
   database: process.env.DB_NAME ?? 'probability_app',
 };
 
-export const databaseEntities = [UserEntity, GameCategoryEntity];
+export const databaseEntities = [UserEntity, GameCategoryEntity, Game];
 export const databaseMigrations = [
   InitialUsersTable2026051400001,
   AddUserBalanceColumns2026051400002,
