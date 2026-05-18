@@ -1,11 +1,11 @@
-import type { ClientNavigation } from "@/app/lib/client-api";
-import type { MockGameCard } from "./mock-game-data";
-import { MockGameCardView } from "./mock-game-card";
+import type { ClientGame, ClientNavigation } from "@/app/lib/client-api";
+import { GameCard } from "./game-card";
 
 type NavigationGameGroupProps = {
-  games: MockGameCard[];
+  games: ClientGame[];
   groupIndex: number;
   navigation: ClientNavigation;
+  totalGameCount: number;
 };
 
 /**
@@ -15,36 +15,42 @@ export function NavigationGameGroup({
   games,
   groupIndex,
   navigation,
+  totalGameCount,
 }: NavigationGameGroupProps) {
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-[0.3em] text-[var(--accent)]">
-            SUB NAVIGATION {String(groupIndex + 1).padStart(2, "0")}
-          </p>
+          <a href={navigation.path}></a>
           <h3 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-            {navigation.name}
+            # {navigation.name}
           </h3>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            当前分组基于子导航循环渲染，后续接入真实接口后可直接替换为正式游戏数据。
+            当前分组已接入真实接口，展示的是该子导航下分页返回的游戏列表。
           </p>
         </div>
         <div className="flex items-center gap-3 text-sm text-[var(--muted)]">
           <span className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2">
-            路径：{navigation.path}
-          </span>
-          <span className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2">
-            游戏数：{games.length}
+            当前 {games.length} / 共 {totalGameCount}
           </span>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-        {games.map((game) => (
-          <MockGameCardView key={game.id} game={game} />
-        ))}
-      </div>
+      {games.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          {games.map((game, gameIndex) => (
+            <GameCard
+              key={game.id}
+              game={game}
+              index={groupIndex + gameIndex}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[1.6rem] border border-dashed border-[var(--border)] bg-[var(--panel)] px-6 py-10 text-center text-sm text-[var(--muted)]">
+          当前子导航下暂无游戏数据。
+        </div>
+      )}
     </section>
   );
 }

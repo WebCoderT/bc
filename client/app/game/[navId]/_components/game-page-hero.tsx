@@ -2,6 +2,7 @@ import { SectionHeading } from "@/app/shared/components/ui/section-heading";
 
 type GamePageHeroProps = {
   childCount: number;
+  isLoading?: boolean;
   sectionTitle: string;
   sectionLabel: string;
   totalGameCount: number;
@@ -12,6 +13,7 @@ type GamePageHeroProps = {
  */
 export function GamePageHero({
   childCount,
+  isLoading = false,
   sectionTitle,
   sectionLabel,
   totalGameCount,
@@ -21,7 +23,11 @@ export function GamePageHero({
       <SectionHeading
         eyebrow={sectionTitle}
         title={sectionLabel}
-        description={`当前页面先按子导航分组展示假数据游戏卡片，便于预览列表层级、卡片密度与整体视觉效果，共 ${childCount} 个子导航、${totalGameCount} 张示例卡片。`}
+        description={
+          isLoading
+            ? `正在根据 ${childCount} 个子导航加载真实游戏数据，请稍候查看最新内容。`
+            : `当前页面已按子导航接入真实游戏接口，共 ${childCount} 个子导航、${totalGameCount} 条游戏数据。`
+        }
         inverted
       />
     </section>

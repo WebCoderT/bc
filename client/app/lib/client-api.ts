@@ -39,6 +39,13 @@ export type ClientMemberDashboard = MemberDashboardDataDto;
 export type ClientGame = GameResponseDto;
 export type ClientVipInsights = VipInsightsDataDto;
 export type ClientGamesQuery = MemberGamesControllerGetGamesParams;
+export type ClientPaginatedResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 export type ClientGameDetailQuery = MemberGamesControllerGetGameParams;
 export type ClientNavigation = NavigationResponseDto;
 export type ClientNavigationsQuery =
@@ -103,6 +110,7 @@ function createSwaggerClients(accessToken?: string) {
   httpClient.setSecurityData(accessToken ?? null);
 
   return {
+    httpClient,
     auth: new SwaggerAuthApi(httpClient),
     memberDashboard: new SwaggerMemberDashboardApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
@@ -295,14 +303,29 @@ export async function fetchMemberGames(
 ) {
   const { games } = createSwaggerClients(accessToken);
 
-  return requestFromSwagger<{
-    items: GameResponseDto[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  }>(() =>
+  return requestFromSwagger<ClientPaginatedResult<GameResponseDto>>(() =>
     games.memberGamesControllerGetGames(query, {
+      format: "json",
+    }),
+  );
+}
+
+export async function fetchMemberGamesByNavigation(
+  accessToken: string,
+  navigationId: number,
+  query: ClientGamesQuery = {},
+) {
+  const { httpClient } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger<ClientPaginatedResult<GameResponseDto>>(() =>
+    httpClient.request<
+      SwaggerEnvelope<ClientPaginatedResult<GameResponseDto>>,
+      SwaggerErrorPayload
+    >({
+      path: `/api/member/games/navigation/${navigationId}`,
+      method: "GET",
+      query,
+      secure: true,
       format: "json",
     }),
   );
