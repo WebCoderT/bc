@@ -7,12 +7,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { createPaginatedResult } from '../common/utils/pagination.util';
+import { ApiPaginatedData } from '../common/interfaces/api-response.interface';
 import { CreateGameDto } from './dto/create-game.dto';
 import { ListGamesByParentNavigationQueryDto } from './dto/list-games-by-parent-navigation-query.dto';
 import { ListGamesQueryDto } from './dto/list-games-query.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
 import { GameType } from './enums/game-type.enum';
+import { GameResponseDto } from './dto/game-response.dto';
 import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { NavigationType } from '../navigator/enums/navigation-type.enum';
 import { NavigationStatus } from '../navigator/enums/navigation-status.enum';
@@ -99,6 +101,64 @@ export class GameService {
     }
 
     return this.toGameResponse(game);
+  }
+
+  /**
+   * 根据菜单 ID 分页查询其下可浏览的游戏。
+   *
+   * - 传入一级菜单时，聚合其下所有可见二级菜单对应的游戏。
+   * - 传入二级菜单时，只返回当前菜单下的游戏。
+   */
+  async findAllByNavigationIdForMember(
+    navigationId: number,
+    query?: ListGamesQueryDto,
+  ): Promise<ApiPaginatedData<GameResponseDto>> {
+    const page = query?.page ?? 1;
+    const pageSize = query?.pageSize ?? 10;
+    const keyword = query?.keyword?.trim();
+
+    const navigation = await this.navigationRepository.findOne({
+      where: { id: navigationId },
+    });
+
+    if (!navigation || !this.isVisibleNavigation(navigation)) {
+      throw new NotFoundException('菜单不存在');
+    }
+
+    const categoryIds = await this.resolveVisibleCategoryIds(navigation);
+
+    if (categoryIds.length === 0) {
+      return createPaginatedResult([], 0, page, pageSize);
+    }
+
+    const queryBuilder = this.gameRepository
+      .createQueryBuilder('game')
+      .where('game.category IN (:...categoryIds)', {
+        categoryIds,
+      });
+
+    if (keyword) {
+      queryBuilder.andWhere(
+        '(game.label LIKE :keyword OR game.description LIKE :keyword OR game.gameModelId LIKE :keyword)',
+        {
+          keyword: `%${keyword}%`,
+        },
+      );
+    }
+
+    const [games, total] = await queryBuilder
+      .orderBy('game.updatedAt', 'DESC')
+      .addOrderBy('game.id', 'ASC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return createPaginatedResult(
+      games.map((game) => this.toGameResponse(game)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   /**
@@ -256,6 +316,34 @@ export class GameService {
     if (navigation.type !== NavigationType.Side) {
       throw new BadRequestException('游戏分类必须选择侧边导航');
     }
+  }
+
+  /**
+   * 解析当前菜单下可用于查询游戏的分类菜单 ID 列表。
+   */
+  private async resolveVisibleCategoryIds(navigation: NavigationEntity) {
+    if (navigation.parentId !== null) {
+      const parent = await this.navigationRepository.findOne({
+        where: { id: navigation.parentId },
+      });
+
+      if (parent && !this.isVisibleNavigation(parent)) {
+        throw new NotFoundException('菜单不存在');
+      }
+
+      return [navigation.id];
+    }
+
+    const childNavigations = await this.navigationRepository.find({
+      where: {
+        parentId: navigation.id,
+        status: NavigationStatus.Visible,
+        type: NavigationType.Side,
+      },
+      order: { sort: 'ASC', id: 'ASC' },
+    });
+
+    return childNavigations.map((childNavigation) => childNavigation.id);
   }
 
   /**

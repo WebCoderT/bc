@@ -15,6 +15,7 @@ import {
   ApiOkDataResponse,
   ApiOkPaginatedResponse,
 } from '../common/swagger/success-response.decorators';
+import { ApiPaginatedData } from '../common/interfaces/api-response.interface';
 import { GroupedGamesByNavigationResponseDto } from '../game/dto/grouped-games-by-navigation-response.dto';
 import { GameResponseDto } from '../game/dto/game-response.dto';
 import { ListGamesByParentNavigationQueryDto } from '../game/dto/list-games-by-parent-navigation-query.dto';
@@ -43,6 +44,19 @@ export class MemberGamesController {
   @ApiOkPaginatedResponse(GameResponseDto)
   getGames(@Query() query: ListGamesQueryDto) {
     return this.gameService.findAll(query);
+  }
+
+  /**
+   * 根据菜单 ID 分页查询该菜单下可浏览的游戏。
+   */
+  @Get('navigation/:navigationId')
+  @ApiOperation({ summary: '根据菜单ID分页查询下方游戏' })
+  @ApiOkPaginatedResponse(GameResponseDto)
+  getGamesByNavigation(
+    @Param('navigationId', ParseIntPipe) navigationId: number,
+    @Query() query: ListGamesQueryDto,
+  ): Promise<ApiPaginatedData<GameResponseDto>> {
+    return this.gameService.findAllByNavigationIdForMember(navigationId, query);
   }
 
   /**
