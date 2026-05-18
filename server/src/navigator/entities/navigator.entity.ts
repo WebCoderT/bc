@@ -10,6 +10,9 @@ import { NavigationStatus } from '../enums/navigation-status.enum';
 import { NavigationType } from '../enums/navigation-type.enum';
 
 @Entity({ name: 'navigations' })
+/**
+ * 导航实体，用于维护前后台两级导航结构。
+ */
 export class NavigationEntity {
   @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;

@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
 
+/**
+ * 安全用户 DTO，剔除密码等敏感字段后对外返回。
+ */
 export class SafeUserDto {
   @ApiProperty({ example: 1 })
   id!: number;

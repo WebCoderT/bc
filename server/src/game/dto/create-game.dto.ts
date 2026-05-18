@@ -10,6 +10,9 @@ import {
 } from 'class-validator';
 import { GameType } from '../enums/game-type.enum';
 
+/**
+ * 创建游戏 DTO，约束后台创建游戏时允许提交的字段。
+ */
 export class CreateGameDto {
   @ApiProperty({ description: '游戏名称', example: '星穹远征' })
   @IsString()

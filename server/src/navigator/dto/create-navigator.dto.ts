@@ -12,6 +12,9 @@ import {
 import { NavigationStatus } from '../enums/navigation-status.enum';
 import { NavigationType } from '../enums/navigation-type.enum';
 
+/**
+ * 创建导航 DTO，约束导航新增时可提交的字段。
+ */
 export class CreateNavigatorDto {
   @ApiProperty({ example: '电子竞技' })
   @IsString()

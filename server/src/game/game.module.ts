@@ -14,4 +14,7 @@ import { GameModel } from 'src/game-model/entities/game-model.entity';
   providers: [GameService],
   exports: [GameService],
 })
+/**
+ * 游戏模块，负责注册游戏服务及其相关实体仓储。
+ */
 export class GameModule {}

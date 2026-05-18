@@ -9,4 +9,7 @@ import { VipController } from './vip.controller';
   controllers: [VipController],
   providers: [RolesGuard],
 })
+/**
+ * VIP 模块，承载 VIP 专属接口与角色权限控制。
+ */
 export class VipModule {}

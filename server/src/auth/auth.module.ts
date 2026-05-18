@@ -18,4 +18,7 @@ import { UsersModule } from '../users/users.module';
   providers: [AuthService, JwtAuthGuard],
   exports: [AuthService, JwtAuthGuard],
 })
+/**
+ * 认证模块，负责注册登录、JWT 校验与认证能力输出。
+ */
 export class AuthModule {}

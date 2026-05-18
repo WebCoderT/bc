@@ -3,6 +3,9 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
 @Entity({ name: 'game_models' })
+/**
+ * 游戏模型实体，用于描述游戏规则模型的版本化基础信息。
+ */
 export class GameModel {
   @ApiProperty({ description: '模型编号（手动编写）', example: '60' })
   @PrimaryColumn({ name: 'id', type: 'varchar', length: 50 })

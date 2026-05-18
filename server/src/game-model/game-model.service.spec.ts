@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameModelService } from './game-model.service';
 
+/**
+ * GameModelService 基础单元测试，验证服务可被 Nest 正常实例化。
+ */
 describe('GameModelService', () => {
   let service: GameModelService;
 

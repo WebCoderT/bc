@@ -10,6 +10,9 @@ import {
 import { Type } from 'class-transformer';
 import { Role } from '../../common/enums/role.enum';
 
+/**
+ * 管理员更新用户 DTO，定义后台可编辑的用户资料字段。
+ */
 export class UpdateAdminUserDto {
   @ApiProperty({ example: 'admin_root' })
   @IsString()

@@ -7,6 +7,9 @@ const decimalTransformer = {
 };
 
 @Entity({ name: 'users' })
+/**
+ * 用户实体，负责承载账号、角色、余额和凭证摘要等基础信息。
+ */
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id!: number;

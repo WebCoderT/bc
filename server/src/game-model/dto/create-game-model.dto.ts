@@ -8,6 +8,9 @@ import {
 } from 'class-validator';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
+/**
+ * 创建游戏模型 DTO，定义模型新增时允许提交的字段。
+ */
 export class CreateGameModelDto {
   @ApiProperty({ description: '模型编号（手动编写）', example: '60' })
   @IsString()

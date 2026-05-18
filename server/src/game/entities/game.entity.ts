@@ -5,6 +5,9 @@ import { NavigationEntity } from 'src/navigator/entities/navigator.entity';
 import { GameModel } from 'src/game-model/entities/game-model.entity';
 
 @Entity({ name: 'games' })
+/**
+ * 游戏实体，描述后台维护和前台展示的游戏基础数据。
+ */
 export class Game {
   @ApiProperty({ description: '游戏ID' })
   @PrimaryGeneratedColumn({ name: 'id' })

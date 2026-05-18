@@ -27,4 +27,7 @@ import { NavigatorModule } from './navigator/navigator.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+/**
+ * 应用根模块，负责汇总数据库连接和各业务子模块。
+ */
+export class AppModule {}

@@ -8,4 +8,7 @@ import { NavigationEntity } from './entities/navigator.entity';
   providers: [NavigatorService],
   exports: [NavigatorService],
 })
+/**
+ * 导航模块，负责注册导航服务与导航实体仓储。
+ */
 export class NavigatorModule {}

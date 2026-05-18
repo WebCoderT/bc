@@ -26,4 +26,7 @@ import { AdminUsersController } from './admin-users.controller';
   ],
   providers: [RolesGuard],
 })
+/**
+ * 管理员模块，聚合后台用户、游戏、模型和导航管理接口。
+ */
 export class AdminModule {}

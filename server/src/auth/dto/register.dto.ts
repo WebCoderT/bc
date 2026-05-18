@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
+/**
+ * 注册 DTO，约束新用户注册时的用户名和密码格式。
+ */
 export class RegisterDto {
   @ApiProperty({ example: 'new_user' })
   @IsString()

@@ -14,6 +14,9 @@ function transformOptionalNumber(value: unknown) {
   return Number.isInteger(parsedValue) ? parsedValue : undefined;
 }
 
+/**
+ * 导航列表查询 DTO，支持类型、状态、父级和关键字筛选。
+ */
 export class ListNavigationsQueryDto extends KeywordQueryDto {
   @ApiPropertyOptional({
     enum: NavigationType,

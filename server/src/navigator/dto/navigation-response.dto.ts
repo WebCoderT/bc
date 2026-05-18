@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { NavigationStatus } from '../enums/navigation-status.enum';
 import { NavigationType } from '../enums/navigation-type.enum';
 
+/**
+ * 导航响应 DTO，定义导航树节点对外返回结构。
+ */
 export class NavigationResponseDto {
   @ApiProperty({ example: 1 })
   id!: number;

@@ -6,6 +6,9 @@ import {
   transformOptionalNumber,
 } from '../../common/dto/pagination-query.dto';
 
+/**
+ * 按父级导航分组查询游戏的双层分页 DTO。
+ */
 export class ListGamesByParentNavigationQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     example: 1,

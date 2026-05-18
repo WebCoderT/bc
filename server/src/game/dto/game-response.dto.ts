@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../enums/game-type.enum';
 
+/**
+ * 游戏响应 DTO，定义游戏对外返回字段。
+ */
 export class GameResponseDto {
   @ApiProperty({ example: 1 })
   id!: number;

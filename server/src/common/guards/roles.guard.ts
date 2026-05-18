@@ -10,9 +10,18 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '../enums/role.enum';
 
 @Injectable()
+/**
+ * 角色守卫负责根据 `Roles` 元数据校验当前用户是否具备访问权限。
+ */
 export class RolesGuard implements CanActivate {
+  /**
+   * 注入反射器，用于读取控制器和处理器上的角色元数据。
+   */
   constructor(private readonly reflector: Reflector) {}
 
+  /**
+   * 校验当前请求用户是否满足接口所需角色。
+   */
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),

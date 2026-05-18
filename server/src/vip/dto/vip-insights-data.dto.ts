@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SafeUserDto } from '../../users/dto/safe-user.dto';
 
+/**
+ * VIP 洞察数据 DTO，描述用户及其可见的专属报告列表。
+ */
 export class VipInsightsDataDto {
   @ApiProperty({ type: SafeUserDto })
   user!: SafeUserDto;

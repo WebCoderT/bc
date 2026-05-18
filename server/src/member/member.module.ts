@@ -9,12 +9,7 @@ import { MemberGamesController } from './member-games.controller';
 import { MemberNavigationsController } from './member-navigations.controller';
 
 @Module({
-  imports: [
-    AuthModule,
-    UsersModule,
-    GameModule,
-    NavigatorModule,
-  ],
+  imports: [AuthModule, UsersModule, GameModule, NavigatorModule],
   controllers: [
     MemberDashboardController,
     MemberGamesController,
@@ -22,4 +17,7 @@ import { MemberNavigationsController } from './member-navigations.controller';
   ],
   providers: [RolesGuard],
 })
-export class MemberModule { }
+/**
+ * 会员模块，聚合登录用户可访问的个人中心、导航和游戏浏览接口。
+ */
+export class MemberModule {}

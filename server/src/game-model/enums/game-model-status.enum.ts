@@ -1,3 +1,6 @@
+/**
+ * 游戏模型状态枚举。
+ */
 export enum GameModelStatus {
   // 模型处于活跃状态，可以被正常使用和访问
   ACTIVE = 'active',

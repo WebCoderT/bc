@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
+/**
+ * 游戏模型响应 DTO，定义模型详情和列表对外字段。
+ */
 export class GameModelResponseDto {
   @ApiProperty({ example: '60' })
   id!: string;

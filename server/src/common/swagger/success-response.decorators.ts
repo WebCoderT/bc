@@ -16,6 +16,9 @@ type ResponseOptions = {
   messageExample?: string;
 };
 
+/**
+ * 声明标准成功响应装饰器，data 为单模型对象。
+ */
 export function ApiOkDataResponse(
   model: Type<unknown>,
   options?: ResponseOptions,
@@ -32,6 +35,9 @@ export function ApiOkDataResponse(
   );
 }
 
+/**
+ * 声明标准创建成功响应装饰器，data 为单模型对象。
+ */
 export function ApiCreatedDataResponse(
   model: Type<unknown>,
   options?: ResponseOptions,
@@ -48,6 +54,9 @@ export function ApiCreatedDataResponse(
   );
 }
 
+/**
+ * 声明标准列表响应装饰器，data 为列表结构。
+ */
 export function ApiOkListResponse(
   model: Type<unknown>,
   options?: ResponseOptions,
@@ -64,6 +73,9 @@ export function ApiOkListResponse(
   );
 }
 
+/**
+ * 声明标准分页响应装饰器，data 为分页结构。
+ */
 export function ApiOkPaginatedResponse(
   model: Type<unknown>,
   options?: ResponseOptions,
@@ -80,6 +92,9 @@ export function ApiOkPaginatedResponse(
   );
 }
 
+/**
+ * 声明字符串列表成功响应装饰器。
+ */
 export function ApiOkStringListResponse(
   options?: ResponseOptions,
 ): MethodDecorator {

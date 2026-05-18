@@ -15,10 +15,16 @@ import {
 type PlainObject = Record<string, unknown>;
 
 @Injectable()
+/**
+ * 响应拦截器负责把控制器返回值统一包装为标准成功响应结构。
+ */
 export class TransformResponseInterceptor implements NestInterceptor<
   unknown,
   ApiSuccessResponse<unknown>
 > {
+  /**
+   * 拦截控制器输出，并将其转换为统一的响应格式。
+   */
   intercept(
     _context: ExecutionContext,
     next: CallHandler,
@@ -26,6 +32,9 @@ export class TransformResponseInterceptor implements NestInterceptor<
     return next.handle().pipe(map((payload) => this.transformPayload(payload)));
   }
 
+  /**
+   * 统一生成标准成功响应对象。
+   */
   private transformPayload(payload: unknown): ApiSuccessResponse<unknown> {
     return {
       code: 0,
@@ -34,6 +43,9 @@ export class TransformResponseInterceptor implements NestInterceptor<
     };
   }
 
+  /**
+   * 从原始载荷中提取 message 字段，缺失时回退为默认成功消息。
+   */
   private extractMessage(payload: unknown) {
     if (!this.isPlainObject(payload)) {
       return 'success';
@@ -42,12 +54,17 @@ export class TransformResponseInterceptor implements NestInterceptor<
     return typeof payload.message === 'string' ? payload.message : 'success';
   }
 
+  /**
+   * 从原始载荷中提取 data 主体，并兼容列表、分页和简单对象场景。
+   */
   private extractData(payload: unknown): unknown {
     if (!this.isPlainObject(payload)) {
       return payload ?? null;
     }
 
-    const { message: _message, ...rest } = payload;
+    const rest = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => key !== 'message'),
+    );
 
     if (this.isPaginatedResult(rest)) {
       return {
@@ -83,16 +100,25 @@ export class TransformResponseInterceptor implements NestInterceptor<
     return rest;
   }
 
+  /**
+   * 判断值是否为普通对象。
+   */
   private isPlainObject(value: unknown): value is PlainObject {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
+  /**
+   * 判断对象是否符合列表结构。
+   */
   private isListResult(
     value: PlainObject,
   ): value is { items: unknown[]; total?: number } {
     return Array.isArray(value.items);
   }
 
+  /**
+   * 判断对象是否符合分页结构。
+   */
   private isPaginatedResult(value: PlainObject): value is {
     items: unknown[];
     total: number;

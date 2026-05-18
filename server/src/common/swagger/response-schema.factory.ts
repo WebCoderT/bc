@@ -7,6 +7,9 @@ import type {
 
 type SwaggerSchema = SchemaObject | ReferenceObject;
 
+/**
+ * 生成标准成功响应包裹结构的 OpenAPI Schema。
+ */
 export function createEnvelopeSchema(
   dataSchema: SwaggerSchema,
   messageExample = 'success',
@@ -28,6 +31,9 @@ export function createEnvelopeSchema(
   };
 }
 
+/**
+ * 生成列表数据结构的 OpenAPI Schema。
+ */
 export function createListDataSchema(itemSchema: SwaggerSchema): SchemaObject {
   return {
     type: 'object',
@@ -45,6 +51,9 @@ export function createListDataSchema(itemSchema: SwaggerSchema): SchemaObject {
   };
 }
 
+/**
+ * 生成分页数据结构的 OpenAPI Schema。
+ */
 export function createPaginatedDataSchema(
   itemSchema: SwaggerSchema,
 ): SchemaObject {
@@ -76,6 +85,9 @@ export function createPaginatedDataSchema(
   };
 }
 
+/**
+ * 生成模型引用 Schema。
+ */
 export function createModelSchema(model: Type<unknown>): ReferenceObject {
   return { $ref: getSchemaPath(model) };
 }

@@ -8,4 +8,7 @@ import { UsersService } from './users.service';
   providers: [UsersService],
   exports: [UsersService],
 })
+/**
+ * 用户模块，负责提供用户实体仓储与用户服务。
+ */
 export class UsersModule {}

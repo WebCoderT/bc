@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GameResponseDto } from './game-response.dto';
 import { NavigationResponseDto } from '../../navigator/dto/navigation-response.dto';
 
+/**
+ * 单个二级导航分组下的分页游戏数据结构。
+ */
 export class NavigationGroupedGamesDto {
   @ApiProperty({
     type: () => [GameResponseDto],
@@ -22,6 +25,9 @@ export class NavigationGroupedGamesDto {
   totalPages!: number;
 }
 
+/**
+ * 按二级导航分组后的游戏响应结构。
+ */
 export class GroupedGamesByNavigationResponseDto {
   @ApiProperty({
     type: () => NavigationResponseDto,
