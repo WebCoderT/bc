@@ -61,11 +61,7 @@ export function getGameSectionByPath(
 ) {
   const currentPathname = pathname ?? "/game";
   return (
-    sections.find(
-      (section) =>
-        currentPathname === section.href ||
-        currentPathname.startsWith(`${section.href}/`),
-    ) ?? sections[0]
+    sections.find((section) => currentPathname === section.href) ?? sections[0]
   );
 }
 
