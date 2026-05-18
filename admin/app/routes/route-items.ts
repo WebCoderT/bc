@@ -25,4 +25,10 @@ export const routeItems: RouteItem[] = [
     path: "/games",
     icon: "▣",
   },
+  {
+    label: "游戏模型管理",
+    description: "模型版本、状态与开奖参数维护",
+    path: "/game-models",
+    icon: "◈",
+  },
 ];

@@ -160,8 +160,78 @@ export interface UpdateGameDto {
 }
 
 export interface IdDataDto {
-  /** @example 1 */
-  id: number;
+  /** @example "1" */
+  id: object;
+}
+
+export interface GameModelResponseDto {
+  /** @example "60" */
+  id: string;
+  /** @example "默认模型" */
+  name: string;
+  /** @example "这是一个默认的游戏模型。" */
+  description: string;
+  /** @example "1.0.0" */
+  version: string;
+  /** @example "active" */
+  status: GameModelResponseDtoStatusEnum;
+  /** @example "2024-01-01T00:00:00.000Z" */
+  createdAt: string;
+  /** @example "2024-01-02T00:00:00.000Z" */
+  updatedAt: string;
+}
+
+export interface CreateGameModelDto {
+  /**
+   * 模型编号（手动编写）
+   * @example "60"
+   */
+  id: string;
+  /**
+   * 模型名称
+   * @example "默认模型"
+   */
+  name: string;
+  /**
+   * 模型描述
+   * @example "这是一个默认的游戏模型。"
+   */
+  description: string;
+  /**
+   * 模型版本
+   * @example "1.0.0"
+   */
+  version: string;
+  /**
+   * 模型状态
+   * @default "active"
+   * @example "active"
+   */
+  status?: CreateGameModelDtoStatusEnum;
+}
+
+export interface UpdateGameModelDto {
+  /**
+   * 模型名称
+   * @example "默认模型"
+   */
+  name?: string;
+  /**
+   * 模型描述
+   * @example "这是一个默认的游戏模型。"
+   */
+  description?: string;
+  /**
+   * 模型版本
+   * @example "1.0.0"
+   */
+  version?: string;
+  /**
+   * 模型状态
+   * @default "active"
+   * @example "active"
+   */
+  status?: UpdateGameModelDtoStatusEnum;
 }
 
 export interface NavigationResponseDto {
@@ -286,6 +356,38 @@ export enum UpdateGameDtoStatusEnum {
   Offline = "offline",
 }
 
+/** @example "active" */
+export enum GameModelResponseDtoStatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Deprecated = "deprecated",
+  Deleted = "deleted",
+}
+
+/**
+ * 模型状态
+ * @default "active"
+ * @example "active"
+ */
+export enum CreateGameModelDtoStatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Deprecated = "deprecated",
+  Deleted = "deleted",
+}
+
+/**
+ * 模型状态
+ * @default "active"
+ * @example "active"
+ */
+export enum UpdateGameModelDtoStatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Deprecated = "deprecated",
+  Deleted = "deleted",
+}
+
 /** @example "顶部导航" */
 export enum NavigationResponseDtoTypeEnum {
   Value顶部导航 = "顶部导航",
@@ -383,6 +485,51 @@ export interface AdminGameControllerDeleteGameParams {
   id: number;
 }
 
+export interface AdminGameModelsControllerGetGameModelsParams {
+  /**
+   * @default 1
+   * @example 1
+   */
+  page?: number;
+  /**
+   * @default 10
+   * @example 10
+   */
+  pageSize?: number;
+  /** @example "关键词" */
+  keyword?: string;
+  /** @example "active" */
+  status?: StatusEnum;
+}
+
+/** @example "active" */
+export enum StatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Deprecated = "deprecated",
+  Deleted = "deleted",
+}
+
+/** @example "active" */
+export enum AdminGameModelsControllerGetGameModelsParams1StatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Deprecated = "deprecated",
+  Deleted = "deleted",
+}
+
+export interface AdminGameModelsControllerGetGameModelParams {
+  id: string;
+}
+
+export interface AdminGameModelsControllerUpdateGameModelParams {
+  id: string;
+}
+
+export interface AdminGameModelsControllerDeleteGameModelParams {
+  id: string;
+}
+
 export interface AdminNavigationsControllerGetNavigationsParams {
   /** @example "关键词" */
   keyword?: string;
@@ -395,7 +542,7 @@ export interface AdminNavigationsControllerGetNavigationsParams {
    * 按导航状态筛选
    * @example "展示中"
    */
-  status?: StatusEnum;
+  status?: StatusEnum1;
   /**
    * 按父级导航筛选
    * @example 1
@@ -417,7 +564,7 @@ export enum TypeEnum {
  * 按导航状态筛选
  * @example "展示中"
  */
-export enum StatusEnum {
+export enum StatusEnum1 {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",
 }

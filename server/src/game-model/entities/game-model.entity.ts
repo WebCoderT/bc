@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
 @Entity({ name: 'game_models' })
 export class GameModel {
-  @ApiProperty({ description: '模型ID', example: 1 })
-  @PrimaryGeneratedColumn({ name: 'id' })
-  id!: number;
+  @ApiProperty({ description: '模型编号（手动编写）', example: '60' })
+  @PrimaryColumn({ name: 'id', type: 'varchar', length: 50 })
+  id!: string;
 
   @ApiProperty({ description: '模型名称', example: '默认模型' })
   @Column({ name: 'name', length: 100 })
@@ -28,10 +28,6 @@ export class GameModel {
     default: GameModelStatus.ACTIVE,
   })
   status!: GameModelStatus;
-
-  @ApiProperty({ description: '开奖间隔时间(秒)', example: 60 })
-  @Column({ name: 'draw_interval', type: 'int', nullable: true })
-  drawInterval?: number;
 
   @ApiProperty({ description: '模型创建时间', example: '2024-01-01T00:00:00Z' })
   @Column({

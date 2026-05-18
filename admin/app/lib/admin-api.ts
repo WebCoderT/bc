@@ -1,16 +1,22 @@
 import { Auth as SwaggerAuthApi } from "@/app/generated/admin-api/Auth";
 import { 用户管理 as SwaggerUsersApi } from "@/app/generated/admin-api/用户管理";
 import { 游戏管理 as SwaggerGamesApi } from "@/app/generated/admin-api/游戏管理";
+import { 游戏模型管理 as SwaggerGameModelsApi } from "@/app/generated/admin-api/游戏模型管理";
 import { 导航管理 as SwaggerNavigationsApi } from "@/app/generated/admin-api/导航管理";
 import {
+  type AdminGameModelsControllerGetGameModelsParams,
   type AdminNavigationsControllerGetNavigationsParams,
   type AdminGameControllerGetGamesParams,
   type AdminUsersControllerGetUsersParams,
+  CreateGameModelDtoStatusEnum,
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
   type CreateGameDto,
+  type CreateGameModelDto,
   type CreateNavigatorDto,
   type GameResponseDto,
+  type GameModelResponseDto,
+  GameModelResponseDtoStatusEnum,
   GameResponseDtoStatusEnum,
   type LoginResponseDto,
   type NavigationResponseDto,
@@ -18,6 +24,9 @@ import {
   NavigationResponseDtoTypeEnum,
   RoleEnum,
   type SafeUserDto,
+  StatusEnum,
+  type UpdateGameModelDto,
+  UpdateGameModelDtoStatusEnum,
   type UpdateAdminUserDto,
   type UpdateGameDto,
   type UpdateNavigatorDto,
@@ -42,10 +51,10 @@ type SwaggerMethod = (
 
 type SwaggerEnvelopeData<TMethod extends SwaggerMethod> =
   Awaited<ReturnType<TMethod>> extends HttpResponse<infer TData, unknown>
-  ? TData extends SwaggerEnvelope<infer TEnvelopeData>
-  ? TEnvelopeData
-  : never
-  : never;
+    ? TData extends SwaggerEnvelope<infer TEnvelopeData>
+      ? TEnvelopeData
+      : never
+    : never;
 
 export type AdminRole = SafeUserDto["role"];
 
@@ -73,6 +82,41 @@ export type SaveAdminGameInput = Omit<CreateGameDto, "status"> & {
 
 export type UpdateAdminGameInput = Omit<UpdateGameDto, "status"> & {
   status?: AdminGameStatus;
+};
+
+type SwaggerAdminGameModel = GameModelResponseDto;
+
+export type AdminGameModel = Omit<
+  SwaggerAdminGameModel,
+  "id" | "drawInterval"
+> & {
+  id: string;
+};
+
+export type AdminGameModelStatus = SwaggerAdminGameModel["status"];
+
+export type PaginatedAdminGameModels = Omit<
+  SwaggerEnvelopeData<
+    SwaggerGameModelsApi["adminGameModelsControllerGetGameModels"]
+  >,
+  "items"
+> & {
+  items: AdminGameModel[];
+};
+
+export type SaveAdminGameModelInput = Omit<
+  CreateGameModelDto,
+  "status" | "drawInterval"
+> & {
+  id: string;
+  status?: AdminGameModelStatus;
+};
+
+export type UpdateAdminGameModelInput = Omit<
+  UpdateGameModelDto,
+  "status" | "drawInterval"
+> & {
+  status?: AdminGameModelStatus;
 };
 
 type SwaggerAdminNavigation = NavigationResponseDto;
@@ -111,12 +155,16 @@ export type AdminNavigationList = {
 export type AdminSession = LoginResponseDto;
 
 export {
+  CreateGameModelDtoStatusEnum,
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
+  GameModelResponseDtoStatusEnum,
   GameResponseDtoStatusEnum,
   NavigationResponseDtoStatusEnum,
   NavigationResponseDtoTypeEnum,
   RoleEnum,
+  StatusEnum,
+  UpdateGameModelDtoStatusEnum,
   UpdateNavigatorDtoStatusEnum,
   UpdateNavigatorDtoTypeEnum,
   UpdateAdminUserDtoRoleEnum,
@@ -200,6 +248,7 @@ function createSwaggerClients(accessToken?: string) {
     auth: new SwaggerAuthApi(httpClient),
     users: new SwaggerUsersApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
+    gameModels: new SwaggerGameModelsApi(httpClient),
     navigations: new SwaggerNavigationsApi(httpClient),
   };
 }
@@ -219,6 +268,47 @@ function normalizeAdminNavigation(
     children: Array.isArray(navigation.children)
       ? navigation.children.map(normalizeAdminNavigation)
       : [],
+  };
+}
+
+function normalizeAdminGameModel(
+  gameModel: GameModelResponseDto,
+): AdminGameModel {
+  return {
+    ...gameModel,
+    id: String(gameModel.id),
+  };
+}
+
+function toSwaggerCreateGameInput(input: SaveAdminGameInput): CreateGameDto {
+  return {
+    ...input,
+    status: input.status as unknown as CreateGameDto["status"],
+  };
+}
+
+function toSwaggerUpdateGameInput(input: UpdateAdminGameInput): UpdateGameDto {
+  return {
+    ...input,
+    status: input.status as unknown as UpdateGameDto["status"],
+  };
+}
+
+function toSwaggerCreateGameModelInput(
+  input: SaveAdminGameModelInput,
+): CreateGameModelDto {
+  return {
+    ...input,
+    status: input.status as unknown as CreateGameModelDto["status"],
+  };
+}
+
+function toSwaggerUpdateGameModelInput(
+  input: UpdateAdminGameModelInput,
+): UpdateGameModelDto {
+  return {
+    ...input,
+    status: input.status as unknown as UpdateGameModelDto["status"],
   };
 }
 
@@ -279,9 +369,9 @@ function normalizeAdminApiError(error: unknown) {
 
   const status =
     typeof error === "object" &&
-      error !== null &&
-      "status" in error &&
-      typeof (error as { status?: unknown }).status === "number"
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
       ? (error as { status: number }).status
       : 500;
 
@@ -561,7 +651,9 @@ export async function createAdminGame(
 ) {
   const { games } = createSwaggerClients(accessToken);
 
-  return requestFromSwagger(() => games.adminGameControllerCreateGame(input));
+  return requestFromSwagger(() =>
+    games.adminGameControllerCreateGame(toSwaggerCreateGameInput(input)),
+  );
 }
 
 export async function updateAdminGame(
@@ -576,7 +668,7 @@ export async function updateAdminGame(
       {
         id: gameId,
       },
-      input,
+      toSwaggerUpdateGameInput(input),
     ),
   );
 }
@@ -587,6 +679,79 @@ export async function deleteAdminGame(accessToken: string, gameId: number) {
   return requestFromSwagger(() =>
     games.adminGameControllerDeleteGame({
       id: gameId,
+    }),
+  );
+}
+
+export async function fetchAdminGameModels(
+  accessToken: string,
+  params: Omit<AdminGameModelsControllerGetGameModelsParams, "status"> & {
+    status?: AdminGameModelStatus | "all";
+  } = {},
+) {
+  const { gameModels } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    gameModels.adminGameModelsControllerGetGameModels({
+      page: params.page,
+      pageSize: params.pageSize,
+      keyword: normalizeOptionalKeyword(params.keyword),
+      status:
+        params.status && params.status !== "all"
+          ? (params.status as unknown as AdminGameModelsControllerGetGameModelsParams["status"])
+          : undefined,
+    }),
+  );
+
+  return {
+    ...response,
+    items: response.items.map(normalizeAdminGameModel),
+  } satisfies PaginatedAdminGameModels;
+}
+
+export async function createAdminGameModel(
+  accessToken: string,
+  input: SaveAdminGameModelInput,
+) {
+  const { gameModels } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    gameModels.adminGameModelsControllerCreateGameModel(
+      toSwaggerCreateGameModelInput(input),
+    ),
+  );
+
+  return normalizeAdminGameModel(response);
+}
+
+export async function updateAdminGameModel(
+  accessToken: string,
+  gameModelId: string,
+  input: UpdateAdminGameModelInput,
+) {
+  const { gameModels } = createSwaggerClients(accessToken);
+
+  const response = await requestFromSwagger(() =>
+    gameModels.adminGameModelsControllerUpdateGameModel(
+      {
+        id: gameModelId,
+      },
+      toSwaggerUpdateGameModelInput(input),
+    ),
+  );
+
+  return normalizeAdminGameModel(response);
+}
+
+export async function deleteAdminGameModel(
+  accessToken: string,
+  gameModelId: string,
+) {
+  const { gameModels } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    gameModels.adminGameModelsControllerDeleteGameModel({
+      id: gameModelId,
     }),
   );
 }

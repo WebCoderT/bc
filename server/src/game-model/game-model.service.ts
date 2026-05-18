@@ -21,6 +21,15 @@ export class GameModelService {
 
   async create(createGameModelDto: CreateGameModelDto) {
     const normalizedInput = this.normalizeInput(createGameModelDto);
+
+    const existingById = await this.gameModelRepository.findOne({
+      where: { id: normalizedInput.id },
+    });
+
+    if (existingById) {
+      throw new ConflictException('模型编号已存在');
+    }
+
     const existingGameModel = await this.gameModelRepository.findOne({
       where: {
         name: normalizedInput.name,
@@ -43,10 +52,28 @@ export class GameModelService {
     const pageSize = query?.pageSize ?? 10;
     const keyword = query?.keyword?.trim();
 
-    const where = {
-      ...(query?.status ? { status: query.status } : {}),
-      ...(keyword ? ({ name: Like(`%${keyword}%`) } as const) : {}),
-    };
+    const where = keyword
+      ? [
+          {
+            ...(query?.status ? { status: query.status } : {}),
+            id: Like(`%${keyword}%`),
+          },
+          {
+            ...(query?.status ? { status: query.status } : {}),
+            name: Like(`%${keyword}%`),
+          },
+          {
+            ...(query?.status ? { status: query.status } : {}),
+            description: Like(`%${keyword}%`),
+          },
+          {
+            ...(query?.status ? { status: query.status } : {}),
+            version: Like(`%${keyword}%`),
+          },
+        ]
+      : query?.status
+        ? { status: query.status }
+        : undefined;
 
     const [items, total] = await this.gameModelRepository.findAndCount({
       where,
@@ -63,7 +90,7 @@ export class GameModelService {
     );
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
     if (!gameModel) {
@@ -73,7 +100,7 @@ export class GameModelService {
     return this.toGameModelResponse(gameModel);
   }
 
-  async update(id: number, updateGameModelDto: UpdateGameModelDto) {
+  async update(id: string, updateGameModelDto: UpdateGameModelDto) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
     if (!gameModel) {
@@ -105,7 +132,7 @@ export class GameModelService {
     return this.toGameModelResponse(savedGameModel);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
     if (!gameModel) {
@@ -124,20 +151,12 @@ export class GameModelService {
     input: Partial<CreateGameModelDto>,
     fallback?: Partial<GameModel>,
   ) {
-    const normalizedDrawInterval =
-      typeof input.drawInterval === 'number'
-        ? input.drawInterval
-        : fallback?.drawInterval;
-
     return {
+      id: input.id?.trim() || fallback?.id || '',
       name: input.name?.trim() || fallback?.name || '',
       description: input.description?.trim() || fallback?.description || '',
       version: input.version?.trim() || fallback?.version || '',
       status: input.status || fallback?.status || GameModelStatus.ACTIVE,
-      drawInterval:
-        typeof normalizedDrawInterval === 'number'
-          ? normalizedDrawInterval
-          : undefined,
     };
   }
 
@@ -148,10 +167,6 @@ export class GameModelService {
       description: gameModel.description,
       version: gameModel.version,
       status: gameModel.status,
-      drawInterval:
-        typeof gameModel.drawInterval === 'number'
-          ? gameModel.drawInterval
-          : null,
       createdAt:
         gameModel.createdAt instanceof Date
           ? gameModel.createdAt.toISOString()

@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
 export class GameModelResponseDto {
-  @ApiProperty({ example: 1 })
-  id!: number;
+  @ApiProperty({ example: '60' })
+  id!: string;
 
   @ApiProperty({ example: '默认模型' })
   name!: string;
@@ -16,9 +16,6 @@ export class GameModelResponseDto {
 
   @ApiProperty({ enum: GameModelStatus, example: GameModelStatus.ACTIVE })
   status!: GameModelStatus;
-
-  @ApiProperty({ example: 60, nullable: true })
-  drawInterval!: number | null;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt!: string;

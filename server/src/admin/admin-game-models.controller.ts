@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -45,7 +44,7 @@ export class AdminGameModelsController {
   @Get(':id')
   @ApiOperation({ summary: '管理员查看游戏模型详情' })
   @ApiOkDataResponse(GameModelResponseDto)
-  getGameModel(@Param('id', ParseIntPipe) id: number) {
+  getGameModel(@Param('id') id: string) {
     return this.gameModelService.findOne(id);
   }
 
@@ -69,7 +68,7 @@ export class AdminGameModelsController {
     messageExample: '游戏模型更新成功',
   })
   async updateGameModel(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateGameModelDto: UpdateGameModelDto,
   ) {
     return {
@@ -81,7 +80,7 @@ export class AdminGameModelsController {
   @Delete(':id')
   @ApiOperation({ summary: '管理员删除游戏模型' })
   @ApiOkDataResponse(IdDataDto, { messageExample: '游戏模型删除成功' })
-  deleteGameModel(@Param('id', ParseIntPipe) id: number) {
+  deleteGameModel(@Param('id') id: string) {
     return this.gameModelService.remove(id);
   }
 }

@@ -1,16 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
-  IsInt,
   IsOptional,
   IsString,
   MaxLength,
-  Min,
   MinLength,
 } from 'class-validator';
 import { GameModelStatus } from '../enums/game-model-status.enum';
 
 export class CreateGameModelDto {
+  @ApiProperty({ description: '模型编号（手动编写）', example: '60' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  id!: string;
+
   @ApiProperty({ description: '模型名称', example: '默认模型' })
   @IsString()
   @MinLength(2)
@@ -38,10 +42,4 @@ export class CreateGameModelDto {
   @IsOptional()
   @IsEnum(GameModelStatus)
   status?: GameModelStatus;
-
-  @ApiPropertyOptional({ description: '开奖间隔时间(秒)', example: 60 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  drawInterval?: number;
 }
