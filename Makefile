@@ -26,7 +26,7 @@ help:
 	@cmd /c "echo   2. dev-all / bootstrap 会在新的命令行窗口中启动三个项目。"
 	@cmd /c "echo."
 
-# 安装全部依赖。
+# install all dependencies for admin, client, and server.
 install: install-admin install-client install-server
 
 # 安装 admin 依赖。
