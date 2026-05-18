@@ -16,6 +16,7 @@ import { GameType } from './enums/game-type.enum';
 import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { NavigationType } from '../navigator/enums/navigation-type.enum';
 import { NavigationStatus } from '../navigator/enums/navigation-status.enum';
+import { resolveNavigationPath } from '../navigator/utils/navigation-path.util';
 import { GameModel } from '../game-model/entities/game-model.entity';
 
 @Injectable()
@@ -290,7 +291,7 @@ export class GameService {
     return {
       id: navigation.id,
       name: navigation.name,
-      path: navigation.path,
+      path: resolveNavigationPath(navigation.id, navigation.path),
       description: navigation.description,
       icon: navigation.icon,
       type: navigation.type,

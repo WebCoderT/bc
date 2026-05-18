@@ -22,11 +22,14 @@ export class CreateNavigatorDto {
   @MaxLength(50)
   name!: string;
 
-  @ApiProperty({ example: '/game/esports' })
+  @ApiPropertyOptional({
+    example: '/game/esports',
+    description: '导航访问路径；不配置时，接口返回会自动回退为导航 id',
+  })
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(200)
-  path!: string;
+  path?: string;
 
   @ApiPropertyOptional({ example: '前台电子竞技业务导航入口' })
   @IsOptional()

@@ -12,7 +12,10 @@ export class NavigationResponseDto {
   @ApiProperty({ example: '电子竞技' })
   name!: string;
 
-  @ApiProperty({ example: '/game/esports' })
+  @ApiProperty({
+    example: '/game/esports',
+    description: '导航访问路径；当未配置 path 时，这里返回导航 id 字符串',
+  })
   path!: string;
 
   @ApiProperty({ example: '前台电子竞技业务导航入口' })

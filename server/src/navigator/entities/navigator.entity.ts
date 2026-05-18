@@ -20,8 +20,8 @@ export class NavigationEntity {
   @Column({ name: 'name', length: 50 })
   name!: string;
 
-  @Column({ name: 'path', length: 200, unique: true })
-  path!: string;
+  @Column({ name: 'path', type: 'varchar', length: 200, nullable: true })
+  path?: string | null;
 
   @Column({ name: 'description', type: 'text' })
   description!: string;

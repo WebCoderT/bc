@@ -12,6 +12,7 @@ import { createListResult } from '../common/utils/pagination.util';
 import { NavigationEntity } from './entities/navigator.entity';
 import { NavigationStatus } from './enums/navigation-status.enum';
 import { Repository } from 'typeorm';
+import { resolveNavigationPath } from './utils/navigation-path.util';
 
 @Injectable()
 /**
@@ -45,7 +46,9 @@ export class NavigatorService {
 
     return {
       message: '导航创建成功',
-      navigation: await this.findEntityOrFail(savedNavigation.id),
+      navigation: this.toNavigationResponse(
+        await this.findEntityOrFail(savedNavigation.id),
+      ),
     };
   }
 
@@ -132,7 +135,7 @@ export class NavigatorService {
 
     return {
       message: '导航更新成功',
-      navigation: await this.findEntityOrFail(id),
+      navigation: this.toNavigationResponse(await this.findEntityOrFail(id)),
     };
   }
 
@@ -304,7 +307,11 @@ export class NavigatorService {
    * path 作为导航访问标识，需要在全局范围内保持唯一。
    * 更新时允许命中自己，因此提供 currentId 排除当前记录。
    */
-  private async ensurePathUnique(path: string, currentId?: number) {
+  private async ensurePathUnique(path: string | null, currentId?: number) {
+    if (!path) {
+      return;
+    }
+
     const existingNavigation = await this.navigationRepository.findOne({
       where: { path },
     });
@@ -319,7 +326,11 @@ export class NavigatorService {
    * filter(Boolean) 用来跳过空描述，避免对空值调用字符串方法。
    */
   private matchesKeyword(item: NavigationEntity, keyword: string) {
-    return [item.name, item.path, item.description]
+    return [
+      item.name,
+      resolveNavigationPath(item.id, item.path),
+      item.description,
+    ]
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(keyword));
   }
@@ -340,10 +351,17 @@ export class NavigatorService {
     input: Partial<CreateNavigatorDto>,
     fallback?: Partial<NavigationEntity>,
   ) {
+    const normalizedPath =
+      typeof input.path === 'string'
+        ? input.path.trim() || null
+        : input.path === undefined
+          ? (fallback?.path ?? null)
+          : null;
+
     return {
       // 文本字段统一 trim，更新场景未传值时回退到原始实体值。
       name: input.name?.trim() || fallback?.name || '',
-      path: input.path?.trim() || fallback?.path || '',
+      path: normalizedPath,
       description: input.description?.trim() || fallback?.description || '',
       icon: input.icon?.trim() || fallback?.icon || '',
       type: input.type || fallback?.type,
@@ -374,7 +392,7 @@ export class NavigatorService {
       // 基础字段保持与实体同名，减少前后端接口映射成本。
       id: navigation.id,
       name: navigation.name,
-      path: navigation.path,
+      path: resolveNavigationPath(navigation.id, navigation.path),
       description: navigation.description,
       icon: navigation.icon,
       type: navigation.type,
