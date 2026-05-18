@@ -7,9 +7,10 @@ import { ThemeToggle } from "../../components/theme-toggle";
 import { formatAuthUserRole, type AuthUser } from "../../lib/auth";
 import {
   getGameSectionByPath,
+  getGameSideNavigations,
   isGameLinkActive,
-  type GameNavigationSection,
 } from "../navigation";
+import type { ClientNavigation } from "@/app/lib/client-api";
 import { AppBrand } from "@/app/shared/components/app-brand";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
@@ -18,7 +19,7 @@ import { getAppProfileSync } from "@/app/shared/repositories/app-profile-reposit
 
 type GameLayoutShellProps = {
   children: ReactNode;
-  navigationSections: GameNavigationSection[];
+  navigations: ClientNavigation[];
   user: AuthUser;
   walletSummary: Array<{ label: string; value: string }>;
   onLogout: () => void;
@@ -32,7 +33,7 @@ type GameLayoutShellProps = {
  */
 export function GameLayoutShell({
   children,
-  navigationSections,
+  navigations,
   user,
   walletSummary,
   onLogout,
@@ -43,8 +44,8 @@ export function GameLayoutShell({
   /**
    * 根据当前路径推断顶部一级导航，并拿到对应二级导航列表。
    */
-  const activeSection = getGameSectionByPath(pathname, navigationSections);
-  const sideRoutes = activeSection.items;
+  const activeNavigation = getGameSectionByPath(pathname, navigations);
+  const sideNavigations = getGameSideNavigations(activeNavigation);
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_84%,transparent)] backdrop-blur-xl">
@@ -59,17 +60,17 @@ export function GameLayoutShell({
           </div>
 
           <nav className="hidden items-center gap-2 xl:flex">
-            {navigationSections.map((item) => (
+            {navigations.map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.path}
+                href={item.path}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  isGameLinkActive(pathname, item.href)
+                  isGameLinkActive(pathname, item.path)
                     ? "border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
                     : "border-[var(--border)] bg-[var(--panel)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
                 }`}
               >
-                {item.label}
+                {item.name}
               </Link>
             ))}
           </nav>
@@ -99,23 +100,25 @@ export function GameLayoutShell({
           <SurfaceCard className="sticky top-24 p-5" tone="card" padding="md">
             <div className="border-b border-[var(--border)] pb-4">
               <h2 className="text-xl font-semibold">
-                {activeSection.title}
+                {activeNavigation ? `${activeNavigation.name}导航` : "导航"}
               </h2>
             </div>
 
             <nav className="mt-4 space-y-2">
-              {sideRoutes.map((item) => (
+              {sideNavigations.map((item) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={item.path}
+                  href={item.path}
                   className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
-                    isGameLinkActive(pathname, item.href)
+                    isGameLinkActive(pathname, item.path)
                       ? "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
                       : "bg-[var(--panel)] text-[var(--foreground)] hover:text-[var(--accent)]"
                   }`}
                 >
-                  <span className="font-medium">{item.label}</span>
-                  <span className="text-xs text-inherit/80">{item.badge}</span>
+                  <span className="font-medium">{item.name}</span>
+                  <span className="text-xs text-inherit/80">
+                    {item.level === 1 ? "一级" : "二级"}
+                  </span>
                 </Link>
               ))}
             </nav>

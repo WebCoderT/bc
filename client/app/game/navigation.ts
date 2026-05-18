@@ -1,70 +1,47 @@
 import { type ClientNavigation } from "@/app/lib/client-api";
 
-export type GameNavigationItem = {
-  label: string;
-  href: string;
-  badge: string;
-  pageTitle: string;
-};
-
-export type GameNavigationSection = {
-  label: string;
-  href: string;
-  title: string;
-  items: GameNavigationItem[];
-};
-
-function createRootNavigationItem(
-  navigation: ClientNavigation,
-): GameNavigationItem {
-  return {
-    label: navigation.name,
-    href: navigation.path,
-    badge: "",
-    pageTitle: navigation.name,
-  };
-}
-
-function createChildNavigationItem(
-  navigation: ClientNavigation,
-): GameNavigationItem {
-  return {
-    label: navigation.name,
-    href: navigation.path,
-    badge: "",
-    pageTitle: navigation.name,
-  };
-}
-
-export function mapNavigationsToGameSections(
-  navigations: ClientNavigation[],
-): GameNavigationSection[] {
-  const sections = navigations
-    .filter((item) => item.level === 1)
-    .map((item) => {
-      const children = item.children.map(createChildNavigationItem);
-
-      return {
-        label: item.name,
-        href: item.path,
-        title: `${item.name}导航`,
-        items: [createRootNavigationItem(item), ...children],
-      } satisfies GameNavigationSection;
-    });
-
-  return sections.length > 0 ? sections : [];
-}
-
+/**
+ * 根据当前路径匹配激活的一级导航。
+ *
+ * 这里直接基于服务端返回的导航结构工作，不再做前端结构转换。
+ */
 export function getGameSectionByPath(
   pathname: string | null,
-  sections: GameNavigationSection[] = [],
+  navigations: ClientNavigation[] = [],
 ) {
   const currentPathname = pathname ?? "/game";
+
   return (
-    sections.find((section) => currentPathname === section.href) ?? sections[0]
+    navigations.find((navigation) => {
+      if (currentPathname === navigation.path) {
+        return true;
+      }
+
+      return navigation.children.some(
+        (child) =>
+          currentPathname === child.path ||
+          currentPathname.startsWith(`${child.path}/`),
+      );
+    }) ?? navigations[0]
   );
 }
 
+/**
+ * 返回当前一级导航应展示的侧边栏节点。
+ *
+ * 当前实现保留一级导航自身，同时拼接其二级导航，便于与现有布局展示兼容。
+ */
+export function getGameSideNavigations(activeNavigation?: ClientNavigation) {
+  if (!activeNavigation) {
+    return [];
+  }
+
+  return [activeNavigation, ...activeNavigation.children];
+}
+
+/**
+ * 判断给定导航链接是否处于激活状态。
+ */
 export function isGameLinkActive(pathname: string | null, href: string) {
   const currentPathname = pathname ?? "/game";
 

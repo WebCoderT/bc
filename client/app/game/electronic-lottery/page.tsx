@@ -4,7 +4,7 @@ import { useGameNavigationStore } from "../../shared/repositories/game-navigatio
 
 // 电子彩票页面
 export default function ElectronicLotteryPage() {
-  const { navigationSections } = useGameNavigationStore();
-  console.log("电子彩票页面 - 导航数据：", navigationSections);
+  const { navigations } = useGameNavigationStore();
+  console.log("电子彩票页面 - 导航数据：", navigations);
   return <EmptyGamePage title="电子彩票" />;
 }

@@ -40,13 +40,7 @@ export type ClientGame = GameResponseDto;
 export type ClientVipInsights = VipInsightsDataDto;
 export type ClientGamesQuery = MemberGamesControllerGetGamesParams;
 export type ClientGameDetailQuery = MemberGamesControllerGetGameParams;
-export type ClientNavigation = Omit<
-  NavigationResponseDto,
-  "parentId" | "children"
-> & {
-  parentId: number | null;
-  children: ClientNavigation[];
-};
+export type ClientNavigation = NavigationResponseDto;
 export type ClientNavigationsQuery =
   MemberNavigationsControllerGetNavigationsParams;
 
@@ -139,19 +133,6 @@ function extractErrorMessage(payload: unknown) {
   return typeof message === "string" ? message : null;
 }
 
-function normalizeClientNavigation(
-  navigation: NavigationResponseDto,
-): ClientNavigation {
-  return {
-    ...navigation,
-    parentId:
-      typeof navigation.parentId === "number" ? navigation.parentId : null,
-    children: Array.isArray(navigation.children)
-      ? navigation.children.map(normalizeClientNavigation)
-      : [],
-  };
-}
-
 function normalizeClientApiError(error: unknown) {
   if (error instanceof ClientApiError) {
     return error;
@@ -159,9 +140,9 @@ function normalizeClientApiError(error: unknown) {
 
   const status =
     typeof error === "object" &&
-      error !== null &&
-      "status" in error &&
-      typeof (error as { status?: unknown }).status === "number"
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
       ? (error as { status: number }).status
       : 500;
 
@@ -365,10 +346,7 @@ export async function fetchMemberNavigations(
     }),
   );
 
-  return {
-    total: response.total,
-    items: response.items.map(normalizeClientNavigation),
-  };
+  return response;
 }
 
 export async function fetchMemberNavigation(
@@ -388,7 +366,7 @@ export async function fetchMemberNavigation(
     ),
   );
 
-  return normalizeClientNavigation(response);
+  return response;
 }
 
 export function formatAuthUserRole(role: AuthUser["role"]) {
