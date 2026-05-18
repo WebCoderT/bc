@@ -29,15 +29,15 @@ export function AppBrand({
   const sizeClassName =
     size === "lg"
       ? {
-          logo: "h-12 w-12 rounded-2xl text-base",
-          caption: "text-xs tracking-[0.3em]",
-          title: "text-2xl",
+          logo: "h-11 w-11 rounded-[var(--surface-radius-md)] text-sm",
+          caption: "text-xs tracking-[var(--eyebrow-tracking)]",
+          title: "text-[length:var(--title-size-sm)]",
           secondary: "text-sm",
         }
       : {
-          logo: "h-11 w-11 rounded-2xl text-sm",
-          caption: "text-[11px] tracking-[0.28em]",
-          title: "text-lg",
+          logo: "h-10 w-10 rounded-[var(--surface-radius-md)] text-sm",
+          caption: "text-[11px] tracking-[var(--eyebrow-tracking)]",
+          title: "text-base",
           secondary: "text-xs",
         };
 
@@ -47,7 +47,7 @@ export function AppBrand({
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <div
         className={cn(
-          "flex items-center justify-center bg-[var(--accent)] font-semibold text-white shadow-[0_16px_34px_var(--glow)]",
+          "flex items-center justify-center bg-[var(--accent)] font-semibold text-white shadow-[var(--shadow-soft)]",
           sizeClassName.logo,
         )}
         aria-hidden="true"

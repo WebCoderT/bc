@@ -19,7 +19,7 @@ export function GamePageHero({
   totalGameCount,
 }: GamePageHeroProps) {
   return (
-    <section className="rounded-[2.2rem] border border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_30%,black))] p-7 text-white shadow-[0_24px_80px_var(--glow)] lg:p-8">
+    <section className="rounded-[var(--surface-radius-xl)] border border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_30%,black))] p-[var(--surface-padding-lg)] text-white shadow-[var(--shadow-hero)] lg:p-[calc(var(--surface-padding-lg)+0.25rem)]">
       <SectionHeading
         eyebrow={sectionTitle}
         title={sectionLabel}

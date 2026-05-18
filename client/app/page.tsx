@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <>
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 pb-6 pt-28 lg:px-10">
+        <header className="compact-shell--wide flex items-center justify-between gap-4 pb-5 pt-16 lg:pt-20">
           <AppBrand caption={appProfile.officialSiteLabel} size="lg" />
 
           <div className="flex items-center gap-3">
@@ -50,21 +50,25 @@ export default function HomePage() {
           </div>
         </header>
 
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 pb-16 lg:px-10">
-          <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-            <SurfaceCard tone="panel" padding="lg" className="rounded-[2.5rem]">
-              <p className="inline-flex rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold tracking-[0.18em] text-[var(--accent)]">
+        <main className="compact-shell--wide compact-stack pb-12">
+          <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <SurfaceCard
+              tone="panel"
+              padding="lg"
+              className="rounded-[var(--surface-radius-xl)]"
+            >
+              <p className="inline-flex rounded-[var(--control-radius)] border border-[var(--border)] px-3 py-1.5 text-xs font-semibold tracking-[0.18em] text-[var(--accent)]">
                 {appProfile.appWordmark} OFFICIAL SITE
               </p>
-              <h2 className="mt-6 max-w-4xl text-5xl font-semibold leading-tight tracking-tight lg:text-7xl">
+              <h2 className="mt-5 max-w-4xl text-[length:var(--title-size-lg)] font-semibold leading-tight tracking-tight">
                 为运动品牌、战队与赛事组织打造更有冲刺感的数字主场。
               </h2>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+              <p className="mt-4 max-w-2xl text-base leading-[var(--body-line-height)] text-[var(--muted)]">
                 首页保持无前缀访问，用更强的速度感和竞技科技视觉承接官网展示；登录或注册成功后，再进入独立的
                 `/game` 已登录空间。
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <ActionButton size="lg" onClick={() => openAuth("register")}>
                   立即加入赛场
                 </ActionButton>
@@ -77,14 +81,14 @@ export default function HomePage() {
                 </ActionButton>
               </div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 {marketingFeatureStats.map((item) => (
                   <SurfaceCard
                     key={item.label}
-                    className="rounded-[1.75rem] p-5"
+                    className="rounded-[var(--surface-radius-md)]"
                     padding="md"
                   >
-                    <p className="text-3xl font-semibold text-[var(--accent-strong)]">
+                    <p className="text-2xl font-semibold text-[var(--accent-strong)]">
                       {item.value}
                     </p>
                     <p className="mt-2 text-sm text-[var(--muted)]">
@@ -95,7 +99,7 @@ export default function HomePage() {
               </div>
             </SurfaceCard>
 
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-[var(--border)] bg-[linear-gradient(145deg,var(--accent),color-mix(in_srgb,var(--accent)_22%,black))] p-8 text-white shadow-[0_24px_80px_var(--glow)]">
+            <div className="relative overflow-hidden rounded-[var(--surface-radius-xl)] border border-[var(--border)] bg-[linear-gradient(145deg,var(--accent),color-mix(in_srgb,var(--accent)_22%,black))] p-6 text-white shadow-[var(--shadow-hero)]">
               <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
               <div className="absolute -bottom-20 -left-10 h-44 w-44 rounded-full bg-black/15 blur-3xl" />
 
@@ -103,18 +107,18 @@ export default function HomePage() {
                 <p className="text-sm font-semibold tracking-[0.28em] text-white/70">
                   ARENA FEED
                 </p>
-                <h3 className="mt-4 text-3xl font-semibold leading-tight">
+                <h3 className="mt-3 text-2xl font-semibold leading-tight">
                   从官网直连竞技工作台
                 </h3>
-                <p className="mt-4 text-sm leading-7 text-white/80">
+                <p className="mt-3 text-sm leading-[var(--body-line-height)] text-white/80">
                   统一承接品牌故事、赛程动态、战队数据、粉丝社群和商业合作，让官网不只是展示页，更是转化入口。
                 </p>
 
-                <div className="mt-8 space-y-4">
+                <div className="mt-6 space-y-3">
                   {marketingArenaFeatures.map((item, index) => (
                     <div
                       key={item}
-                      className="flex items-center gap-4 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur-sm"
+                      className="flex items-center gap-3 rounded-[var(--surface-radius-md)] border border-white/12 bg-white/10 p-3 backdrop-blur-sm"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
                         0{index + 1}
@@ -127,18 +131,18 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-3">
+          <section className="grid gap-4 lg:grid-cols-3">
             {marketingSpotlightCards.map((item) => (
               <SurfaceCard
                 key={item.title}
-                className="rounded-[2rem] p-7"
+                className="rounded-[var(--surface-radius-lg)]"
                 padding="md"
               >
-                <div className="mb-5 h-1.5 w-20 rounded-full bg-[var(--accent)]" />
-                <h3 className="text-2xl font-semibold text-[var(--accent-strong)]">
+                <div className="mb-4 h-1.5 w-16 rounded-full bg-[var(--accent)]" />
+                <h3 className="text-[length:var(--title-size-sm)] font-semibold text-[var(--accent-strong)]">
                   {item.title}
                 </h3>
-                <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+                <p className="mt-3 text-sm leading-[var(--body-line-height)] text-[var(--muted)]">
                   {item.description}
                 </p>
               </SurfaceCard>

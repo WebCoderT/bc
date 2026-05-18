@@ -34,14 +34,14 @@ export function SurfaceCard({
    * padding 保持两档，避免组件 API 过度复杂。
    */
   const paddingClassName = {
-    md: "p-5",
-    lg: "p-6 lg:p-8",
+    md: "p-[var(--surface-padding-md)]",
+    lg: "p-[var(--surface-padding-lg)] lg:p-[calc(var(--surface-padding-lg)+0.25rem)]",
   }[padding];
 
   return (
     <div
       className={cn(
-        "rounded-[2rem] border border-[var(--border)] shadow-[0_18px_50px_var(--glow)] backdrop-blur",
+        "rounded-[var(--surface-radius-lg)] border border-[var(--border)] shadow-[var(--shadow-card)] backdrop-blur",
         toneClassName,
         paddingClassName,
         className,

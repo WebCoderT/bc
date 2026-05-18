@@ -23,11 +23,11 @@ export function NumberBall({
 }: NumberBallProps) {
   const sizeClassName =
     size === "lg"
-      ? "h-20 w-20 text-3xl lg:h-24 lg:w-24 lg:text-4xl"
-      : "h-16 w-16 text-2xl";
+      ? "h-[var(--ball-size-lg)] w-[var(--ball-size-lg)] text-[length:var(--ball-font-size-lg)]"
+      : "h-[var(--ball-size-md)] w-[var(--ball-size-md)] text-[length:var(--ball-font-size-md)]";
 
   return (
-    <div className={cn("flex flex-col items-center gap-3", className)}>
+    <div className={cn("flex flex-col items-center gap-2", className)}>
       {label ? (
         <span className="text-xs font-semibold tracking-[0.28em] text-[var(--muted)]">
           {label}

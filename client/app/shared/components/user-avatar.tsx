@@ -12,13 +12,15 @@ export function UserAvatar({
   className = "",
 }: UserAvatarProps) {
   const sizeClassName =
-    size === "lg" ? "h-20 w-20 rounded-[1.8rem]" : "h-12 w-12 rounded-2xl";
+    size === "lg"
+      ? "h-16 w-16 rounded-[var(--surface-radius-lg)]"
+      : "h-11 w-11 rounded-[var(--surface-radius-md)]";
 
   return (
     <img
       src={src}
       alt={alt}
-      className={`${sizeClassName} border border-[var(--border)] bg-[var(--panel)] object-cover shadow-[0_18px_40px_var(--glow)] ${className}`.trim()}
+      className={`${sizeClassName} border border-[var(--border)] bg-[var(--panel)] object-cover shadow-[var(--shadow-soft)] ${className}`.trim()}
     />
   );
 }

@@ -73,8 +73,8 @@ export function AuthModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[0_30px_80px_var(--glow)]">
-        <div className="bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-6 py-6 text-white">
+      <div className="w-full max-w-md overflow-hidden rounded-[var(--surface-radius-xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-modal)]">
+        <div className="bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-[var(--surface-padding-lg)] py-[var(--surface-padding-lg)] text-white">
           <AppBrand
             caption={appProfile.consoleLabel}
             secondaryText="统一品牌数据已接入认证入口"
@@ -90,8 +90,8 @@ export function AuthModal({
           </p>
         </div>
 
-        <div className="p-6">
-          <div className="mb-6 grid grid-cols-2 rounded-full border border-[var(--border)] bg-[var(--panel)] p-1 text-sm">
+        <div className="p-[var(--surface-padding-lg)]">
+          <div className="mb-5 grid grid-cols-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--panel)] p-1 text-sm">
             <ActionButton
               onClick={() => onModeChange("login")}
               type="button"
@@ -128,7 +128,7 @@ export function AuthModal({
               <input
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                className="w-full rounded-[var(--surface-radius-md)] border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                 placeholder="请输入用户名，仅支持字母、数字和下划线"
                 pattern="[A-Za-z0-9_]+"
                 minLength={3}
@@ -147,7 +147,7 @@ export function AuthModal({
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+                className="w-full rounded-[var(--surface-radius-md)] border border-[var(--border)] bg-[var(--panel)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
                 placeholder="请输入密码"
                 minLength={6}
                 maxLength={32}
@@ -160,7 +160,7 @@ export function AuthModal({
             </label>
 
             {submitError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-[var(--surface-radius-md)] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {submitError}
               </div>
             ) : null}

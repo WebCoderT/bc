@@ -25,7 +25,7 @@ export function SectionHeading({
     <div className={className}>
       <p
         className={cn(
-          "text-xs font-semibold tracking-[0.3em]",
+          "text-xs font-semibold tracking-[var(--eyebrow-tracking)]",
           inverted ? "text-white/70" : "text-[var(--accent)]",
         )}
       >
@@ -33,7 +33,7 @@ export function SectionHeading({
       </p>
       <h2
         className={cn(
-          "mt-3 text-2xl font-semibold lg:text-3xl",
+          "mt-2 text-[length:var(--title-size-md)] font-semibold leading-tight",
           inverted ? "text-white" : "text-[var(--foreground)]",
         )}
       >
@@ -42,7 +42,7 @@ export function SectionHeading({
       {description ? (
         <p
           className={cn(
-            "mt-3 text-sm leading-7 lg:text-base",
+            "mt-2 text-sm leading-[var(--body-line-height)]",
             inverted ? "text-white/80" : "text-[var(--muted)]",
           )}
         >

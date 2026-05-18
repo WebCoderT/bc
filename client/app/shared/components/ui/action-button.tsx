@@ -48,15 +48,15 @@ export function ActionButton({
    */
   const sizeClassName =
     size === "lg"
-      ? "px-6 py-3 text-sm font-semibold"
-      : "px-4 py-2.5 text-sm font-medium";
+      ? "px-[var(--control-padding-x-lg)] py-[var(--control-padding-y-lg)] text-sm font-semibold"
+      : "px-[var(--control-padding-x-md)] py-[var(--control-padding-y-md)] text-sm font-medium";
 
   /**
    * 视觉风格独立维护，便于未来扩展 danger、success 等变体。
    */
   const variantClassName = {
     solid:
-      "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)] hover:brightness-110",
+      "bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:brightness-110",
     outline:
       "border border-[var(--border)] bg-[var(--panel)] text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]",
     soft: "border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]",
@@ -66,7 +66,7 @@ export function ActionButton({
     <button
       type={type}
       className={cn(
-        "rounded-full transition",
+        "rounded-[var(--control-radius)] transition-[border-color,background-color,color,box-shadow,filter] duration-200",
         sizeClassName,
         variantClassName,
         fullWidth && "w-full",

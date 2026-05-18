@@ -1,0 +1,93 @@
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-size: var(--body-font-size);
+  line-height: var(--body-line-height);
+  min-height: 100vh;
+  background-image: var(--page-gradient);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    background-image 220ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+body,
+a {
+  color: inherit;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.compact-shell {
+  width: min(100%, var(--layout-max-width));
+  margin-inline: auto;
+  padding-inline: var(--page-padding-x);
+}
+
+.compact-shell--wide {
+  width: min(100%, calc(var(--layout-max-width) + 4rem));
+  margin-inline: auto;
+  padding-inline: var(--page-padding-x-lg);
+}
+
+.compact-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap-lg);
+}
+
+.compact-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent)
+    transparent;
+}
+
+.compact-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.compact-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
