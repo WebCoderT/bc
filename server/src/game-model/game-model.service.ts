@@ -13,12 +13,21 @@ import { createPaginatedResult } from '../common/utils/pagination.util';
 import { GameModelStatus } from './enums/game-model-status.enum';
 
 @Injectable()
+/**
+ * 游戏模型服务负责模型增删改查与唯一性校验。
+ */
 export class GameModelService {
+  /**
+   * 注入游戏模型仓储，统一处理模型持久化操作。
+   */
   constructor(
     @InjectRepository(GameModel)
     private readonly gameModelRepository: Repository<GameModel>,
   ) {}
 
+  /**
+   * 创建游戏模型，并校验模型编号与名称版本组合唯一性。
+   */
   async create(createGameModelDto: CreateGameModelDto) {
     const normalizedInput = this.normalizeInput(createGameModelDto);
 
@@ -47,6 +56,9 @@ export class GameModelService {
     return this.toGameModelResponse(savedGameModel);
   }
 
+  /**
+   * 分页查询游戏模型列表，并支持关键字与状态筛选。
+   */
   async findAll(query?: ListGameModelsQueryDto) {
     const page = query?.page ?? 1;
     const pageSize = query?.pageSize ?? 10;
@@ -90,6 +102,9 @@ export class GameModelService {
     );
   }
 
+  /**
+   * 根据模型编号查询单个游戏模型详情。
+   */
   async findOne(id: string) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
@@ -100,6 +115,9 @@ export class GameModelService {
     return this.toGameModelResponse(gameModel);
   }
 
+  /**
+   * 更新指定游戏模型，并在关键字段变化时校验唯一性。
+   */
   async update(id: string, updateGameModelDto: UpdateGameModelDto) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
@@ -132,6 +150,9 @@ export class GameModelService {
     return this.toGameModelResponse(savedGameModel);
   }
 
+  /**
+   * 删除指定游戏模型。
+   */
   async remove(id: string) {
     const gameModel = await this.gameModelRepository.findOne({ where: { id } });
 
@@ -147,6 +168,9 @@ export class GameModelService {
     };
   }
 
+  /**
+   * 对创建和更新输入进行统一标准化收口。
+   */
   private normalizeInput(
     input: Partial<CreateGameModelDto>,
     fallback?: Partial<GameModel>,
@@ -160,6 +184,9 @@ export class GameModelService {
     };
   }
 
+  /**
+   * 将模型实体转换为前端可直接消费的响应结构。
+   */
   private toGameModelResponse(gameModel: GameModel) {
     return {
       id: gameModel.id,

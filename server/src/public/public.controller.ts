@@ -8,7 +8,13 @@ import { ServiceStatusDto } from './dto/service-status.dto';
 
 @ApiTags('public')
 @Controller()
+/**
+ * 公开控制器负责承载无需登录即可访问的基础公开接口。
+ */
 export class PublicController {
+  /**
+   * 返回服务描述、认证方式与 Swagger 文档入口。
+   */
   @Get()
   @ApiOperation({ summary: '服务状态与说明' })
   @ApiOkDataResponse(ServiceStatusDto)
@@ -25,6 +31,9 @@ export class PublicController {
     };
   }
 
+  /**
+   * 返回可公开展示的公告列表。
+   */
   @Get('public/announcements')
   @ApiOperation({ summary: '公开公告' })
   @ApiOkStringListResponse()

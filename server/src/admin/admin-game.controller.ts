@@ -32,9 +32,18 @@ import { GameService } from '../game/game.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 @Controller('admin/games')
+/**
+ * 管理员游戏控制器负责游戏后台管理接口。
+ */
 export class AdminGameController {
+  /**
+   * 注入游戏服务，复用统一的游戏管理逻辑。
+   */
   constructor(private readonly gameService: GameService) {}
 
+  /**
+   * 管理员分页查询游戏列表。
+   */
   @Get()
   @ApiOperation({ summary: '管理员分页查询游戏列表' })
   @ApiOkPaginatedResponse(GameResponseDto)
@@ -42,6 +51,9 @@ export class AdminGameController {
     return this.gameService.findAll(query);
   }
 
+  /**
+   * 管理员创建新的游戏记录。
+   */
   @Post()
   @ApiOperation({ summary: '管理员新增游戏' })
   @ApiBody({ type: CreateGameDto, description: '新增游戏参数' })
@@ -53,6 +65,9 @@ export class AdminGameController {
     };
   }
 
+  /**
+   * 管理员更新指定游戏。
+   */
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改游戏' })
   @ApiBody({ type: UpdateGameDto, description: '修改游戏参数' })
@@ -67,6 +82,9 @@ export class AdminGameController {
     };
   }
 
+  /**
+   * 管理员删除指定游戏。
+   */
   @Delete(':id')
   @ApiOperation({ summary: '管理员删除游戏' })
   @ApiOkDataResponse(IdDataDto, { messageExample: '游戏删除成功' })

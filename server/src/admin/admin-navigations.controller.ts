@@ -32,9 +32,18 @@ import { NavigatorService } from '../navigator/navigator.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 @Controller('admin/navigations')
+/**
+ * 管理员导航控制器负责后台导航的查询与维护接口。
+ */
 export class AdminNavigationsController {
-  constructor(private readonly navigatorService: NavigatorService) { }
+  /**
+   * 注入导航服务，复用统一的导航管理逻辑。
+   */
+  constructor(private readonly navigatorService: NavigatorService) {}
 
+  /**
+   * 管理员查询导航列表，默认返回全部导航数据。
+   */
   @Get()
   @ApiOperation({ summary: '管理员查询导航列表' })
   @ApiOkListResponse(NavigationResponseDto)
@@ -44,6 +53,9 @@ export class AdminNavigationsController {
     return this.navigatorService.findAll(query);
   }
 
+  /**
+   * 管理员查看指定导航详情。
+   */
   @Get(':id')
   @ApiOperation({ summary: '管理员查看导航详情' })
   @ApiOkDataResponse(NavigationResponseDto)
@@ -51,6 +63,9 @@ export class AdminNavigationsController {
     return this.navigatorService.findOne(id);
   }
 
+  /**
+   * 管理员创建新的导航节点。
+   */
   @Post()
   @ApiOperation({ summary: '管理员新增导航' })
   @ApiBody({ type: CreateNavigatorDto, description: '新增导航参数' })
@@ -61,6 +76,9 @@ export class AdminNavigationsController {
     return this.navigatorService.create(createNavigatorDto);
   }
 
+  /**
+   * 管理员更新指定导航。
+   */
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改导航' })
   @ApiBody({ type: UpdateNavigatorDto, description: '修改导航参数' })
@@ -74,6 +92,9 @@ export class AdminNavigationsController {
     return this.navigatorService.update(id, updateNavigatorDto);
   }
 
+  /**
+   * 管理员删除指定导航。
+   */
   @Delete(':id')
   @ApiOperation({ summary: '管理员删除导航' })
   @ApiOkDataResponse(IdDataDto, { messageExample: '导航删除成功' })

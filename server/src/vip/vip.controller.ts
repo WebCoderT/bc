@@ -12,7 +12,13 @@ import { VipInsightsDataDto } from './dto/vip-insights-data.dto';
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('vip')
+/**
+ * VIP 控制器负责输出仅 VIP 与管理员可访问的专属内容。
+ */
 export class VipController {
+  /**
+   * 返回当前登录用户可查看的 VIP 专属报告与能力说明。
+   */
   @Get('insights')
   @Roles(Role.Vip, Role.Admin)
   @ApiOperation({ summary: 'VIP 专属内容' })

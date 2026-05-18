@@ -14,9 +14,18 @@ import { SafeUserDto } from '../users/dto/safe-user.dto';
 
 @ApiTags('auth')
 @Controller('auth')
+/**
+ * 认证控制器负责注册、登录与当前用户资料查询。
+ */
 export class AuthController {
+  /**
+   * 注入认证服务，复用注册登录与令牌校验逻辑。
+   */
   constructor(private readonly authService: AuthService) {}
 
+  /**
+   * 处理普通用户注册请求。
+   */
   @Post('register')
   @ApiOperation({ summary: '普通用户注册' })
   @ApiBody({ type: RegisterDto, description: '注册参数' })
@@ -25,6 +34,9 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  /**
+   * 处理用户登录并返回访问令牌。
+   */
   @Post('login')
   @ApiOperation({ summary: '用户登录并获取 JWT' })
   @ApiBody({ type: LoginDto, description: '登录参数' })
@@ -33,6 +45,9 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  /**
+   * 校验当前 JWT，并回传当前登录用户信息。
+   */
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

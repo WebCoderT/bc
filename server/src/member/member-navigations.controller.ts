@@ -24,9 +24,18 @@ import { NavigatorService } from '../navigator/navigator.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.User, Role.Vip, Role.Admin)
 @Controller('member/navigations')
+/**
+ * 会员导航控制器负责向登录用户输出可见导航数据。
+ */
 export class MemberNavigationsController {
+  /**
+   * 注入导航服务，复用前台可见性过滤后的导航查询逻辑。
+   */
   constructor(private readonly navigatorService: NavigatorService) {}
 
+  /**
+   * 查询当前登录用户可访问的导航列表。
+   */
   @Get()
   @ApiOperation({ summary: '登录用户查询导航列表' })
   @ApiOkListResponse(NavigationResponseDto)
@@ -34,6 +43,9 @@ export class MemberNavigationsController {
     return this.navigatorService.findAllForMember(query);
   }
 
+  /**
+   * 查询当前登录用户可访问的单个导航详情。
+   */
   @Get(':id')
   @ApiOperation({ summary: '登录用户查看导航详情' })
   @ApiOkDataResponse(NavigationResponseDto)

@@ -27,9 +27,18 @@ import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 @Controller('admin/users')
+/**
+ * 管理员用户控制器负责后台用户查询与编辑接口。
+ */
 export class AdminUsersController {
+  /**
+   * 注入用户服务，复用统一的用户查询和更新逻辑。
+   */
   constructor(private readonly usersService: UsersService) {}
 
+  /**
+   * 管理员分页查看用户，并支持按角色和关键字筛选。
+   */
   @Get()
   @ApiOperation({ summary: '管理员分页查看用户并按角色筛选' })
   @ApiOkPaginatedResponse(SafeUserDto)
@@ -37,6 +46,9 @@ export class AdminUsersController {
     return this.usersService.listPublicUsers(query);
   }
 
+  /**
+   * 管理员更新指定用户的后台资料。
+   */
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改用户信息' })
   @ApiBody({ type: UpdateAdminUserDto, description: '修改用户参数' })

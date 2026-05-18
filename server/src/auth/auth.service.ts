@@ -7,12 +7,21 @@ import { UsersService } from '../users/users.service';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Injectable()
+/**
+ * 认证服务负责注册、登录与 JWT 校验。
+ */
 export class AuthService {
+  /**
+   * 注入用户服务与 JWT 服务，统一处理认证相关流程。
+   */
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * 注册普通用户并返回安全用户信息。
+   */
   async register(registerDto: RegisterDto) {
     const user = await this.usersService.create(
       registerDto.username,
@@ -25,6 +34,9 @@ export class AuthService {
     };
   }
 
+  /**
+   * 校验用户名密码并签发访问令牌。
+   */
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByUsername(loginDto.username);
 
@@ -53,6 +65,9 @@ export class AuthService {
     };
   }
 
+  /**
+   * 校验令牌有效性，并解析出当前安全用户信息。
+   */
   async verifyToken(token: string) {
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);

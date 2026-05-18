@@ -31,9 +31,18 @@ import { GameModelService } from '../game-model/game-model.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 @Controller('admin/game-models')
+/**
+ * 管理员游戏模型控制器负责模型后台管理接口。
+ */
 export class AdminGameModelsController {
+  /**
+   * 注入游戏模型服务，复用统一的模型管理逻辑。
+   */
   constructor(private readonly gameModelService: GameModelService) {}
 
+  /**
+   * 管理员分页查询游戏模型列表。
+   */
   @Get()
   @ApiOperation({ summary: '管理员分页查询游戏模型列表' })
   @ApiOkPaginatedResponse(GameModelResponseDto)
@@ -41,6 +50,9 @@ export class AdminGameModelsController {
     return this.gameModelService.findAll(query);
   }
 
+  /**
+   * 管理员查看单个游戏模型详情。
+   */
   @Get(':id')
   @ApiOperation({ summary: '管理员查看游戏模型详情' })
   @ApiOkDataResponse(GameModelResponseDto)
@@ -48,6 +60,9 @@ export class AdminGameModelsController {
     return this.gameModelService.findOne(id);
   }
 
+  /**
+   * 管理员创建新的游戏模型。
+   */
   @Post()
   @ApiOperation({ summary: '管理员新增游戏模型' })
   @ApiBody({ type: CreateGameModelDto, description: '新增游戏模型参数' })
@@ -61,6 +76,9 @@ export class AdminGameModelsController {
     };
   }
 
+  /**
+   * 管理员更新指定游戏模型。
+   */
   @Patch(':id')
   @ApiOperation({ summary: '管理员修改游戏模型' })
   @ApiBody({ type: UpdateGameModelDto, description: '修改游戏模型参数' })
@@ -77,6 +95,9 @@ export class AdminGameModelsController {
     };
   }
 
+  /**
+   * 管理员删除指定游戏模型。
+   */
   @Delete(':id')
   @ApiOperation({ summary: '管理员删除游戏模型' })
   @ApiOkDataResponse(IdDataDto, { messageExample: '游戏模型删除成功' })

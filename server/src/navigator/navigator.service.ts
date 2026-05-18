@@ -14,6 +14,9 @@ import { NavigationStatus } from './enums/navigation-status.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
+/**
+ * 导航服务负责后台导航维护与前台导航可见性过滤。
+ */
 export class NavigatorService {
   /**
    * 导航服务直接操作导航实体仓储，负责后台维护与前台可见性过滤。
@@ -21,7 +24,7 @@ export class NavigatorService {
   constructor(
     @InjectRepository(NavigationEntity)
     private readonly navigationRepository: Repository<NavigationEntity>,
-  ) { }
+  ) {}
 
   /**
    * 创建导航前先做输入标准化、父级校验与路径唯一性校验。
@@ -55,7 +58,7 @@ export class NavigatorService {
 
   /**
    * 会员端仅返回可见导航，并沿用统一的列表包装结构。
-    * 这里不额外重写分页格式，避免后台和前台返回协议分叉。
+   * 这里不额外重写分页格式，避免后台和前台返回协议分叉。
    */
   async findAllForMember(query?: ListNavigationsQueryDto) {
     const navigations = await this.listNavigations(query, true);
@@ -65,7 +68,7 @@ export class NavigatorService {
 
   /**
    * 后台查看单个导航时不做可见性过滤。
-    * 后台管理需要看到隐藏节点，因此这里只校验记录是否存在。
+   * 后台管理需要看到隐藏节点，因此这里只校验记录是否存在。
    */
   async findOne(id: number) {
     const navigation = await this.findEntityOrFail(id);
@@ -99,7 +102,7 @@ export class NavigatorService {
 
   /**
    * 更新时复用与创建一致的输入清洗和父级约束逻辑。
-    * 这样可以把创建和编辑的约束保持在同一套规则里。
+   * 这样可以把创建和编辑的约束保持在同一套规则里。
    */
   async update(id: number, updateNavigatorDto: UpdateNavigatorDto) {
     // 更新前先取出现有实体，用于局部更新时回填缺失字段。
@@ -135,7 +138,7 @@ export class NavigatorService {
 
   /**
    * 删除前先确认记录存在，保证错误语义一致。
-    * 这样删除不存在节点时也会得到统一的 404 响应。
+   * 这样删除不存在节点时也会得到统一的 404 响应。
    */
   async remove(id: number) {
     // remove 使用实体删除，沿用 TypeORM 的级联与生命周期行为。
@@ -221,36 +224,38 @@ export class NavigatorService {
     // 这样用户搜索到某个二级导航时，前端仍然可以拿到它所属的一级分组。
     const matchedIds = new Set(keywordFilteredItems.map((item) => item.id));
 
-    return statusFilteredItems
-      // 树形输出只从一级节点开始组装，二级节点统一挂在 children 上。
-      .filter((item) => item.parentId === null)
-      .filter((item) => {
-        if (!keyword) {
-          return true;
-        }
+    return (
+      statusFilteredItems
+        // 树形输出只从一级节点开始组装，二级节点统一挂在 children 上。
+        .filter((item) => item.parentId === null)
+        .filter((item) => {
+          if (!keyword) {
+            return true;
+          }
 
-        const rootNode = itemMap.get(item.id);
-        // 一级命中直接保留；否则只要任一子节点命中也保留该一级节点。
-        return (
-          matchedIds.has(item.id) ||
-          rootNode?.children.some((child) => matchedIds.has(child.id))
-        );
-      })
-      .map((item) => {
-        const rootNode = itemMap.get(item.id);
-        const children = rootNode?.children ?? [];
-        // 搜索场景只返回命中的子节点，避免无关二级导航干扰前端展示。
-        const filteredChildren = keyword
-          ? children.filter((child) => matchedIds.has(child.id))
-          : children;
+          const rootNode = itemMap.get(item.id);
+          // 一级命中直接保留；否则只要任一子节点命中也保留该一级节点。
+          return (
+            matchedIds.has(item.id) ||
+            rootNode?.children.some((child) => matchedIds.has(child.id))
+          );
+        })
+        .map((item) => {
+          const rootNode = itemMap.get(item.id);
+          const children = rootNode?.children ?? [];
+          // 搜索场景只返回命中的子节点，避免无关二级导航干扰前端展示。
+          const filteredChildren = keyword
+            ? children.filter((child) => matchedIds.has(child.id))
+            : children;
 
-        return this.toNavigationResponse(item, filteredChildren);
-      });
+          return this.toNavigationResponse(item, filteredChildren);
+        })
+    );
   }
 
   /**
    * 查询实体时顺带加载 children，便于响应转换阶段直接生成树结构。
-    * 这里固定对子节点排序，避免不同调用方读到的顺序不一致。
+   * 这里固定对子节点排序，避免不同调用方读到的顺序不一致。
    */
   private async findEntityOrFail(id: number) {
     const navigation = await this.navigationRepository.findOne({
@@ -273,7 +278,7 @@ export class NavigatorService {
 
   /**
    * 父级仅允许为空或一级导航，借此维持当前系统只支持两级菜单的约束。
-    * 如果未来支持更深层级，应优先在这里统一放宽约束。
+   * 如果未来支持更深层级，应优先在这里统一放宽约束。
    */
   private async resolveParent(parentId: number | null) {
     if (parentId === null || parentId === undefined) {
@@ -297,7 +302,7 @@ export class NavigatorService {
 
   /**
    * path 作为导航访问标识，需要在全局范围内保持唯一。
-    * 更新时允许命中自己，因此提供 currentId 排除当前记录。
+   * 更新时允许命中自己，因此提供 currentId 排除当前记录。
    */
   private async ensurePathUnique(path: string, currentId?: number) {
     const existingNavigation = await this.navigationRepository.findOne({
@@ -311,7 +316,7 @@ export class NavigatorService {
 
   /**
    * 关键字匹配覆盖名称、路径和描述，兼顾后台检索体验。
-    * filter(Boolean) 用来跳过空描述，避免对空值调用字符串方法。
+   * filter(Boolean) 用来跳过空描述，避免对空值调用字符串方法。
    */
   private matchesKeyword(item: NavigationEntity, keyword: string) {
     return [item.name, item.path, item.description]
@@ -321,7 +326,7 @@ export class NavigatorService {
 
   /**
    * 前台可见性目前由状态字段单独控制，后续若有更多条件可集中扩展。
-    * 统一封装成方法后，会员端列表和详情都能复用相同判定口径。
+   * 统一封装成方法后，会员端列表和详情都能复用相同判定口径。
    */
   private isVisibleNavigation(item: NavigationEntity) {
     return item.status === NavigationStatus.Visible;
@@ -329,7 +334,7 @@ export class NavigatorService {
 
   /**
    * 对创建和更新输入做统一收口，避免空字符串、未传字段和数据库旧值处理不一致。
-    * fallback 主要用于更新场景，保证部分字段更新时不会把其余字段清空。
+   * fallback 主要用于更新场景，保证部分字段更新时不会把其余字段清空。
    */
   private normalizeInput(
     input: Partial<CreateNavigatorDto>,

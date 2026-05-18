@@ -13,7 +13,13 @@ import { MemberDashboardDataDto } from './dto/member-dashboard-data.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.User, Role.Vip, Role.Admin)
 @Controller('member')
+/**
+ * 会员面板控制器负责输出登录用户的个人中心摘要数据。
+ */
 export class MemberDashboardController {
+  /**
+   * 返回当前登录用户的基础能力列表与个人面板信息。
+   */
   @Get('dashboard')
   @ApiOperation({ summary: '普通登录用户可访问的个人面板' })
   @ApiOkDataResponse(MemberDashboardDataDto, {
