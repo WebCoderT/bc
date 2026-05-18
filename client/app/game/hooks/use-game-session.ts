@@ -12,9 +12,11 @@ import {
 } from "../../lib/auth";
 import { fetchMemberNavigations } from "../../lib/client-api";
 import {
-  mapNavigationsToGameSections,
-  type GameNavigationSection,
-} from "../navigation";
+  clearGameNavigationSections,
+  setGameNavigationSections,
+  useGameNavigationStore,
+} from "../../shared/repositories/game-navigation-repository";
+import { mapNavigationsToGameSections } from "../navigation";
 
 /**
  * 统一处理 `/game` 区域的登录态读取和退出逻辑。
@@ -26,9 +28,7 @@ export function useGameSession() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [navigationSections, setNavigationSections] = useState<
-    GameNavigationSection[]
-  >([]);
+  const { navigationSections } = useGameNavigationStore();
 
   useEffect(() => {
     /**
@@ -40,6 +40,7 @@ export function useGameSession() {
         const storedSession = readStoredSession();
 
         if (!storedSession) {
+          clearGameNavigationSections();
           router.replace("/");
           return;
         }
@@ -52,7 +53,7 @@ export function useGameSession() {
 
           writeStoredSession(refreshedSession);
           setUser(refreshedSession.user);
-          setNavigationSections(
+          setGameNavigationSections(
             navigationResult
               ? mapNavigationsToGameSections(navigationResult.items)
               : [],
@@ -60,6 +61,7 @@ export function useGameSession() {
           setIsReady(true);
         } catch {
           clearStoredSession();
+          clearGameNavigationSections();
           router.replace("/");
         }
       })();
@@ -88,6 +90,7 @@ export function useGameSession() {
    */
   const logout = () => {
     clearStoredSession();
+    clearGameNavigationSections();
     router.replace("/");
   };
 

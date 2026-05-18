@@ -63,9 +63,10 @@ export function getGameSectionByPath(
   return (
     sections.find(
       (section) =>
-        currentPathname === section.href,
-    )
-  ) ?? sections[0];
+        currentPathname === section.href ||
+        currentPathname.startsWith(`${section.href}/`),
+    ) ?? sections[0]
+  );
 }
 
 export function isGameLinkActive(pathname: string | null, href: string) {

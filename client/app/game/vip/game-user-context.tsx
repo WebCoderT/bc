@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, ReactNode, useContext } from "react";
-import { type AuthUser } from "../lib/auth";
+import { type AuthUser } from "../../lib/auth";
 
 /**
  * `/game` 区域专用的用户上下文。

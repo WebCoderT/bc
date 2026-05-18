@@ -2,12 +2,12 @@
 
 import { useMemo } from "react";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
-import { useGameUser } from "./vip/game-user-context";
+import { useGameUser } from "./game-user-context";
 import {
   formatAuthCurrency,
   formatAuthDate,
   formatAuthUserRole,
-} from "../lib/auth";
+} from "../../lib/auth";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SectionHeading } from "@/app/shared/components/ui/section-heading";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";

@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { GameUserProvider } from "./game-user-context";
+import { GameUserProvider } from "./vip/game-user-context";
 import { GameLayoutShell } from "./components/game-layout-shell";
 import { useGameSession } from "./hooks/use-game-session";
 
