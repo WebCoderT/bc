@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { UserEditModal } from "@/app/components/admin/user-edit-modal";
+import { ADMIN_DEFAULT_PAGE_SIZE } from "@/app/config/pagination";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
 import { StatusPill } from "@/app/components/admin/ui/status-pill";
@@ -23,8 +24,6 @@ import {
   formatRole,
 } from "@/app/utils/admin-format";
 
-const PAGE_SIZE = 5;
-
 export default function UsersRoute() {
   const { session, logout } = useAdminSession();
   const [keyword, setKeyword] = useState("");
@@ -37,7 +36,7 @@ export default function UsersRoute() {
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    pageSize: PAGE_SIZE,
+    pageSize: ADMIN_DEFAULT_PAGE_SIZE,
     totalPages: 1,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +48,7 @@ export default function UsersRoute() {
       request: () =>
         fetchAdminUsers(session.accessToken, {
           page,
-          pageSize: PAGE_SIZE,
+          pageSize: ADMIN_DEFAULT_PAGE_SIZE,
           role: roleFilter,
           keyword,
         }),
@@ -98,7 +97,8 @@ export default function UsersRoute() {
         setIsSubmitting(true);
         setSubmitError("");
       },
-      request: () => updateAdminUser(session.accessToken, selectedUser.id, input),
+      request: () =>
+        updateAdminUser(session.accessToken, selectedUser.id, input),
       fallbackMessage: "更新用户失败",
       onSuccess: async () => {
         await loadUsers();

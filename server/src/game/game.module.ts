@@ -4,10 +4,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Game } from './entities/game.entity';
 import { NavigatorModule } from 'src/navigator/navigator.module';
 import { NavigationEntity } from 'src/navigator/entities/navigator.entity';
+import { GameModel } from 'src/game-model/entities/game-model.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, NavigationEntity]), NavigatorModule],
+  imports: [
+    TypeOrmModule.forFeature([Game, NavigationEntity, GameModel]),
+    NavigatorModule,
+  ],
   providers: [GameService],
   exports: [GameService],
 })
-export class GameModule { }
+export class GameModule {}

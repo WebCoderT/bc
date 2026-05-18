@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import type {
   AdminGame,
+  AdminGameModel,
   AdminGameStatus,
   AdminNavigation,
   SaveAdminGameInput,
@@ -18,6 +19,7 @@ type GameFormState = {
   description: string;
   iconUrl: string;
   category: string;
+  gameModelId: string;
   drawInterval: string;
   status: AdminGameStatus;
 };
@@ -28,14 +30,61 @@ function createEmptyGameInput(): GameFormState {
     description: "",
     iconUrl: "",
     category: "",
+    gameModelId: "",
     drawInterval: "60",
     status: GameResponseDtoStatusEnum.Online,
+  };
+}
+
+function createGameFormState(game?: AdminGame | null): GameFormState {
+  if (!game) {
+    return createEmptyGameInput();
+  }
+
+  return {
+    label: game.label,
+    description: game.description,
+    iconUrl: game.iconUrl,
+    category: String(game.category),
+    gameModelId: game.gameModelId,
+    drawInterval: String(game.drawInterval),
+    status: game.status,
+  };
+}
+
+function buildGameFormInput(formState: GameFormState): GameFormInput | null {
+  const category = Number(formState.category);
+  const gameModelId = formState.gameModelId.trim();
+  const drawInterval = Number(formState.drawInterval);
+
+  if (!Number.isInteger(category) || category < 1) {
+    return null;
+  }
+
+  if (!gameModelId) {
+    return null;
+  }
+
+  if (!Number.isInteger(drawInterval) || drawInterval < 1) {
+    return null;
+  }
+
+  return {
+    ...formState,
+    label: formState.label.trim(),
+    description: formState.description.trim(),
+    iconUrl: formState.iconUrl.trim(),
+    category,
+    gameModelId,
+    drawInterval,
+    status: formState.status,
   };
 }
 
 export function GameEditModal({
   game,
   categoryOptions,
+  gameModelOptions,
   isSubmitting,
   submitError,
   onClose,
@@ -43,30 +92,15 @@ export function GameEditModal({
 }: {
   game?: AdminGame | null;
   categoryOptions: AdminNavigation[];
+  gameModelOptions: AdminGameModel[];
   isSubmitting: boolean;
   submitError: string;
   onClose: () => void;
   onSubmit: (input: GameFormInput) => Promise<void>;
 }) {
-  const [formState, setFormState] = useState<GameFormState>(
-    createEmptyGameInput(),
+  const [formState, setFormState] = useState<GameFormState>(() =>
+    createGameFormState(game),
   );
-
-  useEffect(() => {
-    if (!game) {
-      setFormState(createEmptyGameInput());
-      return;
-    }
-
-    setFormState({
-      label: game.label,
-      description: game.description,
-      iconUrl: game.iconUrl,
-      category: String(game.category),
-      drawInterval: String(game.drawInterval),
-      status: game.status,
-    });
-  }, [game]);
 
   const modalTitle = game ? `编辑游戏 #${game.id}` : "新增游戏";
 
@@ -81,26 +115,13 @@ export function GameEditModal({
         onSubmit={(event) => {
           event.preventDefault();
 
-          const category = Number(formState.category);
-          const drawInterval = Number(formState.drawInterval);
+          const input = buildGameFormInput(formState);
 
-          if (!Number.isInteger(category) || category < 1) {
+          if (!input) {
             return;
           }
 
-          if (!Number.isInteger(drawInterval) || drawInterval < 1) {
-            return;
-          }
-
-          void onSubmit({
-            ...formState,
-            label: formState.label.trim(),
-            description: formState.description.trim(),
-            iconUrl: formState.iconUrl.trim(),
-            category,
-            drawInterval,
-            status: formState.status,
-          });
+          void onSubmit(input);
         }}
       >
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
@@ -114,6 +135,11 @@ export function GameEditModal({
             {formState.category
               ? `分类 ID：${formState.category}`
               : "未选择所属左侧导航"}
+          </p>
+          <p className="mt-2 text-slate-500">
+            {formState.gameModelId
+              ? `模型 ID：${formState.gameModelId}`
+              : "未选择关联游戏模型"}
           </p>
           <p className="mt-2 text-slate-500">
             开奖间隔：{formState.drawInterval || "未设置"} 秒
@@ -194,7 +220,33 @@ export function GameEditModal({
               <option value="">请选择左侧导航</option>
               {categoryOptions.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.level === 2 ? `二级 / ${item.name}` : `一级 / ${item.name}`}
+                  {item.level === 2
+                    ? `二级 / ${item.name}`
+                    : `一级 / ${item.name}`}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              关联游戏模型
+            </span>
+            <select
+              value={formState.gameModelId}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  gameModelId: event.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+              required
+            >
+              <option value="">请选择游戏模型</option>
+              {gameModelOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}（{item.id}）
                 </option>
               ))}
             </select>

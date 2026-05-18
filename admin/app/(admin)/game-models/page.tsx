@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GameModelEditModal } from "@/app/components/admin/game-model-edit-modal";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
+import { ADMIN_DEFAULT_PAGE_SIZE } from "@/app/config/pagination";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { MetricPanel } from "@/app/components/admin/ui/metric-panel";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
@@ -19,8 +20,6 @@ import {
   type UpdateAdminGameModelInput,
   updateAdminGameModel,
 } from "@/app/lib/admin-api";
-
-const GAME_MODEL_PAGE_SIZE = 10;
 
 type GameModelFormInput = SaveAdminGameModelInput | UpdateAdminGameModelInput;
 type GameModelStatusFilter = AdminGameModelStatus | "all";
@@ -42,7 +41,7 @@ export default function GameModelsRoute() {
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    pageSize: GAME_MODEL_PAGE_SIZE,
+    pageSize: ADMIN_DEFAULT_PAGE_SIZE,
     totalPages: 1,
   });
 
@@ -68,7 +67,7 @@ export default function GameModelsRoute() {
       request: () =>
         fetchAdminGameModels(session.accessToken, {
           page,
-          pageSize: GAME_MODEL_PAGE_SIZE,
+          pageSize: ADMIN_DEFAULT_PAGE_SIZE,
           keyword,
           status: statusFilter,
         }),

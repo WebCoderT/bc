@@ -44,6 +44,15 @@ export class CreateGameDto {
   category!: number;
 
   @ApiProperty({
+    description: '游戏模型 ID',
+    example: '60',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  gameModelId!: string;
+
+  @ApiProperty({
     description: '开奖间隔时间，单位秒',
     example: 60,
   })

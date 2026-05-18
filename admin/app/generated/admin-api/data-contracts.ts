@@ -78,6 +78,11 @@ export interface GameResponseDto {
    * @example 1
    */
   category: number;
+  /**
+   * 关联游戏模型 ID
+   * @example "60"
+   */
+  gameModelId: string;
   /** @example "online" */
   status: GameResponseDtoStatusEnum;
   /**
@@ -113,6 +118,11 @@ export interface CreateGameDto {
    */
   category: number;
   /**
+   * 游戏模型 ID
+   * @example "60"
+   */
+  gameModelId: string;
+  /**
    * 开奖间隔时间，单位秒
    * @example 60
    */
@@ -146,6 +156,11 @@ export interface UpdateGameDto {
    * @example 1
    */
   category?: number;
+  /**
+   * 游戏模型 ID
+   * @example "60"
+   */
+  gameModelId?: string;
   /**
    * 开奖间隔时间，单位秒
    * @example 60

@@ -14,6 +14,7 @@ import { Game } from './entities/game.entity';
 import { GameType } from './enums/game-type.enum';
 import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { NavigationType } from '../navigator/enums/navigation-type.enum';
+import { GameModel } from '../game-model/entities/game-model.entity';
 
 @Injectable()
 export class GameService {
@@ -22,11 +23,14 @@ export class GameService {
     private readonly gameRepository: Repository<Game>,
     @InjectRepository(NavigationEntity)
     private readonly navigationRepository: Repository<NavigationEntity>,
-  ) { }
+    @InjectRepository(GameModel)
+    private readonly gameModelRepository: Repository<GameModel>,
+  ) {}
 
   async create(createGameDto: CreateGameDto) {
     const normalizedInput = this.normalizeInput(createGameDto);
     await this.ensureCategoryIsValid(normalizedInput.category);
+    await this.ensureGameModelIsValid(normalizedInput.gameModelId);
     const existingGame = await this.gameRepository.findOne({
       where: { label: normalizedInput.label },
     });
@@ -47,7 +51,11 @@ export class GameService {
     const keyword = query?.keyword?.trim();
 
     const where = keyword
-      ? [{ label: Like(`%${keyword}%`) }, { description: Like(`%${keyword}%`) }]
+      ? [
+          { label: Like(`%${keyword}%`) },
+          { description: Like(`%${keyword}%`) },
+          { gameModelId: Like(`%${keyword}%`) },
+        ]
       : undefined;
 
     const [games, total] = await this.gameRepository.findAndCount({
@@ -84,6 +92,7 @@ export class GameService {
 
     const normalizedInput = this.normalizeInput(updateGameDto, game);
     await this.ensureCategoryIsValid(normalizedInput.category);
+    await this.ensureGameModelIsValid(normalizedInput.gameModelId);
 
     if (normalizedInput.label !== game.label) {
       const existingGame = await this.gameRepository.findOne({
@@ -128,6 +137,7 @@ export class GameService {
         typeof input.category === 'number'
           ? input.category
           : Number(fallback?.category ?? 0),
+      gameModelId: input.gameModelId?.trim() || fallback?.gameModelId || '',
       drawInterval:
         typeof input.drawInterval === 'number'
           ? input.drawInterval
@@ -154,6 +164,22 @@ export class GameService {
     }
   }
 
+  private async ensureGameModelIsValid(gameModelId: string) {
+    const normalizedGameModelId = gameModelId?.trim();
+
+    if (!normalizedGameModelId) {
+      throw new BadRequestException('游戏模型不能为空');
+    }
+
+    const gameModel = await this.gameModelRepository.findOne({
+      where: { id: normalizedGameModelId },
+    });
+
+    if (!gameModel) {
+      throw new NotFoundException('关联的游戏模型不存在');
+    }
+  }
+
   private toGameResponse(game: Game) {
     return {
       id: game.id,
@@ -161,6 +187,7 @@ export class GameService {
       description: game.description,
       iconUrl: game.iconUrl || '',
       category: Number(game.category ?? 0),
+      gameModelId: String(game.gameModelId ?? ''),
       status: game.status,
       drawInterval: Number(game.drawInterval ?? 0),
       createdAt:

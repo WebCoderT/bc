@@ -17,6 +17,9 @@ export class GameResponseDto {
   @ApiProperty({ example: 1, description: '所属左侧导航 ID' })
   category!: number;
 
+  @ApiProperty({ example: '60', description: '关联游戏模型 ID' })
+  gameModelId!: string;
+
   @ApiProperty({ enum: GameType, example: GameType.ONLINE })
   status!: GameType;
 

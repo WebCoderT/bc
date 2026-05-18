@@ -64,11 +64,22 @@ export interface GameResponseDto {
   description: string;
   /** @example "https://example.com/game-icon.png" */
   iconUrl: string;
-  /** @example 1 */
+  /**
+   * 所属左侧导航 ID
+   * @example 1
+   */
   category: number;
-  /** @example "运营中" */
-  status: string;
-  /** @example 60 */
+  /**
+   * 关联游戏模型 ID
+   * @example "60"
+   */
+  gameModelId: string;
+  /** @example "online" */
+  status: GameResponseDtoStatusEnum;
+  /**
+   * 开奖间隔时间，单位秒
+   * @example 60
+   */
   drawInterval: number;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
@@ -94,7 +105,7 @@ export interface NavigationResponseDto {
   /** @example 10 */
   sort: number;
   /** @example null */
-  parentId: object | null;
+  parentId: number | null;
   /**
    * 1 为一级导航，2 为二级导航
    * @example 1
@@ -119,6 +130,12 @@ export enum SafeUserDtoRoleEnum {
   User = "user",
   Vip = "vip",
   Admin = "admin",
+}
+
+/** @example "online" */
+export enum GameResponseDtoStatusEnum {
+  Online = "online",
+  Offline = "offline",
 }
 
 /** @example "顶部导航" */
@@ -156,10 +173,16 @@ export interface MemberGamesControllerGetGameParams {
 export interface MemberNavigationsControllerGetNavigationsParams {
   /** @example "关键词" */
   keyword?: string;
-  /** @example "顶部导航" */
+  /**
+   * 按导航类型筛选
+   * @example "顶部导航"
+   */
   type?: TypeEnum;
-  /** @example "展示中" */
-  status?: StatusEnum1;
+  /**
+   * 按导航状态筛选
+   * @example "展示中"
+   */
+  status?: StatusEnum;
   /**
    * 按父级导航筛选
    * @example 1
@@ -167,27 +190,39 @@ export interface MemberNavigationsControllerGetNavigationsParams {
   parentId?: number;
 }
 
-/** @example "顶部导航" */
+/**
+ * 按导航类型筛选
+ * @example "顶部导航"
+ */
 export enum TypeEnum {
   Value顶部导航 = "顶部导航",
   Value侧边导航 = "侧边导航",
   Value快捷入口 = "快捷入口",
 }
 
-/** @example "展示中" */
-export enum StatusEnum1 {
+/**
+ * 按导航状态筛选
+ * @example "展示中"
+ */
+export enum StatusEnum {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",
 }
 
-/** @example "顶部导航" */
+/**
+ * 按导航类型筛选
+ * @example "顶部导航"
+ */
 export enum MemberNavigationsControllerGetNavigationsParams1TypeEnum {
   Value顶部导航 = "顶部导航",
   Value侧边导航 = "侧边导航",
   Value快捷入口 = "快捷入口",
 }
 
-/** @example "展示中" */
+/**
+ * 按导航状态筛选
+ * @example "展示中"
+ */
 export enum MemberNavigationsControllerGetNavigationsParams1StatusEnum {
   Value展示中 = "展示中",
   Value隐藏中 = "隐藏中",

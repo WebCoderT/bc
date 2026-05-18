@@ -43,9 +43,15 @@ export namespace 导航查询 {
     export type RequestQuery = {
       /** @example "关键词" */
       keyword?: string;
-      /** @example "顶部导航" */
+      /**
+       * 按导航类型筛选
+       * @example "顶部导航"
+       */
       type?: MemberNavigationsControllerGetNavigationsParams1TypeEnum;
-      /** @example "展示中" */
+      /**
+       * 按导航状态筛选
+       * @example "展示中"
+       */
       status?: MemberNavigationsControllerGetNavigationsParams1StatusEnum;
       /**
        * 按父级导航筛选

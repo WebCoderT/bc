@@ -26,7 +26,7 @@ export function GamesToolbar({
       <div className="flex w-full flex-col gap-3 md:max-w-2xl md:flex-row">
         <input
           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-500/10"
-          placeholder="搜索游戏名称或简介"
+          placeholder="搜索游戏名称、简介或模型 ID"
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
         />
@@ -63,6 +63,7 @@ type GamesTableProps = {
   games: AdminGame[];
   isLoading: boolean;
   categoryNameMap: ReadonlyMap<number, string>;
+  gameModelNameMap: ReadonlyMap<string, string>;
   onEdit: (game: AdminGame) => void;
   onDelete: (gameId: number) => void;
 };
@@ -71,6 +72,7 @@ export function GamesTable({
   games,
   isLoading,
   categoryNameMap,
+  gameModelNameMap,
   onEdit,
   onDelete,
 }: GamesTableProps) {
@@ -81,6 +83,7 @@ export function GamesTable({
           <tr>
             <th className="px-4 py-3 font-medium">游戏</th>
             <th className="px-4 py-3 font-medium">分类</th>
+            <th className="px-4 py-3 font-medium">游戏模型</th>
             <th className="px-4 py-3 font-medium">开奖间隔</th>
             <th className="px-4 py-3 font-medium">状态</th>
             <th className="px-4 py-3 font-medium">简介</th>
@@ -119,6 +122,7 @@ export function GamesTable({
               key={game.id}
               game={game}
               categoryNameMap={categoryNameMap}
+              gameModelNameMap={gameModelNameMap}
               onEdit={onEdit}
               onDelete={onDelete}
             />
@@ -132,6 +136,7 @@ export function GamesTable({
 type GameTableRowProps = {
   game: AdminGame;
   categoryNameMap: ReadonlyMap<number, string>;
+  gameModelNameMap: ReadonlyMap<string, string>;
   onEdit: (game: AdminGame) => void;
   onDelete: (gameId: number) => void;
 };
@@ -139,6 +144,7 @@ type GameTableRowProps = {
 function GameTableRow({
   game,
   categoryNameMap,
+  gameModelNameMap,
   onEdit,
   onDelete,
 }: GameTableRowProps) {
@@ -153,6 +159,10 @@ function GameTableRow({
 
       <td className="px-4 py-4 text-slate-600">
         {categoryNameMap.get(game.category) ?? `导航 #${game.category}`}
+      </td>
+
+      <td className="px-4 py-4 text-slate-600">
+        {gameModelNameMap.get(game.gameModelId) ?? `模型 ${game.gameModelId}`}
       </td>
 
       <td className="px-4 py-4 text-slate-600">{game.drawInterval} 秒</td>
