@@ -28,7 +28,6 @@ type P5BoardProps = {
 };
 
 const DIGIT_OPTIONS = Array.from({ length: 10 }, (_, index) => index);
-const QUICK_LINKS = ["开奖记录", "玩法走势", "历史订单", "充值中心"];
 const PLAY_RULES = [
   "排列5从 00000 至 99999 中开出 1 个五位号码，顺序固定为万、千、百、十、个位。",
   "当前页面支持机选与自选两种模式，二者互斥，完成选号后可保存到左侧待下注列表。",

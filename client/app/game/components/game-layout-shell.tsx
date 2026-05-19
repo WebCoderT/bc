@@ -46,9 +46,10 @@ export function GameLayoutShell({
    */
   const activeNavigation = getGameSectionByPath(pathname, navigations);
   const sideNavigations = getGameSideNavigations(activeNavigation);
+
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_84%,transparent)] backdrop-blur-xl">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+      <header className="z-30 shrink-0 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_84%,transparent)] backdrop-blur-xl">
         <div className="flex items-center justify-between gap-6 px-4 py-4 lg:px-6 xl:px-8">
           <div className="flex min-w-0 items-center gap-4">
             <Link href="/" className="flex items-center gap-3">
@@ -95,9 +96,9 @@ export function GameLayoutShell({
         </div>
       </header>
 
-      <div className="flex gap-5 px-4 pb-6 pt-5 lg:px-6 xl:px-8">
-        <aside className="hidden w-[248px] shrink-0 lg:block">
-          <SurfaceCard className="sticky top-24 p-5" tone="card" padding="md">
+      <div className="flex min-h-0 flex-1 gap-5 overflow-hidden px-4 pb-5 pt-5 lg:px-6 xl:px-8">
+        <aside className="hidden h-full w-[248px] shrink-0 lg:block">
+          <SurfaceCard className="h-full p-5" tone="card" padding="md">
             <div className="border-b border-[var(--border)] pb-4">
               <h2 className="text-xl font-semibold">
                 {activeNavigation ? `${activeNavigation.name}导航` : "导航"}
@@ -125,10 +126,12 @@ export function GameLayoutShell({
           </SurfaceCard>
         </aside>
 
-        <div className="grid min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0">{children}</div>
+        <div className="grid min-h-0 min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <main className="compact-scrollbar min-h-0 min-w-0 overflow-y-auto pr-1">
+            {children}
+          </main>
 
-          <aside className="space-y-5">
+          <aside className="h-full space-y-5 overflow-hidden">
             <SurfaceCard className="p-5" tone="card" padding="md">
               <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
                 RIGHT NAV

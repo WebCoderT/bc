@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { P5Board } from "./p5/p5-board";
 import { P5History } from "./p5/p5-history";
-import { P5Rules } from "./p5/p5-rules";
 import {
   createBetItem,
   createEmptyDigits,
@@ -136,7 +135,6 @@ export default function GamePage() {
       />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.5fr)]">
-        <P5Rules />
         <P5History records={records} />
       </section>
     </main>
