@@ -6,6 +6,7 @@ import { P5Board } from "./p5/p5-board";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
 import { P5History } from "./p5/p5-history";
 import { readStoredSession } from "@/app/lib/auth";
+import { fetchMemberGame, type ClientGame } from "@/app/lib/client-api";
 import { createClientRealtimeSocket } from "@/app/lib/client-realtime";
 import {
   FloatingNotificationBubbles,
@@ -66,6 +67,8 @@ export default function GamePage() {
   const [selectionMode, setSelectionMode] = useState<P5SelectionMode>("manual");
   const [currentIssue, setCurrentIssue] = useState<P5CurrentIssue | null>(null);
   const [drawError, setDrawError] = useState("");
+  const [gameDetail, setGameDetail] = useState<ClientGame | null>(null);
+  const [gameDetailError, setGameDetailError] = useState("");
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
   const { items: notificationItems, pushBubble } =
@@ -75,6 +78,8 @@ export default function GamePage() {
     session?.accessToken && Number.isInteger(gameId) && gameId > 0,
   );
   const [isDrawLoading, setIsDrawLoading] = useState(canLoadDrawData);
+  const [isGameDetailLoading, setIsGameDetailLoading] =
+    useState(canLoadDrawData);
 
   const latestDrawDigits = records[0]?.digits ?? [];
   const totalAmount = useMemo(
@@ -111,6 +116,56 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
+      setIsGameDetailLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    setIsGameDetailLoading(true);
+    setGameDetailError("");
+
+    void fetchMemberGame(session.accessToken, gameId)
+      .then((detail) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setGameDetail(detail);
+      })
+      .catch((error: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+
+        const message =
+          error instanceof Error ? error.message : "读取游戏详情失败";
+
+        setGameDetail(null);
+        setGameDetailError(message);
+        pushBubble({
+          title: "游戏详情",
+          message,
+          tone: "warning",
+          durationMs: 3200,
+        });
+      })
+      .finally(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setIsGameDetailLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canLoadDrawData, gameId, pushBubble, session?.accessToken]);
+
+  useEffect(() => {
+    if (!canLoadDrawData || !session?.accessToken) {
+      setIsDrawLoading(false);
       return;
     }
 
@@ -368,6 +423,9 @@ export default function GamePage() {
       />
 
       <P5Board
+        gameDetail={gameDetail}
+        isGameDetailLoading={isGameDetailLoading}
+        gameDetailError={gameDetailError}
         digits={digits}
         latestDrawDigits={latestDrawDigits}
         currentIssue={currentIssue}

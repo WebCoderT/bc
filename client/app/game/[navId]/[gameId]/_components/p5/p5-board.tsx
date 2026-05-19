@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { NumberBall } from "@/app/shared/components/lottery/number-ball";
 import { cn } from "@/app/shared/lib/cn";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
+import type { ClientGame } from "@/app/lib/client-api";
 import { P5_POSITIONS } from "./p5.constants";
-import { formatCompactDigits } from "./p5.utils";
+import {
+  calculateEstimatedPayout,
+  calculateEstimatedProfit,
+  formatCompactDigits,
+  getGameOddsSummary,
+} from "./p5.utils";
 import type {
   P5BetAmount,
   P5BetItem,
@@ -15,6 +21,9 @@ import type {
 type P5SelectionMode = "random" | "manual";
 
 type P5BoardProps = {
+  gameDetail: ClientGame | null;
+  isGameDetailLoading: boolean;
+  gameDetailError: string;
   digits: P5SelectedDigit[];
   latestDrawDigits: number[];
   currentIssue: P5CurrentIssue | null;
@@ -44,6 +53,9 @@ const PLAY_RULES = [
 ];
 
 export function P5Board({
+  gameDetail,
+  isGameDetailLoading,
+  gameDetailError,
   digits,
   latestDrawDigits,
   currentIssue,
@@ -67,6 +79,57 @@ export function P5Board({
   const isRandomMode = selectionMode === "random";
   const isCurrentSelectionReady = digits.every((digit) => digit !== null);
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const oddsSummary = getGameOddsSummary(gameDetail);
+  const oddsDescription = isGameDetailLoading
+    ? "正在同步当前游戏赔率，下注列表会在详情加载完成后展示预计派彩。"
+    : gameDetail?.oddsMode === "fixed"
+      ? "下注列表中的每一注都会按当前固定赔率实时计算预计派彩。"
+      : "当前游戏预留了自定义赔付模式，下注列表将等待后续规则接入。";
+  const betSummaries = useMemo(
+    () =>
+      betItems.map((item) => ({
+        ...item,
+        estimatedPayout: calculateEstimatedPayout(item.amount, gameDetail),
+        estimatedProfit: calculateEstimatedProfit(item.amount, gameDetail),
+      })),
+    [betItems, gameDetail],
+  );
+  const estimatedTotalPayout = useMemo(
+    () =>
+      betSummaries.reduce<number | null>((sum, item) => {
+        if (item.estimatedPayout === null || sum === null) {
+          return null;
+        }
+
+        return Number((sum + item.estimatedPayout).toFixed(2));
+      }, 0),
+    [betSummaries],
+  );
+  const estimatedTotalProfit = useMemo(
+    () =>
+      betSummaries.reduce<number | null>((sum, item) => {
+        if (item.estimatedProfit === null || sum === null) {
+          return null;
+        }
+
+        return Number((sum + item.estimatedProfit).toFixed(2));
+      }, 0),
+    [betSummaries],
+  );
+
+  const handleOpenSubmitModal = () => {
+    if (!isReadyToSubmit) {
+      return;
+    }
+
+    setIsSubmitModalOpen(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setIsSubmitModalOpen(false);
+    onSubmit();
+  };
 
   return (
     <>
@@ -76,6 +139,41 @@ export function P5Board({
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               开奖号码与投注面板
             </h2>
+          </div>
+
+          <div className="rounded-[1.8rem] border border-[var(--border)] bg-[var(--panel)] p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                  当前游戏配置
+                </p>
+                <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                  {gameDetail?.label ?? "正在读取游戏详情..."}
+                </h3>
+                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+                  {gameDetail?.description ||
+                    (isGameDetailLoading
+                      ? "正在根据当前 URL 中的游戏 ID 同步房间详情与赔率配置。"
+                      : "暂时未读取到当前游戏详情。")}
+                </p>
+              </div>
+
+              <div className="min-w-[16rem] rounded-[1.4rem] border border-[var(--border)] bg-[var(--card)] px-4 py-4">
+                <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                  当前赔率
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+                  {oddsSummary}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  {oddsDescription}
+                </p>
+              </div>
+            </div>
+
+            {gameDetailError ? (
+              <p className="mt-4 text-sm text-rose-300">{gameDetailError}</p>
+            ) : null}
           </div>
 
           <div className="rounded-[1.8rem] border border-[var(--border)] bg-[var(--panel)] p-5">
@@ -159,6 +257,22 @@ export function P5Board({
                     {totalAmount} 元
                   </span>
                 </div>
+                <div className="mt-3 flex items-center justify-between gap-4 text-sm">
+                  <span className="text-[var(--muted)]">赔率配置</span>
+                  <span className="text-right text-sm font-medium text-[var(--foreground)]">
+                    {oddsSummary}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-4 text-sm">
+                  <span className="text-[var(--muted)]">预计总派彩</span>
+                  <span className="text-lg font-semibold text-[var(--foreground)]">
+                    {estimatedTotalPayout === null
+                      ? gameDetail?.oddsMode === "custom"
+                        ? "按自定义规则结算"
+                        : "待赔率同步"
+                      : `${estimatedTotalPayout.toFixed(2)} 元`}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-5 space-y-3">
@@ -167,7 +281,7 @@ export function P5Board({
                     还没有待下注号码，请在右侧完成机选或自选后，点击“保存至投注区”。
                   </div>
                 ) : (
-                  betItems.map((item) => (
+                  betSummaries.map((item) => (
                     <div
                       key={item.id}
                       className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--card)] p-4"
@@ -180,6 +294,25 @@ export function P5Board({
                           <p className="mt-2 text-xl font-semibold tracking-[0.24em] text-[var(--foreground)]">
                             {formatCompactDigits(item.digits)}
                           </p>
+                          <div className="mt-3 space-y-1 text-xs leading-6 text-[var(--muted)]">
+                            <p>赔率：{oddsSummary}</p>
+                            <p>
+                              预计派彩：
+                              {item.estimatedPayout === null
+                                ? gameDetail?.oddsMode === "custom"
+                                  ? "按自定义规则结算"
+                                  : "待赔率同步"
+                                : `${item.estimatedPayout.toFixed(2)} 元`}
+                            </p>
+                            <p>
+                              预计盈利：
+                              {item.estimatedProfit === null
+                                ? gameDetail?.oddsMode === "custom"
+                                  ? "待自定义规则"
+                                  : "待赔率同步"
+                                : `${item.estimatedProfit.toFixed(2)} 元`}
+                            </p>
+                          </div>
                         </div>
 
                         <button
@@ -228,7 +361,7 @@ export function P5Board({
                       !isReadyToSubmit && "cursor-not-allowed opacity-60",
                     )}
                     disabled={!isReadyToSubmit}
-                    onClick={onSubmit}
+                    onClick={handleOpenSubmitModal}
                   >
                     确认投注
                   </ActionButton>
@@ -401,6 +534,157 @@ export function P5Board({
                   onClick={() => setIsRuleModalOpen(false)}
                 >
                   我知道了
+                </ActionButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isSubmitModalOpen ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-3xl overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[0_30px_80px_var(--glow)]">
+            <div className="bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-6 py-6 text-white">
+              <h3 className="text-2xl font-semibold">确认投注</h3>
+              <p className="mt-2 text-sm text-white/80">
+                请在提交前核对本次下注号码、赔率配置与预计派彩。
+              </p>
+            </div>
+
+            <div className="space-y-5 p-6">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
+                <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
+                  <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                    当前游戏
+                  </p>
+                  <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+                    {gameDetail?.label ?? "当前游戏"}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+                    {oddsDescription}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
+                  <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                    汇总信息
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
+                    <div className="flex items-center justify-between gap-4">
+                      <span>下注组数</span>
+                      <span className="font-semibold text-[var(--foreground)]">
+                        {betItems.length} 组
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span>总金额</span>
+                      <span className="font-semibold text-[var(--foreground)]">
+                        {totalAmount} 元
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span>赔率配置</span>
+                      <span className="text-right font-semibold text-[var(--foreground)]">
+                        {oddsSummary}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span>预计总派彩</span>
+                      <span className="font-semibold text-[var(--foreground)]">
+                        {estimatedTotalPayout === null
+                          ? gameDetail?.oddsMode === "custom"
+                            ? "按自定义规则结算"
+                            : "待赔率同步"
+                          : `${estimatedTotalPayout.toFixed(2)} 元`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span>预计总盈利</span>
+                      <span className="font-semibold text-[var(--foreground)]">
+                        {estimatedTotalProfit === null
+                          ? gameDetail?.oddsMode === "custom"
+                            ? "待自定义规则"
+                            : "待赔率同步"
+                          : `${estimatedTotalProfit.toFixed(2)} 元`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-h-[24rem] space-y-3 overflow-y-auto pr-1">
+                {betSummaries.map((item, index) => (
+                  <div
+                    key={`submit-${item.id}`}
+                    className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold tracking-[0.2em] text-[var(--accent)]">
+                          第 {index + 1} 注 ·{" "}
+                          {item.source === "random" ? "机选" : "自选"}
+                        </p>
+                        <p className="mt-2 text-xl font-semibold tracking-[0.24em] text-[var(--foreground)]">
+                          {formatCompactDigits(item.digits)}
+                        </p>
+                      </div>
+
+                      <div className="text-right text-sm text-[var(--muted)]">
+                        <p>投注金额：{item.amount} 元</p>
+                        <p className="mt-1">赔率：{oddsSummary}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                        <p className="text-xs font-semibold tracking-[0.2em]">
+                          预计派彩
+                        </p>
+                        <p className="mt-2 font-semibold text-[var(--foreground)]">
+                          {item.estimatedPayout === null
+                            ? gameDetail?.oddsMode === "custom"
+                              ? "按自定义规则结算"
+                              : "待赔率同步"
+                            : `${item.estimatedPayout.toFixed(2)} 元`}
+                        </p>
+                      </div>
+                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                        <p className="text-xs font-semibold tracking-[0.2em]">
+                          预计盈利
+                        </p>
+                        <p className="mt-2 font-semibold text-[var(--foreground)]">
+                          {item.estimatedProfit === null
+                            ? gameDetail?.oddsMode === "custom"
+                              ? "待自定义规则"
+                              : "待赔率同步"
+                            : `${item.estimatedProfit.toFixed(2)} 元`}
+                        </p>
+                      </div>
+                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                        <p className="text-xs font-semibold tracking-[0.2em]">
+                          说明
+                        </p>
+                        <p className="mt-2 leading-6 text-[var(--foreground)]">
+                          {gameDetail?.oddsMode === "custom"
+                            ? "当前仅展示预留文案，后续会按自定义赔付规则结算。"
+                            : "固定赔率已参与当前注单预计派彩计算。"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <ActionButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsSubmitModalOpen(false)}
+                >
+                  返回修改
+                </ActionButton>
+                <ActionButton type="button" onClick={handleConfirmSubmit}>
+                  确认提交
                 </ActionButton>
               </div>
             </div>

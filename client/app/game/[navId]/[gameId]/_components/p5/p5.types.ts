@@ -24,6 +24,8 @@ export type P5BetItem = {
   source: "random" | "manual";
 };
 
+export type P5OddsMode = "fixed" | "custom";
+
 export type P5Position = {
   key: string;
   label: string;

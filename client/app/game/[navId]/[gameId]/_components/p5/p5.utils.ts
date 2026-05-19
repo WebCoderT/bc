@@ -1,5 +1,5 @@
 import { P5_BALL_COUNT } from "./p5.constants";
-import type { ClientGameDrawRecord } from "@/app/lib/client-api";
+import type { ClientGame, ClientGameDrawRecord } from "@/app/lib/client-api";
 import type {
   P5BetAmount,
   P5BetItem,
@@ -53,6 +53,54 @@ export function formatDigits(digits: P5SelectedDigit[]) {
 
 export function formatCompactDigits(digits: Array<number | null>) {
   return digits.map((digit) => (digit === null ? "—" : String(digit))).join("");
+}
+
+export function formatOddsNumber(value: number) {
+  return value.toFixed(4).replace(/\.0+$|(?:(\.\d*?[1-9])0+)$/, "$1");
+}
+
+export function getGameOddsSummary(game: ClientGame | null) {
+  if (!game) {
+    return "赔率读取中";
+  }
+
+  if (game.oddsMode === "custom") {
+    return "自定义赔付（预留）";
+  }
+
+  if (typeof game.fixedOdds !== "number") {
+    return "固定赔率未设置";
+  }
+
+  return `固定赔率 ${formatOddsNumber(game.fixedOdds)}`;
+}
+
+export function calculateEstimatedPayout(
+  amount: number,
+  game: ClientGame | null,
+) {
+  if (
+    !game ||
+    game.oddsMode !== "fixed" ||
+    typeof game.fixedOdds !== "number"
+  ) {
+    return null;
+  }
+
+  return Number((amount * game.fixedOdds).toFixed(2));
+}
+
+export function calculateEstimatedProfit(
+  amount: number,
+  game: ClientGame | null,
+) {
+  const estimatedPayout = calculateEstimatedPayout(amount, game);
+
+  if (estimatedPayout === null) {
+    return null;
+  }
+
+  return Number((estimatedPayout - amount).toFixed(2));
 }
 
 export function formatP5DateTime(value: string | null) {
