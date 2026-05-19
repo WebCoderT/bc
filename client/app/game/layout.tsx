@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { GameUserProvider } from "./vip/game-user-context";
 import { GameLayoutShell } from "./components/game-layout-shell";
+import { GameLayoutSidebarProvider } from "./components/game-layout-sidebar";
 import { useGameSession } from "./hooks/use-game-session";
 
 /**
@@ -33,14 +34,16 @@ export default function GameLayout({ children }: { children: ReactNode }) {
 
   return (
     <GameUserProvider user={user}>
-      <GameLayoutShell
-        navigations={navigations}
-        user={user}
-        walletSummary={walletSummary}
-        onLogout={logout}
-      >
-        {children}
-      </GameLayoutShell>
+      <GameLayoutSidebarProvider>
+        <GameLayoutShell
+          navigations={navigations}
+          user={user}
+          walletSummary={walletSummary}
+          onLogout={logout}
+        >
+          {children}
+        </GameLayoutShell>
+      </GameLayoutSidebarProvider>
     </GameUserProvider>
   );
 }

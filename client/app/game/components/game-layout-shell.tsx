@@ -16,6 +16,7 @@ import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
+import { useGameLayoutSidebar } from "./game-layout-sidebar";
 
 type GameLayoutShellProps = {
   children: ReactNode;
@@ -40,6 +41,7 @@ export function GameLayoutShell({
 }: GameLayoutShellProps) {
   const appProfile = getAppProfileSync();
   const pathname = usePathname();
+  const { leftSidebarContent } = useGameLayoutSidebar();
 
   /**
    * 根据当前路径推断顶部一级导航，并拿到对应二级导航列表。
@@ -97,36 +99,40 @@ export function GameLayoutShell({
       </header>
 
       <div className="flex min-h-0 flex-1 gap-5 overflow-hidden px-4 pb-5 pt-5 lg:px-6 xl:px-8">
-        <aside className="hidden h-full w-[248px] shrink-0 lg:block">
-          <SurfaceCard className="h-full p-5" tone="card" padding="md">
-            <div className="border-b border-[var(--border)] pb-4">
-              <h2 className="text-xl font-semibold">
-                {activeNavigation ? `${activeNavigation.name}导航` : "导航"}
-              </h2>
-            </div>
+        <aside className="hidden h-full w-[300px] shrink-0 xl:w-[336px] 2xl:w-[360px] lg:block">
+          {leftSidebarContent ? (
+            <div className="h-full">{leftSidebarContent}</div>
+          ) : (
+            <SurfaceCard className="h-full p-5" tone="card" padding="md">
+              <div className="border-b border-[var(--border)] pb-4">
+                <h2 className="text-xl font-semibold">
+                  {activeNavigation ? `${activeNavigation.name}导航` : "导航"}
+                </h2>
+              </div>
 
-            <nav className="mt-4 space-y-2">
-              {sideNavigations.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
-                    isGameLinkActive(pathname, item.path)
-                      ? "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
-                      : "bg-[var(--panel)] text-[var(--foreground)] hover:text-[var(--accent)]"
-                  }`}
-                >
-                  <span className="font-medium">{item.name}</span>
-                  <span className="text-xs text-inherit/80">
-                    {item.level === 1 ? "一级" : "二级"}
-                  </span>
-                </Link>
-              ))}
-            </nav>
-          </SurfaceCard>
+              <nav className="mt-4 space-y-2">
+                {sideNavigations.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
+                      isGameLinkActive(pathname, item.path)
+                        ? "bg-[var(--accent)] text-white shadow-[0_16px_40px_var(--glow)]"
+                        : "bg-[var(--panel)] text-[var(--foreground)] hover:text-[var(--accent)]"
+                    }`}
+                  >
+                    <span className="font-medium">{item.name}</span>
+                    <span className="text-xs text-inherit/80">
+                      {item.level === 1 ? "一级" : "二级"}
+                    </span>
+                  </Link>
+                ))}
+              </nav>
+            </SurfaceCard>
+          )}
         </aside>
 
-        <div className="grid min-h-0 min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid min-h-0 min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_260px] 2xl:grid-cols-[minmax(0,1fr)_240px]">
           <main className="compact-scrollbar min-h-0 min-w-0 overflow-y-auto pr-1">
             {children}
           </main>

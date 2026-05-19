@@ -3,7 +3,7 @@ import { cn } from "../../lib/cn";
 type NumberBallProps = {
   digit: number | string;
   label?: string;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   highlighted?: boolean;
   className?: string;
 };
@@ -24,7 +24,9 @@ export function NumberBall({
   const sizeClassName =
     size === "lg"
       ? "h-[var(--ball-size-lg)] w-[var(--ball-size-lg)] text-[length:var(--ball-font-size-lg)]"
-      : "h-[var(--ball-size-md)] w-[var(--ball-size-md)] text-[length:var(--ball-font-size-md)]";
+      : size === "md"
+        ? "h-[var(--ball-size-md)] w-[var(--ball-size-md)] text-[length:var(--ball-font-size-md)]"
+        : "h-[var(--ball-size-sm)] w-[var(--ball-size-sm)] text-[length:var(--ball-font-size-sm)]";
 
   return (
     <div className={cn("flex flex-col items-center gap-2", className)}>

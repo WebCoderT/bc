@@ -24,7 +24,6 @@ type P5BoardProps = {
   onBetAmountChange: (betId: string, amount: P5BetAmount) => void;
   onRemoveBetItem: (betId: string) => void;
   onSubmit: () => void;
-  statusMessage?: string;
 };
 
 const DIGIT_OPTIONS = Array.from({ length: 10 }, (_, index) => index);
@@ -50,7 +49,6 @@ export function P5Board({
   onBetAmountChange,
   onRemoveBetItem,
   onSubmit,
-  statusMessage,
 }: P5BoardProps) {
   const isReadyToSubmit = betItems.length > 0;
   const isRandomMode = selectionMode === "random";
@@ -65,21 +63,17 @@ export function P5Board({
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               开奖号码与投注面板
             </h2>
-            <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-              开奖号码放在上方，下面使用机选 /
-              自选的互斥模式完成当前投注，右侧辅助区保持固定，不跟随选号滚动。
-            </p>
           </div>
 
           <div className="rounded-[1.8rem] border border-[var(--border)] bg-[var(--panel)] p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-[var(--foreground)]">
                   当前开奖号码
+                  <span className="ml-2 text-sm font-medium text-[var(--muted)]">
+                    距离下次开奖剩余：00:12:34
+                  </span>
                 </h3>
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  展示最近一期排列5号码，保留球体视觉强化开奖区识别度。
-                </p>
               </div>
 
               <ActionButton
@@ -199,12 +193,6 @@ export function P5Board({
                 )}
               </div>
 
-              {statusMessage ? (
-                <div className="mt-4 rounded-[1.4rem] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-7 text-[var(--muted)]">
-                  {statusMessage}
-                </div>
-              ) : null}
-
               <div className="mt-5 grid gap-3">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                   <ActionButton size="lg" variant="outline" onClick={onClear}>
@@ -231,11 +219,6 @@ export function P5Board({
                     <h3 className="text-lg font-semibold text-[var(--foreground)]">
                       {isRandomMode ? "机选号码" : "自选号码"}
                     </h3>
-                    <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-                      {isRandomMode
-                        ? "当前为机选模式，点击按钮生成一组排列5号码；如需手动选号，请切换到自选模式。"
-                        : "当前为自选模式，逐位点击数字完成选择；完成后可保存到左侧待下注列表。"}
-                    </p>
                   </div>
 
                   <div className="flex rounded-full border border-[var(--border)] bg-[var(--card)] p-1">
