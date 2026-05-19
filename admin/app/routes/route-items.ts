@@ -26,6 +26,12 @@ export const routeItems: RouteItem[] = [
     icon: "▣",
   },
   {
+    label: "下注管理",
+    description: "按游戏与用户查看下注订单",
+    path: "/bets",
+    icon: "◉",
+  },
+  {
     label: "游戏模型管理",
     description: "模型版本、状态与开奖参数维护",
     path: "/game-models",

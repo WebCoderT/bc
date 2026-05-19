@@ -129,6 +129,46 @@ export type AdminGameCurrentIssue = {
   drawInterval: number;
   status: string;
 };
+export type AdminBetStatus = "placed" | "settled" | "cancelled";
+export type AdminBetItem = {
+  id: number;
+  itemIndex: number;
+  betType: string;
+  displayText: string;
+  amount: number;
+  estimatedPayout: number | null;
+  estimatedProfit: number | null;
+  selection: Record<string, unknown>;
+  extraPayload: Record<string, unknown> | null;
+  createdAt: string;
+};
+export type AdminBetOrder = {
+  id: number;
+  gameId: number;
+  gameLabel: string;
+  betStrategyKey: string;
+  issueNo: string | null;
+  status: AdminBetStatus;
+  totalAmount: number;
+  itemCount: number;
+  estimatedPayout: number | null;
+  estimatedProfit: number | null;
+  oddsSummary: string;
+  selectionSummary: string;
+  placedAt: string;
+  items: AdminBetItem[];
+  user?: {
+    id: number;
+    username: string;
+  };
+};
+export type PaginatedAdminBets = {
+  items: AdminBetOrder[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 
 export type SaveAdminGameInput = Omit<CreateGameDto, "status" | "oddsMode"> & {
   oddsMode?: AdminGameOddsMode;
@@ -798,6 +838,47 @@ export async function drawOnceAdminGame(accessToken: string, gameId: number) {
     `/admin/games/${gameId}/draw-once`,
     {
       method: "POST",
+      accessToken,
+    },
+  ).then((response) => response.data);
+}
+
+export async function fetchAdminBets(
+  accessToken: string,
+  params: {
+    page?: number;
+    pageSize?: number;
+    gameId?: number;
+    userId?: number;
+    status?: AdminBetStatus | "all";
+    keyword?: string;
+  } = {},
+) {
+  const query = new URLSearchParams();
+
+  query.set("page", String(params.page ?? 1));
+  query.set("pageSize", String(params.pageSize ?? 10));
+
+  if (typeof params.gameId === "number") {
+    query.set("gameId", String(params.gameId));
+  }
+
+  if (typeof params.userId === "number") {
+    query.set("userId", String(params.userId));
+  }
+
+  if (params.status && params.status !== "all") {
+    query.set("status", params.status);
+  }
+
+  if (params.keyword?.trim()) {
+    query.set("keyword", params.keyword.trim());
+  }
+
+  return requestJson<SwaggerEnvelope<PaginatedAdminBets>>(
+    `/admin/bets?${query.toString()}`,
+    {
+      method: "GET",
       accessToken,
     },
   ).then((response) => response.data);

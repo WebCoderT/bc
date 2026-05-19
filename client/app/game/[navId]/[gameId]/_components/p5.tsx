@@ -6,7 +6,11 @@ import { P5Board } from "./p5/p5-board";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
 import { P5History } from "./p5/p5-history";
 import { readStoredSession } from "@/app/lib/auth";
-import { fetchMemberGame, type ClientGame } from "@/app/lib/client-api";
+import {
+  createMemberGameBet,
+  fetchMemberGame,
+  type ClientGame,
+} from "@/app/lib/client-api";
 import { createClientRealtimeSocket } from "@/app/lib/client-realtime";
 import {
   FloatingNotificationBubbles,
@@ -16,6 +20,7 @@ import {
   createBetItem,
   createEmptyDigits,
   createRandomDigits,
+  formatCompactDigits,
   formatP5DateTime,
   formatServerDrivenCountdown,
   mapClientDrawRecordToP5Record,
@@ -400,11 +405,46 @@ export default function GamePage() {
   };
 
   const handleSubmit = () => {
-    if (betItems.length === 0) {
+    if (!session?.accessToken || betItems.length === 0) {
       return;
     }
 
-    window.alert("当前仅接入真实开奖数据，投注提交流程将在后续版本接入。");
+    void createMemberGameBet(session.accessToken, gameId, {
+      issueNo: currentIssue?.issue ?? undefined,
+      items: betItems.map((item) => ({
+        displayText: formatCompactDigits(item.digits),
+        betType: "p5-single-number",
+        amount: item.amount,
+        selection: {
+          digits: item.digits,
+          source: item.source,
+        },
+        extraPayload: {
+          source: item.source,
+        },
+      })),
+    })
+      .then((result) => {
+        setBetItems([]);
+        setDigits(createEmptyDigits());
+        pushBubble({
+          title: "下注成功",
+          message: `注单 #${result.id} 已提交，金额 ${result.totalAmount} 元`,
+          tone: "success",
+          durationMs: 3200,
+        });
+      })
+      .catch((error: unknown) => {
+        const message =
+          error instanceof Error ? error.message : "下注失败，请稍后重试";
+
+        pushBubble({
+          title: "下注失败",
+          message,
+          tone: "error",
+          durationMs: 3600,
+        });
+      });
   };
 
   return (

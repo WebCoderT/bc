@@ -14,6 +14,7 @@ import { GameDrawModule } from './game-draw/game-draw.module';
 import { GameModule } from './game/game.module';
 import { NavigatorModule } from './navigator/navigator.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { BetModule } from './bet/bet.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     GameModule,
     NavigatorModule,
     RealtimeModule,
+    BetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

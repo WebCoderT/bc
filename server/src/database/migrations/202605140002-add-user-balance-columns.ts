@@ -10,7 +10,10 @@ export class AddUserBalanceColumns2026051400002 implements MigrationInterface {
       return;
     }
 
-    const hasRechargeAmount = await queryRunner.hasColumn('users', 'recharge_amount');
+    const hasRechargeAmount = await queryRunner.hasColumn(
+      'users',
+      'recharge_amount',
+    );
     const hasBonusAmount = await queryRunner.hasColumn('users', 'bonus_amount');
 
     if (!hasRechargeAmount) {
@@ -49,7 +52,10 @@ export class AddUserBalanceColumns2026051400002 implements MigrationInterface {
       return;
     }
 
-    const hasRechargeAmount = await queryRunner.hasColumn('users', 'recharge_amount');
+    const hasRechargeAmount = await queryRunner.hasColumn(
+      'users',
+      'recharge_amount',
+    );
     const hasBonusAmount = await queryRunner.hasColumn('users', 'bonus_amount');
 
     if (hasRechargeAmount) {

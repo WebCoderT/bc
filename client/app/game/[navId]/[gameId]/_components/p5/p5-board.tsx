@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
+import { ModalShell } from "@/app/shared/components/ui/modal-shell";
 import { NumberBall } from "@/app/shared/components/lottery/number-ball";
 import { cn } from "@/app/shared/lib/cn";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
@@ -509,187 +510,183 @@ export function P5Board({
       </SurfaceCard>
 
       {isRuleModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[0_30px_80px_var(--glow)]">
-            <div className="bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-6 py-6 text-white">
-              <h3 className="text-2xl font-semibold">排列5玩法说明</h3>
-              <p className="mt-2 text-sm text-white/80">
-                这里汇总当前页面的玩法结构、选号逻辑与投注区使用方式。
-              </p>
+        <ModalShell
+          title="排列5玩法说明"
+          description="这里汇总当前页面的玩法结构、选号逻辑与投注区使用方式。"
+          onClose={() => setIsRuleModalOpen(false)}
+          maxWidthClassName="max-w-2xl"
+          footer={
+            <div className="flex justify-end">
+              <ActionButton
+                type="button"
+                onClick={() => setIsRuleModalOpen(false)}
+              >
+                我知道了
+              </ActionButton>
             </div>
-
-            <div className="space-y-4 p-6">
-              {PLAY_RULES.map((rule) => (
-                <div
-                  key={rule}
-                  className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm leading-7 text-[var(--muted)]"
-                >
-                  {rule}
-                </div>
-              ))}
-
-              <div className="flex justify-end pt-2">
-                <ActionButton
-                  type="button"
-                  onClick={() => setIsRuleModalOpen(false)}
-                >
-                  我知道了
-                </ActionButton>
+          }
+        >
+          <div className="space-y-4">
+            {PLAY_RULES.map((rule) => (
+              <div
+                key={rule}
+                className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm leading-7 text-[var(--muted)]"
+              >
+                {rule}
               </div>
-            </div>
+            ))}
           </div>
-        </div>
+        </ModalShell>
       ) : null}
 
       {isSubmitModalOpen ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-3xl overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[0_30px_80px_var(--glow)]">
-            <div className="bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-6 py-6 text-white">
-              <h3 className="text-2xl font-semibold">确认投注</h3>
-              <p className="mt-2 text-sm text-white/80">
-                请在提交前核对本次下注号码、赔率配置与预计派彩。
-              </p>
+        <ModalShell
+          title="确认投注"
+          description="请在提交前核对本次下注号码、赔率配置与预计派彩。"
+          onClose={() => setIsSubmitModalOpen(false)}
+          maxWidthClassName="max-w-3xl"
+          zIndexClassName="z-[60]"
+          overlayClassName="bg-black/65"
+          footer={
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <ActionButton
+                type="button"
+                variant="outline"
+                onClick={() => setIsSubmitModalOpen(false)}
+              >
+                返回修改
+              </ActionButton>
+              <ActionButton type="button" onClick={handleConfirmSubmit}>
+                确认提交
+              </ActionButton>
+            </div>
+          }
+        >
+          <div className="space-y-5">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
+              <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
+                <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                  当前游戏
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+                  {gameDetail?.label ?? "当前游戏"}
+                </p>
+                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+                  {oddsDescription}
+                </p>
+              </div>
+
+              <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
+                <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
+                  汇总信息
+                </p>
+                <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
+                  <div className="flex items-center justify-between gap-4">
+                    <span>下注组数</span>
+                    <span className="font-semibold text-[var(--foreground)]">
+                      {betItems.length} 组
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>总金额</span>
+                    <span className="font-semibold text-[var(--foreground)]">
+                      {totalAmount} 元
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>赔率配置</span>
+                    <span className="text-right font-semibold text-[var(--foreground)]">
+                      {oddsSummary}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>预计总派彩</span>
+                    <span className="font-semibold text-[var(--foreground)]">
+                      {estimatedTotalPayout === null
+                        ? gameDetail?.oddsMode === "custom"
+                          ? "按自定义规则结算"
+                          : "待赔率同步"
+                        : `${estimatedTotalPayout.toFixed(2)} 元`}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>预计总盈利</span>
+                    <span className="font-semibold text-[var(--foreground)]">
+                      {estimatedTotalProfit === null
+                        ? gameDetail?.oddsMode === "custom"
+                          ? "待自定义规则"
+                          : "待赔率同步"
+                        : `${estimatedTotalProfit.toFixed(2)} 元`}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-5 p-6">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
-                <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
-                    当前游戏
-                  </p>
-                  <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">
-                    {gameDetail?.label ?? "当前游戏"}
-                  </p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                    {oddsDescription}
-                  </p>
-                </div>
+            <div className="max-h-[24rem] space-y-3 overflow-y-auto pr-1">
+              {betSummaries.map((item, index) => (
+                <div
+                  key={`submit-${item.id}`}
+                  className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.2em] text-[var(--accent)]">
+                        第 {index + 1} 注 ·{" "}
+                        {item.source === "random" ? "机选" : "自选"}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold tracking-[0.24em] text-[var(--foreground)]">
+                        {formatCompactDigits(item.digits)}
+                      </p>
+                    </div>
 
-                <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4">
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[var(--muted)]">
-                    汇总信息
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-                    <div className="flex items-center justify-between gap-4">
-                      <span>下注组数</span>
-                      <span className="font-semibold text-[var(--foreground)]">
-                        {betItems.length} 组
-                      </span>
+                    <div className="text-right text-sm text-[var(--muted)]">
+                      <p>投注金额：{item.amount} 元</p>
+                      <p className="mt-1">赔率：{oddsSummary}</p>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>总金额</span>
-                      <span className="font-semibold text-[var(--foreground)]">
-                        {totalAmount} 元
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>赔率配置</span>
-                      <span className="text-right font-semibold text-[var(--foreground)]">
-                        {oddsSummary}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>预计总派彩</span>
-                      <span className="font-semibold text-[var(--foreground)]">
-                        {estimatedTotalPayout === null
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                      <p className="text-xs font-semibold tracking-[0.2em]">
+                        预计派彩
+                      </p>
+                      <p className="mt-2 font-semibold text-[var(--foreground)]">
+                        {item.estimatedPayout === null
                           ? gameDetail?.oddsMode === "custom"
                             ? "按自定义规则结算"
                             : "待赔率同步"
-                          : `${estimatedTotalPayout.toFixed(2)} 元`}
-                      </span>
+                          : `${item.estimatedPayout.toFixed(2)} 元`}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>预计总盈利</span>
-                      <span className="font-semibold text-[var(--foreground)]">
-                        {estimatedTotalProfit === null
+                    <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                      <p className="text-xs font-semibold tracking-[0.2em]">
+                        预计盈利
+                      </p>
+                      <p className="mt-2 font-semibold text-[var(--foreground)]">
+                        {item.estimatedProfit === null
                           ? gameDetail?.oddsMode === "custom"
                             ? "待自定义规则"
                             : "待赔率同步"
-                          : `${estimatedTotalProfit.toFixed(2)} 元`}
-                      </span>
+                          : `${item.estimatedProfit.toFixed(2)} 元`}
+                      </p>
+                    </div>
+                    <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
+                      <p className="text-xs font-semibold tracking-[0.2em]">
+                        说明
+                      </p>
+                      <p className="mt-2 leading-6 text-[var(--foreground)]">
+                        {gameDetail?.oddsMode === "custom"
+                          ? "当前仅展示预留文案，后续会按自定义赔付规则结算。"
+                          : "固定赔率已参与当前注单预计派彩计算。"}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="max-h-[24rem] space-y-3 overflow-y-auto pr-1">
-                {betSummaries.map((item, index) => (
-                  <div
-                    key={`submit-${item.id}`}
-                    className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold tracking-[0.2em] text-[var(--accent)]">
-                          第 {index + 1} 注 ·{" "}
-                          {item.source === "random" ? "机选" : "自选"}
-                        </p>
-                        <p className="mt-2 text-xl font-semibold tracking-[0.24em] text-[var(--foreground)]">
-                          {formatCompactDigits(item.digits)}
-                        </p>
-                      </div>
-
-                      <div className="text-right text-sm text-[var(--muted)]">
-                        <p>投注金额：{item.amount} 元</p>
-                        <p className="mt-1">赔率：{oddsSummary}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
-                        <p className="text-xs font-semibold tracking-[0.2em]">
-                          预计派彩
-                        </p>
-                        <p className="mt-2 font-semibold text-[var(--foreground)]">
-                          {item.estimatedPayout === null
-                            ? gameDetail?.oddsMode === "custom"
-                              ? "按自定义规则结算"
-                              : "待赔率同步"
-                            : `${item.estimatedPayout.toFixed(2)} 元`}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
-                        <p className="text-xs font-semibold tracking-[0.2em]">
-                          预计盈利
-                        </p>
-                        <p className="mt-2 font-semibold text-[var(--foreground)]">
-                          {item.estimatedProfit === null
-                            ? gameDetail?.oddsMode === "custom"
-                              ? "待自定义规则"
-                              : "待赔率同步"
-                            : `${item.estimatedProfit.toFixed(2)} 元`}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--muted)]">
-                        <p className="text-xs font-semibold tracking-[0.2em]">
-                          说明
-                        </p>
-                        <p className="mt-2 leading-6 text-[var(--foreground)]">
-                          {gameDetail?.oddsMode === "custom"
-                            ? "当前仅展示预留文案，后续会按自定义赔付规则结算。"
-                            : "固定赔率已参与当前注单预计派彩计算。"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <ActionButton
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsSubmitModalOpen(false)}
-                >
-                  返回修改
-                </ActionButton>
-                <ActionButton type="button" onClick={handleConfirmSubmit}>
-                  确认提交
-                </ActionButton>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
+        </ModalShell>
       ) : null}
     </>
   );

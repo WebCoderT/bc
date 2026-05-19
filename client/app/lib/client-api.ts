@@ -76,6 +76,46 @@ export type ClientCurrentIssue = {
   drawInterval: number;
   status: string;
 };
+export type ClientBetStatus = "placed" | "settled" | "cancelled";
+export type ClientBetItem = {
+  id: number;
+  itemIndex: number;
+  betType: string;
+  displayText: string;
+  amount: number;
+  estimatedPayout: number | null;
+  estimatedProfit: number | null;
+  selection: Record<string, unknown>;
+  extraPayload: Record<string, unknown> | null;
+  createdAt: string;
+};
+export type ClientBetOrder = {
+  id: number;
+  gameId: number;
+  gameLabel: string;
+  betStrategyKey: string;
+  issueNo: string | null;
+  status: ClientBetStatus;
+  totalAmount: number;
+  itemCount: number;
+  estimatedPayout: number | null;
+  estimatedProfit: number | null;
+  oddsSummary: string;
+  selectionSummary: string;
+  placedAt: string;
+  items: ClientBetItem[];
+};
+export type CreateMemberBetItemInput = {
+  displayText: string;
+  betType: string;
+  amount: number;
+  selection: Record<string, unknown>;
+  extraPayload?: Record<string, unknown>;
+};
+export type CreateMemberGameBetInput = {
+  issueNo?: string;
+  items: CreateMemberBetItemInput[];
+};
 
 export {
   NavigationResponseDtoStatusEnum,
@@ -432,6 +472,57 @@ export async function fetchMemberCurrentIssue(
 ) {
   return requestJson<SwaggerEnvelope<ClientCurrentIssue>>(
     `/member/games/${gameId}/current-issue`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
+}
+
+export async function createMemberGameBet(
+  accessToken: string,
+  gameId: number,
+  input: CreateMemberGameBetInput,
+) {
+  return requestJson<SwaggerEnvelope<ClientBetOrder>>(
+    `/member/games/${gameId}/bets`,
+    {
+      method: "POST",
+      accessToken,
+      body: JSON.stringify(input),
+    },
+  ).then((response) => response.data);
+}
+
+export async function fetchMemberBets(
+  accessToken: string,
+  query: {
+    page?: number;
+    pageSize?: number;
+    gameId?: number;
+    status?: ClientBetStatus | "all";
+    keyword?: string;
+  } = {},
+) {
+  const search = new URLSearchParams();
+
+  search.set("page", String(query.page ?? 1));
+  search.set("pageSize", String(query.pageSize ?? 10));
+
+  if (typeof query.gameId === "number") {
+    search.set("gameId", String(query.gameId));
+  }
+
+  if (query.status && query.status !== "all") {
+    search.set("status", query.status);
+  }
+
+  if (query.keyword?.trim()) {
+    search.set("keyword", query.keyword.trim());
+  }
+
+  return requestJson<SwaggerEnvelope<ClientPaginatedResult<ClientBetOrder>>>(
+    `/member/bets?${search.toString()}`,
     {
       method: "GET",
       accessToken,

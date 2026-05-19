@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { useGameUser } from "./game-user-context";
@@ -85,6 +86,9 @@ export default function ProfileHome() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Link href="/game/bets">
+                <ActionButton>下注历史</ActionButton>
+              </Link>
               <ActionButton>余额充值</ActionButton>
               <ActionButton variant="outline">余额提现</ActionButton>
             </div>
@@ -151,7 +155,7 @@ export default function ProfileHome() {
                   </p>
                 </div>
                 <ActionButton variant="outline" className="px-4 py-2 text-sm">
-                  查看资金记录
+                  <Link href="/game/bets">查看下注记录</Link>
                 </ActionButton>
               </div>
             ))}
