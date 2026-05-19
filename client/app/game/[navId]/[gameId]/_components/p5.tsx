@@ -8,7 +8,9 @@ import { P5History } from "./p5/p5-history";
 import { readStoredSession } from "@/app/lib/auth";
 import {
   createMemberGameBet,
+  fetchMemberBets,
   fetchMemberGame,
+  type ClientBetOrder,
   type ClientGame,
 } from "@/app/lib/client-api";
 import { createClientRealtimeSocket } from "@/app/lib/client-realtime";
@@ -69,9 +71,11 @@ export default function GamePage() {
   );
   const [records, setRecords] = useState<P5DrawRecord[]>([]);
   const [betItems, setBetItems] = useState<P5BetItem[]>([]);
+  const [betHistory, setBetHistory] = useState<ClientBetOrder[]>([]);
   const [selectionMode, setSelectionMode] = useState<P5SelectionMode>("manual");
   const [currentIssue, setCurrentIssue] = useState<P5CurrentIssue | null>(null);
   const [drawError, setDrawError] = useState("");
+  const [betHistoryError, setBetHistoryError] = useState("");
   const [gameDetail, setGameDetail] = useState<ClientGame | null>(null);
   const [gameDetailError, setGameDetailError] = useState("");
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
@@ -83,6 +87,8 @@ export default function GamePage() {
     session?.accessToken && Number.isInteger(gameId) && gameId > 0,
   );
   const [isDrawLoading, setIsDrawLoading] = useState(canLoadDrawData);
+  const [isBetHistoryLoading, setIsBetHistoryLoading] =
+    useState(canLoadDrawData);
   const [isGameDetailLoading, setIsGameDetailLoading] =
     useState(canLoadDrawData);
 
@@ -361,6 +367,52 @@ export default function GamePage() {
     };
   }, [canLoadDrawData, gameId, pushBubble, session?.accessToken]);
 
+  useEffect(() => {
+    if (!canLoadDrawData || !session?.accessToken) {
+      setIsBetHistoryLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    setIsBetHistoryLoading(true);
+    setBetHistoryError("");
+
+    void fetchMemberBets(session.accessToken, {
+      page: 1,
+      pageSize: 20,
+      gameId,
+    })
+      .then((response) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setBetHistory(response.items);
+      })
+      .catch((error: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setBetHistory([]);
+        setBetHistoryError(
+          error instanceof Error ? error.message : "读取投注历史失败",
+        );
+      })
+      .finally(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setIsBetHistoryLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canLoadDrawData, gameId, session?.accessToken]);
+
   const handleModeChange = (mode: P5SelectionMode) => {
     setSelectionMode(mode);
   };
@@ -429,6 +481,7 @@ export default function GamePage() {
       .then((result) => {
         setBetItems([]);
         setDigits(createEmptyDigits());
+        setBetHistory((current) => [result, ...current].slice(0, 20));
         pushBubble({
           title: "下注成功",
           message: `注单 #${result.id} 已提交，金额 ${result.totalAmount} 元`,
@@ -457,9 +510,12 @@ export default function GamePage() {
         content={
           <P5History
             records={records}
+            betOrders={betHistory}
             variant="sidebar"
-            isLoading={isDrawLoading}
-            error={drawErrorText}
+            isDrawLoading={isDrawLoading}
+            drawError={drawErrorText}
+            isBetHistoryLoading={isBetHistoryLoading}
+            betHistoryError={betHistoryError}
           />
         }
       />

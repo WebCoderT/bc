@@ -15,7 +15,6 @@ type AppBrandProps = {
  * 组件统一负责渲染 Logo 和应用名称，避免首页、弹窗、控制台头部各写一套品牌结构。
  */
 export function AppBrand({
-  caption,
   secondaryText,
   variant = "default",
   size = "md",
@@ -56,15 +55,6 @@ export function AppBrand({
       </div>
 
       <div className="min-w-0">
-        <p
-          className={cn(
-            "font-semibold",
-            sizeClassName.caption,
-            isInverted ? "text-white/75" : "text-[var(--accent)]",
-          )}
-        >
-          {caption ?? profile.appWordmark}
-        </p>
         <h1
           className={cn(
             "truncate font-semibold",

@@ -10,7 +10,6 @@ export type AppProfile = {
   logoText: string;
   description: string;
   officialSiteLabel: string;
-  consoleLabel: string;
   defaultOrganizationName: string;
   defaultEmailDomain: string;
   defaultUserAvatar: string;
@@ -27,7 +26,6 @@ const mockAppProfile: AppProfile = {
   logoText: "PP",
   description: "未登录官网与 `/game` 已登录模块分离的运动科技风示例。",
   officialSiteLabel: "PULSEPLAY LAB",
-  consoleLabel: "PULSEPLAY CONSOLE",
   defaultOrganizationName: "疾跃竞技科技",
   defaultEmailDomain: "pulseplay.com",
   defaultUserAvatar:

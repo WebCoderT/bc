@@ -84,7 +84,6 @@ export function AuthModal({
       maxWidthClassName="max-w-md"
       headerContent={
         <AppBrand
-          caption={appProfile.consoleLabel}
           secondaryText="统一品牌数据已接入认证入口"
           variant="inverted"
         />

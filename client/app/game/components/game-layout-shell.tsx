@@ -56,7 +56,6 @@ export function GameLayoutShell({
           <div className="flex min-w-0 items-center gap-4">
             <Link href="/" className="flex items-center gap-3">
               <AppBrand
-                caption={appProfile.consoleLabel}
                 secondaryText={`当前角色：${formatAuthUserRole(user.role)}`}
               />
             </Link>
