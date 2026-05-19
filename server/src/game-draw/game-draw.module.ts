@@ -12,6 +12,7 @@ import { GameDrawSchedulerService } from './game-draw-scheduler.service';
 import { GameDrawService } from './game-draw.service';
 import { GameDrawStrategyRegistry } from './game-draw-strategy.registry';
 import { GameDrawTableService } from './game-draw-table.service';
+import { P3DrawStrategy } from './strategies/p3-draw.strategy';
 import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 
 @Module({
@@ -32,8 +33,9 @@ import { P5DrawStrategy } from './strategies/p5-draw.strategy';
     GameDrawStrategyRegistry,
     GameDrawService,
     GameDrawSchedulerService,
+    P3DrawStrategy,
     P5DrawStrategy,
   ],
   exports: [GameDrawService, GameDrawTableService, GameDrawRuntimeService],
 })
-export class GameDrawModule {}
+export class GameDrawModule { }
