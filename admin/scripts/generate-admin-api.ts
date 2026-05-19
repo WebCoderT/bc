@@ -9,9 +9,11 @@ const projectRoot = path.resolve(currentDirectoryPath, "..");
 const swaggerUrl =
   process.env.ADMIN_SWAGGER_URL ?? "http://127.0.0.1:8000/docs/admin-json";
 
+const swaggerInput = process.env.ADMIN_SWAGGER_INPUT ?? null;
+
 async function main() {
   await generateApi({
-    url: swaggerUrl,
+    ...(swaggerInput ? { input: swaggerInput } : { url: swaggerUrl }),
     fileName: "index.ts",
     output: path.resolve(projectRoot, "app/generated/admin-api"),
     httpClientType: "fetch",
@@ -29,7 +31,9 @@ async function main() {
     singleHttpClient: true,
   });
 
-  console.log(`Admin Swagger client generated from ${swaggerUrl}`);
+  console.log(
+    `Admin Swagger client generated from ${swaggerInput ?? swaggerUrl}`,
+  );
 }
 
 main().catch((error) => {

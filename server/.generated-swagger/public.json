@@ -1,0 +1,541 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "注册参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "注册成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "普通用户注册",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "登录参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LoginResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "用户登录并获取 JWT",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "JWT 校验通过"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "校验 JWT 并返回当前用户",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api": {
+      "get": {
+        "operationId": "PublicController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ServiceStatusDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "服务状态与说明",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/announcements": {
+      "get": {
+        "operationId": "PublicController_getAnnouncements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "支持普通用户注册与登录"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 1
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "公开公告",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/app-profile": {
+      "get": {
+        "operationId": "PublicController_getAppProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppProfileResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "公开品牌资料",
+        "tags": [
+          "public"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Public API",
+    "description": "公开访问与认证入口文档",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "请填入登录后返回的 accessToken"
+      }
+    },
+    "schemas": {
+      "SafeUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "data:image/svg+xml;utf8,..."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "vip",
+              "admin"
+            ],
+            "example": "admin"
+          },
+          "rechargeAmount": {
+            "type": "number",
+            "example": 2000
+          },
+          "bonusAmount": {
+            "type": "number",
+            "example": 300
+          },
+          "totalBalance": {
+            "type": "number",
+            "example": 2300
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-14T08:30:00.000Z"
+          },
+          "isOnline": {
+            "type": "boolean",
+            "example": true
+          },
+          "onlineStatus": {
+            "type": "string",
+            "example": "online"
+          },
+          "currentGameRoomId": {
+            "type": "object",
+            "example": 101,
+            "nullable": true
+          },
+          "currentGameRoomLabel": {
+            "type": "object",
+            "example": "排列5",
+            "nullable": true
+          },
+          "lastActiveAt": {
+            "type": "object",
+            "example": "2026-05-19T08:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "avatar",
+          "role",
+          "rechargeAmount",
+          "bonusAmount",
+          "totalBalance",
+          "createdAt",
+          "isOnline",
+          "onlineStatus"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "new_user"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPass123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeUserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin@123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "SwaggerEntryDto": {
+        "type": "object",
+        "properties": {
+          "public": {
+            "type": "string",
+            "example": "/docs/public"
+          },
+          "member": {
+            "type": "string",
+            "example": "/docs/member"
+          },
+          "admin": {
+            "type": "string",
+            "example": "/docs/admin"
+          }
+        },
+        "required": [
+          "public",
+          "member",
+          "admin"
+        ]
+      },
+      "ServiceStatusDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "概率学应用服务端"
+          },
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "auth": {
+            "type": "string",
+            "example": "JWT Bearer"
+          },
+          "swagger": {
+            "$ref": "#/components/schemas/SwaggerEntryDto"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "auth",
+          "swagger"
+        ]
+      },
+      "AppProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "应用名称",
+            "example": ""
+          },
+          "appWordmark": {
+            "type": "string",
+            "description": "英文品牌字标",
+            "example": ""
+          },
+          "logoText": {
+            "type": "string",
+            "description": "Logo 简写",
+            "example": ""
+          },
+          "description": {
+            "type": "string",
+            "description": "品牌描述"
+          },
+          "officialSiteLabel": {
+            "type": "string",
+            "description": "官网标识",
+            "example": ""
+          },
+          "defaultOrganizationName": {
+            "type": "string",
+            "description": "默认组织名称"
+          },
+          "defaultEmailDomain": {
+            "type": "string",
+            "description": "默认邮箱域名",
+            "example": ""
+          },
+          "defaultUserAvatar": {
+            "type": "string",
+            "description": "默认头像 SVG / URL"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "appName",
+          "appWordmark",
+          "logoText",
+          "description",
+          "officialSiteLabel",
+          "defaultOrganizationName",
+          "defaultEmailDomain",
+          "defaultUserAvatar",
+          "updatedAt"
+        ]
+      }
+    }
+  }
+}

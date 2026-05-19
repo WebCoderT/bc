@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { BetModule } from '../bet/bet.module';
 import { GameDrawModule } from '../game-draw/game-draw.module';
 import { GameModule } from '../game/game.module';
 import { NavigatorModule } from '../navigator/navigator.module';
@@ -12,6 +13,7 @@ import { MemberNavigationsController } from './member-navigations.controller';
 @Module({
   imports: [
     AuthModule,
+    BetModule,
     UsersModule,
     GameModule,
     GameDrawModule,

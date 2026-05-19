@@ -1,0 +1,1530 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "注册参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "注册成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "普通用户注册",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "登录参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LoginResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "用户登录并获取 JWT",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "JWT 校验通过"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "校验 JWT 并返回当前用户",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/member/dashboard": {
+      "get": {
+        "operationId": "MemberDashboardController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "欢迎进入用户中心"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MemberDashboardDataDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "普通登录用户可访问的个人面板",
+        "tags": [
+          "用户中心"
+        ]
+      }
+    },
+    "/api/member/games": {
+      "get": {
+        "operationId": "MemberGamesController_getGames",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "星穹",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户分页查询游戏列表",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/games/navigation/{navigationId}": {
+      "get": {
+        "operationId": "MemberGamesController_getGamesByNavigation",
+        "parameters": [
+          {
+            "name": "navigationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "星穹",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "根据菜单ID分页查询下方游戏",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/games/parent-navigation/{parentId}/grouped": {
+      "get": {
+        "operationId": "MemberGamesController_getGroupedGamesByParentNavigation",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "gamePage",
+            "required": false,
+            "in": "query",
+            "description": "组内游戏分页页码，对当前页的每个二级导航分组同时生效",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "gamePageSize",
+            "required": false,
+            "in": "query",
+            "description": "组内游戏每页条数，对当前页的每个二级导航分组同时生效",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GroupedGamesByNavigationResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "根据一级父级导航分页读取二级导航分组及其下分页游戏列表",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/games/{id}": {
+      "get": {
+        "operationId": "MemberGamesController_getGame",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户查看游戏详情",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/games/{id}/draw-records": {
+      "get": {
+        "operationId": "MemberGamesController_getDrawRecords",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameDrawRecordResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户查询游戏开奖历史",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/games/{id}/current-issue": {
+      "get": {
+        "operationId": "MemberGamesController_getCurrentIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameCurrentIssueResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户查询当前期号",
+        "tags": [
+          "游戏浏览"
+        ]
+      }
+    },
+    "/api/member/navigations": {
+      "get": {
+        "operationId": "MemberNavigationsController_getNavigations",
+        "parameters": [
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "关键词",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "按导航类型筛选",
+            "schema": {
+              "example": "顶部导航",
+              "type": "string",
+              "enum": [
+                "顶部导航",
+                "侧边导航",
+                "快捷入口"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "按导航状态筛选",
+            "schema": {
+              "example": "展示中",
+              "type": "string",
+              "enum": [
+                "展示中",
+                "隐藏中"
+              ]
+            }
+          },
+          {
+            "name": "parentId",
+            "required": false,
+            "in": "query",
+            "description": "按父级导航筛选",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/NavigationResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 1
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户查询导航列表",
+        "tags": [
+          "导航查询"
+        ]
+      }
+    },
+    "/api/member/navigations/{id}": {
+      "get": {
+        "operationId": "MemberNavigationsController_getNavigation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NavigationResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "登录用户查看导航详情",
+        "tags": [
+          "导航查询"
+        ]
+      }
+    },
+    "/api/vip/insights": {
+      "get": {
+        "operationId": "VipController_getInsights",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "VIP 内容访问成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/VipInsightsDataDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "VIP 专属内容",
+        "tags": [
+          "vip"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Member API",
+    "description": "普通用户与 VIP 用户文档",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "请填入登录后返回的 accessToken"
+      }
+    },
+    "schemas": {
+      "SafeUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "data:image/svg+xml;utf8,..."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "vip",
+              "admin"
+            ],
+            "example": "admin"
+          },
+          "rechargeAmount": {
+            "type": "number",
+            "example": 2000
+          },
+          "bonusAmount": {
+            "type": "number",
+            "example": 300
+          },
+          "totalBalance": {
+            "type": "number",
+            "example": 2300
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-14T08:30:00.000Z"
+          },
+          "isOnline": {
+            "type": "boolean",
+            "example": true
+          },
+          "onlineStatus": {
+            "type": "string",
+            "example": "online"
+          },
+          "currentGameRoomId": {
+            "type": "object",
+            "example": 101,
+            "nullable": true
+          },
+          "currentGameRoomLabel": {
+            "type": "object",
+            "example": "排列5",
+            "nullable": true
+          },
+          "lastActiveAt": {
+            "type": "object",
+            "example": "2026-05-19T08:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "avatar",
+          "role",
+          "rechargeAmount",
+          "bonusAmount",
+          "totalBalance",
+          "createdAt",
+          "isOnline",
+          "onlineStatus"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "new_user"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPass123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeUserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin@123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "MemberDashboardDataDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SafeUserDto"
+          },
+          "abilities": {
+            "example": [
+              "查看个人资料",
+              "浏览公开业务",
+              "升级 VIP"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "user",
+          "abilities"
+        ]
+      },
+      "GameResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "label": {
+            "type": "string",
+            "example": "星穹远征"
+          },
+          "description": {
+            "type": "string",
+            "example": "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+          },
+          "iconUrl": {
+            "type": "string",
+            "example": "https://example.com/game-icon.png"
+          },
+          "category": {
+            "type": "number",
+            "example": 1,
+            "description": "所属左侧导航 ID"
+          },
+          "gameModelId": {
+            "type": "string",
+            "example": "60",
+            "description": "关联游戏模型 ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "online"
+          },
+          "drawInterval": {
+            "type": "number",
+            "example": 60,
+            "description": "开奖间隔时间，单位秒"
+          },
+          "oddsMode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "custom"
+            ],
+            "example": "fixed",
+            "description": "赔率模式"
+          },
+          "fixedOdds": {
+            "type": "object",
+            "example": 1.98,
+            "description": "固定赔率值，若为自定义赔付则为空",
+            "nullable": true
+          },
+          "customPayoutConfig": {
+            "type": "object",
+            "example": {
+              "formula": "future-config"
+            },
+            "description": "自定义赔付配置，当前仅预留字段",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-16T06:30:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-16T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "description",
+          "iconUrl",
+          "category",
+          "gameModelId",
+          "status",
+          "drawInterval",
+          "oddsMode",
+          "fixedOdds",
+          "customPayoutConfig",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NavigationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "电子竞技"
+          },
+          "path": {
+            "type": "string",
+            "example": "/game/esports",
+            "description": "导航访问路径；当未配置 path 时，这里返回导航 id 字符串"
+          },
+          "description": {
+            "type": "string",
+            "example": "前台电子竞技业务导航入口"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🎮"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "顶部导航",
+              "侧边导航",
+              "快捷入口"
+            ],
+            "example": "顶部导航"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "展示中",
+              "隐藏中"
+            ],
+            "example": "展示中"
+          },
+          "sort": {
+            "type": "number",
+            "example": 10
+          },
+          "parentId": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "level": {
+            "type": "number",
+            "example": 1,
+            "description": "1 为一级导航，2 为二级导航"
+          },
+          "children": {
+            "description": "二级导航列表，仅一级导航返回非空数组",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NavigationResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-16T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-16T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "description",
+          "icon",
+          "type",
+          "status",
+          "sort",
+          "parentId",
+          "level",
+          "children",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NavigationGroupedGamesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "当前二级导航下的游戏列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 12,
+            "description": "当前二级导航下游戏总数"
+          },
+          "page": {
+            "type": "number",
+            "example": 1,
+            "description": "当前二级导航下游戏页码"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "description": "当前二级导航下游戏每页条数"
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 2,
+            "description": "当前二级导航下游戏总页数"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ]
+      },
+      "GroupedGamesByNavigationResponseDto": {
+        "type": "object",
+        "properties": {
+          "navigation": {
+            "description": "当前分组对应的二级导航信息",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NavigationResponseDto"
+              }
+            ]
+          },
+          "games": {
+            "description": "当前二级导航下的分页游戏数据",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NavigationGroupedGamesDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "navigation",
+          "games"
+        ]
+      },
+      "GameDrawRecordResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "issueNo": {
+            "type": "string",
+            "example": "2026051900001"
+          },
+          "openCode": {
+            "type": "string",
+            "example": "1,4,7,2,9"
+          },
+          "openCodeJson": {
+            "type": "object",
+            "example": [
+              1,
+              4,
+              7,
+              2,
+              9
+            ]
+          },
+          "resultPayload": {
+            "type": "object",
+            "example": {
+              "sum": 23,
+              "span": 8
+            }
+          },
+          "drawTime": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          },
+          "drawStatus": {
+            "type": "string",
+            "enum": [
+              "open",
+              "cancelled",
+              "retry"
+            ],
+            "example": "open"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "system",
+              "manual"
+            ],
+            "example": "system"
+          },
+          "algorithmVersion": {
+            "type": "string",
+            "example": "p5-v1"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "issueNo",
+          "openCode",
+          "openCodeJson",
+          "resultPayload",
+          "drawTime",
+          "drawStatus",
+          "sourceType",
+          "algorithmVersion",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "GameCurrentIssueResponseDto": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "number",
+            "example": 101
+          },
+          "serverTime": {
+            "type": "string",
+            "example": "2026-05-19T08:01:30.000Z"
+          },
+          "currentIssue": {
+            "type": "object",
+            "example": "2026051900002",
+            "nullable": true
+          },
+          "lastDrawAt": {
+            "type": "object",
+            "example": "2026-05-19T08:01:00.000Z",
+            "nullable": true
+          },
+          "nextDrawAt": {
+            "type": "string",
+            "example": "2026-05-19T08:02:00.000Z"
+          },
+          "drawInterval": {
+            "type": "number",
+            "example": 60
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "drawing",
+              "paused",
+              "error"
+            ],
+            "example": "idle"
+          }
+        },
+        "required": [
+          "gameId",
+          "serverTime",
+          "nextDrawAt",
+          "drawInterval",
+          "status"
+        ]
+      },
+      "VipInsightsDataDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SafeUserDto"
+          },
+          "reports": {
+            "example": [
+              "高阶概率分析报告",
+              "优先实验功能",
+              "专属数据看板"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "user",
+          "reports"
+        ]
+      }
+    }
+  }
+}

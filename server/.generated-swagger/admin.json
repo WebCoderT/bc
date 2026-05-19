@@ -1,0 +1,2644 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "注册参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "注册成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "普通用户注册",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "登录参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LoginResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "用户登录并获取 JWT",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "JWT 校验通过"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "校验 JWT 并返回当前用户",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "AdminUsersController_getUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "关键词",
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "admin",
+              "type": "string",
+              "enum": [
+                "user",
+                "vip",
+                "admin"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SafeUserDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员分页查看用户并按角色筛选",
+        "tags": [
+          "用户管理"
+        ]
+      }
+    },
+    "/api/admin/users/{id}": {
+      "patch": {
+        "operationId": "AdminUsersController_updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "修改用户参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "用户信息更新成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SafeUserDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员修改用户信息",
+        "tags": [
+          "用户管理"
+        ]
+      }
+    },
+    "/api/admin/app-profile": {
+      "get": {
+        "operationId": "AdminAppProfileController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppProfileResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员读取品牌数据",
+        "tags": [
+          "品牌数据管理"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminAppProfileController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "品牌数据修改参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "品牌数据更新成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppProfileResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员修改品牌数据",
+        "tags": [
+          "品牌数据管理"
+        ]
+      }
+    },
+    "/api/admin/games": {
+      "get": {
+        "operationId": "AdminGameController_getGames",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "星穹",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员分页查询游戏列表",
+        "tags": [
+          "游戏管理"
+        ]
+      },
+      "post": {
+        "operationId": "AdminGameController_createGame",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "新增游戏参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏创建成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员新增游戏",
+        "tags": [
+          "游戏管理"
+        ]
+      }
+    },
+    "/api/admin/games/{id}": {
+      "patch": {
+        "operationId": "AdminGameController_updateGame",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "修改游戏参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏更新成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员修改游戏",
+        "tags": [
+          "游戏管理"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminGameController_deleteGame",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏删除成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/IdDataDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员删除游戏",
+        "tags": [
+          "游戏管理"
+        ]
+      }
+    },
+    "/api/admin/games/{id}/draw-records": {
+      "get": {
+        "operationId": "AdminGameController_getDrawRecords",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameDrawRecordResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员查询游戏开奖历史",
+        "tags": [
+          "游戏管理"
+        ]
+      }
+    },
+    "/api/admin/games/{id}/current-issue": {
+      "get": {
+        "operationId": "AdminGameController_getCurrentIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameCurrentIssueResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员查询当前期号",
+        "tags": [
+          "游戏管理"
+        ]
+      }
+    },
+    "/api/admin/games/{id}/draw-once": {
+      "post": {
+        "operationId": "AdminGameController_drawOnce",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "手动开奖成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameDrawRecordResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员手动触发一次开奖",
+        "tags": [
+          "游戏管理"
+        ]
+      }
+    },
+    "/api/admin/game-models": {
+      "get": {
+        "operationId": "AdminGameModelsController_getGameModels",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "关键词",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "active",
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive",
+                "deprecated",
+                "deleted"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/GameModelResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 2
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "pageSize",
+                        "totalPages"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员分页查询游戏模型列表",
+        "tags": [
+          "游戏模型管理"
+        ]
+      },
+      "post": {
+        "operationId": "AdminGameModelsController_createGameModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "新增游戏模型参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGameModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏模型创建成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameModelResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员新增游戏模型",
+        "tags": [
+          "游戏模型管理"
+        ]
+      }
+    },
+    "/api/admin/game-models/{id}": {
+      "get": {
+        "operationId": "AdminGameModelsController_getGameModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameModelResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员查看游戏模型详情",
+        "tags": [
+          "游戏模型管理"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminGameModelsController_updateGameModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "修改游戏模型参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGameModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏模型更新成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GameModelResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员修改游戏模型",
+        "tags": [
+          "游戏模型管理"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminGameModelsController_deleteGameModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "游戏模型删除成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/IdDataDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员删除游戏模型",
+        "tags": [
+          "游戏模型管理"
+        ]
+      }
+    },
+    "/api/admin/navigations": {
+      "get": {
+        "operationId": "AdminNavigationsController_getNavigations",
+        "parameters": [
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "关键词",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "按导航类型筛选",
+            "schema": {
+              "example": "顶部导航",
+              "type": "string",
+              "enum": [
+                "顶部导航",
+                "侧边导航",
+                "快捷入口"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "按导航状态筛选",
+            "schema": {
+              "example": "展示中",
+              "type": "string",
+              "enum": [
+                "展示中",
+                "隐藏中"
+              ]
+            }
+          },
+          {
+            "name": "parentId",
+            "required": false,
+            "in": "query",
+            "description": "按父级导航筛选",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/NavigationResponseDto"
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 1
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员查询导航列表",
+        "tags": [
+          "导航管理"
+        ]
+      },
+      "post": {
+        "operationId": "AdminNavigationsController_createNavigation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "新增导航参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNavigatorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "导航创建成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NavigationResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员新增导航",
+        "tags": [
+          "导航管理"
+        ]
+      }
+    },
+    "/api/admin/navigations/{id}": {
+      "get": {
+        "operationId": "AdminNavigationsController_getNavigation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NavigationResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员查看导航详情",
+        "tags": [
+          "导航管理"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminNavigationsController_updateNavigation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "修改导航参数",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNavigatorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "导航更新成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NavigationResponseDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员修改导航",
+        "tags": [
+          "导航管理"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminNavigationsController_deleteNavigation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "导航删除成功"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/IdDataDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "管理员删除导航",
+        "tags": [
+          "导航管理"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Admin API",
+    "description": "后台管理员文档",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "请填入登录后返回的 accessToken"
+      }
+    },
+    "schemas": {
+      "SafeUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "data:image/svg+xml;utf8,..."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "vip",
+              "admin"
+            ],
+            "example": "admin"
+          },
+          "rechargeAmount": {
+            "type": "number",
+            "example": 2000
+          },
+          "bonusAmount": {
+            "type": "number",
+            "example": 300
+          },
+          "totalBalance": {
+            "type": "number",
+            "example": 2300
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-14T08:30:00.000Z"
+          },
+          "isOnline": {
+            "type": "boolean",
+            "example": true
+          },
+          "onlineStatus": {
+            "type": "string",
+            "example": "online"
+          },
+          "currentGameRoomId": {
+            "type": "object",
+            "example": 101,
+            "nullable": true
+          },
+          "currentGameRoomLabel": {
+            "type": "object",
+            "example": "排列5",
+            "nullable": true
+          },
+          "lastActiveAt": {
+            "type": "object",
+            "example": "2026-05-19T08:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "avatar",
+          "role",
+          "rechargeAmount",
+          "bonusAmount",
+          "totalBalance",
+          "createdAt",
+          "isOnline",
+          "onlineStatus"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "new_user"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPass123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeUserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin@123"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "UpdateAdminUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin_root"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "data:image/svg+xml;utf8,..."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "vip",
+              "admin"
+            ],
+            "example": "admin"
+          },
+          "rechargeAmount": {
+            "type": "number",
+            "example": 2000
+          },
+          "bonusAmount": {
+            "type": "number",
+            "example": 300
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-14T08:30:00.000Z"
+          }
+        },
+        "required": [
+          "username",
+          "avatar",
+          "role",
+          "rechargeAmount",
+          "bonusAmount",
+          "createdAt"
+        ]
+      },
+      "AppProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "应用名称",
+            "example": ""
+          },
+          "appWordmark": {
+            "type": "string",
+            "description": "英文品牌字标",
+            "example": ""
+          },
+          "logoText": {
+            "type": "string",
+            "description": "Logo 简写",
+            "example": ""
+          },
+          "description": {
+            "type": "string",
+            "description": "品牌描述"
+          },
+          "officialSiteLabel": {
+            "type": "string",
+            "description": "官网标识",
+            "example": ""
+          },
+          "defaultOrganizationName": {
+            "type": "string",
+            "description": "默认组织名称"
+          },
+          "defaultEmailDomain": {
+            "type": "string",
+            "description": "默认邮箱域名",
+            "example": ""
+          },
+          "defaultUserAvatar": {
+            "type": "string",
+            "description": "默认头像 SVG / URL"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "appName",
+          "appWordmark",
+          "logoText",
+          "description",
+          "officialSiteLabel",
+          "defaultOrganizationName",
+          "defaultEmailDomain",
+          "defaultUserAvatar",
+          "updatedAt"
+        ]
+      },
+      "UpdateAppProfileDto": {
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "应用名称",
+            "maxLength": 120
+          },
+          "appWordmark": {
+            "type": "string",
+            "description": "英文品牌字标",
+            "maxLength": 120
+          },
+          "logoText": {
+            "type": "string",
+            "description": "Logo 简写",
+            "maxLength": 20
+          },
+          "description": {
+            "type": "string",
+            "description": "品牌描述",
+            "maxLength": 255
+          },
+          "officialSiteLabel": {
+            "type": "string",
+            "description": "官网标识",
+            "maxLength": 120
+          },
+          "defaultOrganizationName": {
+            "type": "string",
+            "description": "默认组织名称",
+            "maxLength": 120
+          },
+          "defaultEmailDomain": {
+            "type": "string",
+            "description": "默认邮箱域名",
+            "maxLength": 120
+          },
+          "defaultUserAvatar": {
+            "type": "string",
+            "description": "默认用户头像 SVG / URL"
+          }
+        }
+      },
+      "GameResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "label": {
+            "type": "string",
+            "example": "星穹远征"
+          },
+          "description": {
+            "type": "string",
+            "example": "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+          },
+          "iconUrl": {
+            "type": "string",
+            "example": "https://example.com/game-icon.png"
+          },
+          "category": {
+            "type": "number",
+            "example": 1,
+            "description": "所属左侧导航 ID"
+          },
+          "gameModelId": {
+            "type": "string",
+            "example": "60",
+            "description": "关联游戏模型 ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "online"
+          },
+          "drawInterval": {
+            "type": "number",
+            "example": 60,
+            "description": "开奖间隔时间，单位秒"
+          },
+          "oddsMode": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "custom"
+            ],
+            "example": "fixed",
+            "description": "赔率模式"
+          },
+          "fixedOdds": {
+            "type": "object",
+            "example": 1.98,
+            "description": "固定赔率值，若为自定义赔付则为空",
+            "nullable": true
+          },
+          "customPayoutConfig": {
+            "type": "object",
+            "example": {
+              "formula": "future-config"
+            },
+            "description": "自定义赔付配置，当前仅预留字段",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-16T06:30:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-16T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "description",
+          "iconUrl",
+          "category",
+          "gameModelId",
+          "status",
+          "drawInterval",
+          "oddsMode",
+          "fixedOdds",
+          "customPayoutConfig",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateGameDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "游戏名称",
+            "example": "星穹远征"
+          },
+          "description": {
+            "type": "string",
+            "description": "游戏描述",
+            "example": "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "游戏图标 URL",
+            "example": "https://example.com/game-icon.png"
+          },
+          "category": {
+            "type": "number",
+            "description": "游戏分类，表示游戏所属的左侧导航 ID",
+            "example": 1
+          },
+          "gameModelId": {
+            "type": "string",
+            "description": "游戏模型 ID",
+            "example": "60"
+          },
+          "drawInterval": {
+            "type": "number",
+            "description": "开奖间隔时间，单位秒",
+            "example": 60
+          },
+          "oddsMode": {
+            "type": "string",
+            "description": "赔率模式，固定赔率或自定义赔付",
+            "enum": [
+              "fixed",
+              "custom"
+            ],
+            "example": "fixed",
+            "default": "fixed"
+          },
+          "fixedOdds": {
+            "type": "number",
+            "description": "固定赔率值，赔率模式为 fixed 时生效",
+            "example": 1.98
+          },
+          "customPayoutConfig": {
+            "type": "object",
+            "description": "自定义赔付配置，当前仅预留字段",
+            "example": {
+              "formula": "future-config"
+            },
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "游戏状态",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "online",
+            "default": "online"
+          }
+        },
+        "required": [
+          "label",
+          "description",
+          "category",
+          "gameModelId",
+          "drawInterval"
+        ]
+      },
+      "UpdateGameDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "游戏名称",
+            "example": "星穹远征"
+          },
+          "description": {
+            "type": "string",
+            "description": "游戏描述",
+            "example": "高沉浸叙事与多人协作玩法结合的太空冒险游戏。"
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "游戏图标 URL",
+            "example": "https://example.com/game-icon.png"
+          },
+          "category": {
+            "type": "number",
+            "description": "游戏分类，表示游戏所属的左侧导航 ID",
+            "example": 1
+          },
+          "gameModelId": {
+            "type": "string",
+            "description": "游戏模型 ID",
+            "example": "60"
+          },
+          "drawInterval": {
+            "type": "number",
+            "description": "开奖间隔时间，单位秒",
+            "example": 60
+          },
+          "oddsMode": {
+            "type": "string",
+            "description": "赔率模式，固定赔率或自定义赔付",
+            "enum": [
+              "fixed",
+              "custom"
+            ],
+            "example": "fixed",
+            "default": "fixed"
+          },
+          "fixedOdds": {
+            "type": "number",
+            "description": "固定赔率值，赔率模式为 fixed 时生效",
+            "example": 1.98
+          },
+          "customPayoutConfig": {
+            "type": "object",
+            "description": "自定义赔付配置，当前仅预留字段",
+            "example": {
+              "formula": "future-config"
+            },
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "游戏状态",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "online",
+            "default": "online"
+          }
+        }
+      },
+      "IdDataDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "object",
+            "example": "1"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "GameDrawRecordResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "issueNo": {
+            "type": "string",
+            "example": "2026051900001"
+          },
+          "openCode": {
+            "type": "string",
+            "example": "1,4,7,2,9"
+          },
+          "openCodeJson": {
+            "type": "object",
+            "example": [
+              1,
+              4,
+              7,
+              2,
+              9
+            ]
+          },
+          "resultPayload": {
+            "type": "object",
+            "example": {
+              "sum": 23,
+              "span": 8
+            }
+          },
+          "drawTime": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          },
+          "drawStatus": {
+            "type": "string",
+            "enum": [
+              "open",
+              "cancelled",
+              "retry"
+            ],
+            "example": "open"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "system",
+              "manual"
+            ],
+            "example": "system"
+          },
+          "algorithmVersion": {
+            "type": "string",
+            "example": "p5-v1"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-19T08:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "issueNo",
+          "openCode",
+          "openCodeJson",
+          "resultPayload",
+          "drawTime",
+          "drawStatus",
+          "sourceType",
+          "algorithmVersion",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "GameCurrentIssueResponseDto": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "number",
+            "example": 101
+          },
+          "serverTime": {
+            "type": "string",
+            "example": "2026-05-19T08:01:30.000Z"
+          },
+          "currentIssue": {
+            "type": "object",
+            "example": "2026051900002",
+            "nullable": true
+          },
+          "lastDrawAt": {
+            "type": "object",
+            "example": "2026-05-19T08:01:00.000Z",
+            "nullable": true
+          },
+          "nextDrawAt": {
+            "type": "string",
+            "example": "2026-05-19T08:02:00.000Z"
+          },
+          "drawInterval": {
+            "type": "number",
+            "example": 60
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "drawing",
+              "paused",
+              "error"
+            ],
+            "example": "idle"
+          }
+        },
+        "required": [
+          "gameId",
+          "serverTime",
+          "nextDrawAt",
+          "drawInterval",
+          "status"
+        ]
+      },
+      "GameModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "60"
+          },
+          "name": {
+            "type": "string",
+            "example": "默认模型"
+          },
+          "description": {
+            "type": "string",
+            "example": "这是一个默认的游戏模型。"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "drawConfigJson": {
+            "type": "object",
+            "example": {
+              "digits": 5,
+              "min": 0,
+              "max": 9,
+              "allowRepeat": true
+            },
+            "nullable": true
+          },
+          "resultSchemaJson": {
+            "type": "object",
+            "example": {
+              "openCode": "string",
+              "resultPayload": {
+                "sum": "number"
+              }
+            },
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "deprecated",
+              "deleted"
+            ],
+            "example": "active"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2024-01-02T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "version",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateGameModelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "模型编号（手动编写）",
+            "example": "60"
+          },
+          "name": {
+            "type": "string",
+            "description": "模型名称",
+            "example": "默认模型"
+          },
+          "description": {
+            "type": "string",
+            "description": "模型描述",
+            "example": "这是一个默认的游戏模型。"
+          },
+          "version": {
+            "type": "string",
+            "description": "模型版本",
+            "example": "1.0.0"
+          },
+          "drawConfigJson": {
+            "type": "object",
+            "description": "开奖配置JSON",
+            "example": {
+              "digits": 5,
+              "min": 0,
+              "max": 9,
+              "allowRepeat": true
+            }
+          },
+          "resultSchemaJson": {
+            "type": "object",
+            "description": "开奖结果结构描述JSON",
+            "example": {
+              "openCode": "string",
+              "resultPayload": {
+                "sum": "number"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "模型状态",
+            "enum": [
+              "active",
+              "inactive",
+              "deprecated",
+              "deleted"
+            ],
+            "example": "active",
+            "default": "active"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "version"
+        ]
+      },
+      "UpdateGameModelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "模型名称",
+            "example": "默认模型"
+          },
+          "description": {
+            "type": "string",
+            "description": "模型描述",
+            "example": "这是一个默认的游戏模型。"
+          },
+          "version": {
+            "type": "string",
+            "description": "模型版本",
+            "example": "1.0.0"
+          },
+          "drawConfigJson": {
+            "type": "object",
+            "description": "开奖配置JSON",
+            "example": {
+              "digits": 5,
+              "min": 0,
+              "max": 9,
+              "allowRepeat": true
+            }
+          },
+          "resultSchemaJson": {
+            "type": "object",
+            "description": "开奖结果结构描述JSON",
+            "example": {
+              "openCode": "string",
+              "resultPayload": {
+                "sum": "number"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "模型状态",
+            "enum": [
+              "active",
+              "inactive",
+              "deprecated",
+              "deleted"
+            ],
+            "example": "active",
+            "default": "active"
+          }
+        }
+      },
+      "NavigationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "电子竞技"
+          },
+          "path": {
+            "type": "string",
+            "example": "/game/esports",
+            "description": "导航访问路径；当未配置 path 时，这里返回导航 id 字符串"
+          },
+          "description": {
+            "type": "string",
+            "example": "前台电子竞技业务导航入口"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🎮"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "顶部导航",
+              "侧边导航",
+              "快捷入口"
+            ],
+            "example": "顶部导航"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "展示中",
+              "隐藏中"
+            ],
+            "example": "展示中"
+          },
+          "sort": {
+            "type": "number",
+            "example": 10
+          },
+          "parentId": {
+            "type": "number",
+            "example": null,
+            "nullable": true
+          },
+          "level": {
+            "type": "number",
+            "example": 1,
+            "description": "1 为一级导航，2 为二级导航"
+          },
+          "children": {
+            "description": "二级导航列表，仅一级导航返回非空数组",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NavigationResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-05-16T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-05-16T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "description",
+          "icon",
+          "type",
+          "status",
+          "sort",
+          "parentId",
+          "level",
+          "children",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateNavigatorDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "电子竞技"
+          },
+          "path": {
+            "type": "string",
+            "example": "/game/esports",
+            "description": "导航访问路径；不配置时，接口返回会自动回退为导航 id"
+          },
+          "description": {
+            "type": "string",
+            "example": "前台电子竞技业务导航入口"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🎮"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "顶部导航",
+              "侧边导航",
+              "快捷入口"
+            ],
+            "example": "顶部导航"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "展示中",
+              "隐藏中"
+            ],
+            "example": "展示中"
+          },
+          "sort": {
+            "type": "number",
+            "example": 10,
+            "default": 0
+          },
+          "parentId": {
+            "type": "number",
+            "nullable": true,
+            "example": 1,
+            "description": "所属一级导航 ID"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      },
+      "UpdateNavigatorDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "电子竞技"
+          },
+          "path": {
+            "type": "string",
+            "example": "/game/esports",
+            "description": "导航访问路径；不配置时，接口返回会自动回退为导航 id"
+          },
+          "description": {
+            "type": "string",
+            "example": "前台电子竞技业务导航入口"
+          },
+          "icon": {
+            "type": "string",
+            "example": "🎮"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "顶部导航",
+              "侧边导航",
+              "快捷入口"
+            ],
+            "example": "顶部导航"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "展示中",
+              "隐藏中"
+            ],
+            "example": "展示中"
+          },
+          "sort": {
+            "type": "number",
+            "example": 10,
+            "default": 0
+          },
+          "parentId": {
+            "type": "number",
+            "nullable": true,
+            "example": 1,
+            "description": "所属一级导航 ID"
+          }
+        }
+      }
+    }
+  }
+}
