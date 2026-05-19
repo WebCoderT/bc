@@ -26,6 +26,15 @@ import type {
 } from "./p5/p5.types";
 
 type P5SelectionMode = "random" | "manual";
+type RealtimeConnectionStage =
+  | "idle"
+  | "connecting"
+  | "authenticated"
+  | "joining-room"
+  | "joined-room"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
 
 type RealtimeDrawRecordPayload = {
   id: number;
@@ -65,6 +74,9 @@ export default function GamePage() {
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
   const [roomNotice, setRoomNotice] = useState("");
+  const [connectionStage, setConnectionStage] =
+    useState<RealtimeConnectionStage>("idle");
+  const [connectionMessage, setConnectionMessage] = useState("等待连接");
   const gameId = Number(params.gameId);
   const canLoadDrawData = Boolean(
     session?.accessToken && Number.isInteger(gameId) && gameId > 0,
@@ -89,6 +101,24 @@ export default function GamePage() {
     ? drawError
     : "无法读取当前游戏的开奖信息";
   const drawStatusText = currentIssue ? currentIssue.status : "读取中";
+  const connectionToneClassName = useMemo(() => {
+    if (connectionStage === "joined-room") {
+      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-100";
+    }
+
+    if (connectionStage === "error") {
+      return "border-rose-400/30 bg-rose-500/10 text-rose-100";
+    }
+
+    if (
+      connectionStage === "reconnecting" ||
+      connectionStage === "disconnected"
+    ) {
+      return "border-amber-400/30 bg-amber-500/10 text-amber-100";
+    }
+
+    return "border-sky-400/30 bg-sky-500/10 text-sky-100";
+  }, [connectionStage]);
 
   useEffect(() => {
     if (!canLoadDrawData) {
@@ -111,9 +141,19 @@ export default function GamePage() {
 
     const socket = createClientRealtimeSocket(session.accessToken);
 
+    setConnectionStage("connecting");
+    setConnectionMessage("实时连接建立中...");
+
+    socket.on("connect", () => {
+      setConnectionStage("connecting");
+      setConnectionMessage("连接成功，等待服务器认证...");
+    });
+
     socket.on("socket:ready", () => {
       setIsDrawLoading(true);
       setDrawError("");
+      setConnectionStage("authenticated");
+      setConnectionMessage("认证成功，正在进入游戏房间...");
       socket.emit("game:join", { gameId });
     });
 
@@ -122,6 +162,8 @@ export default function GamePage() {
         return;
       }
 
+      setConnectionStage("joined-room");
+      setConnectionMessage("已进入游戏房间，等待实时开奖推送");
       setRoomNotice(payload.message);
     });
 
@@ -144,6 +186,8 @@ export default function GamePage() {
 
         setDrawError("");
         setIsDrawLoading(false);
+        setConnectionStage("joined-room");
+        setConnectionMessage("实时连接正常，已同步房间快照");
         setRecords(payload.records.map(mapRealtimeRecord));
         setServerTimeOffsetMs(
           resolveServerTimeOffset(payload.currentIssue.serverTime),
@@ -176,6 +220,8 @@ export default function GamePage() {
           return;
         }
 
+        setConnectionStage("joined-room");
+        setConnectionMessage("实时连接正常，已收到最新开奖推送");
         setServerTimeOffsetMs(
           resolveServerTimeOffset(payload.currentIssue.serverTime),
         );
@@ -199,12 +245,36 @@ export default function GamePage() {
 
     socket.on("game:error", (payload: { message: string }) => {
       setIsDrawLoading(false);
+      setConnectionStage("error");
+      setConnectionMessage(payload.message);
       setDrawError(payload.message);
     });
 
     socket.on("socket:error", (payload: { message: string }) => {
       setIsDrawLoading(false);
+      setConnectionStage("error");
+      setConnectionMessage(payload.message);
       setDrawError(payload.message);
+    });
+
+    socket.on("disconnect", (reason: string) => {
+      setConnectionStage("disconnected");
+      setConnectionMessage(`实时连接已断开：${reason}`);
+    });
+
+    socket.io.on("reconnect_attempt", (attempt) => {
+      setConnectionStage("reconnecting");
+      setConnectionMessage(`实时连接重试中，第 ${attempt} 次...`);
+    });
+
+    socket.io.on("reconnect", () => {
+      setConnectionStage("connecting");
+      setConnectionMessage("重连成功，等待服务器重新认证...");
+    });
+
+    socket.io.on("reconnect_error", () => {
+      setConnectionStage("reconnecting");
+      setConnectionMessage("重连失败，正在继续尝试...");
     });
 
     return () => {
@@ -268,6 +338,12 @@ export default function GamePage() {
 
   return (
     <main className="space-y-6">
+      <div
+        className={`rounded-[var(--surface-radius-lg)] border px-4 py-3 text-sm ${connectionToneClassName}`}
+      >
+        {connectionMessage}
+      </div>
+
       {roomNotice ? (
         <div className="rounded-[var(--surface-radius-lg)] border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
           {roomNotice}

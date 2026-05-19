@@ -11,6 +11,16 @@ import type {
 } from "@/app/lib/admin-api";
 import { formatDate } from "@/app/utils/admin-format";
 
+type RealtimeConnectionStage =
+  | "idle"
+  | "connecting"
+  | "authenticated"
+  | "joining-room"
+  | "joined-room"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
+
 function formatOpenCode(record: AdminGameDrawRecord) {
   if (Array.isArray(record.openCodeJson) && record.openCodeJson.length > 0) {
     return record.openCodeJson.join(" ");
@@ -77,6 +87,9 @@ export function GameDrawRecordsModal({
   const [socketError, setSocketError] = useState("");
   const [roomMessage, setRoomMessage] = useState("");
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(true);
+  const [connectionStage, setConnectionStage] =
+    useState<RealtimeConnectionStage>("idle");
+  const [connectionMessage, setConnectionMessage] = useState("等待连接");
 
   const serverTimeOffsetMs = useMemo(
     () => resolveServerTimeOffset(liveCurrentIssue?.serverTime),
@@ -92,6 +105,24 @@ export function GameDrawRecordsModal({
       ),
     [liveCurrentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
   );
+  const connectionToneClassName = useMemo(() => {
+    if (connectionStage === "joined-room") {
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    }
+
+    if (connectionStage === "error") {
+      return "border-rose-200 bg-rose-50 text-rose-700";
+    }
+
+    if (
+      connectionStage === "reconnecting" ||
+      connectionStage === "disconnected"
+    ) {
+      return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+
+    return "border-sky-200 bg-sky-50 text-sky-700";
+  }, [connectionStage]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -106,9 +137,19 @@ export function GameDrawRecordsModal({
   useEffect(() => {
     const socket = createAdminRealtimeSocket(session.accessToken);
 
+    setConnectionStage("connecting");
+    setConnectionMessage("实时连接建立中...");
+
+    socket.on("connect", () => {
+      setConnectionStage("connecting");
+      setConnectionMessage("连接成功，等待服务器认证...");
+    });
+
     socket.on("socket:ready", () => {
       setIsSnapshotLoading(true);
       setSocketError("");
+      setConnectionStage("authenticated");
+      setConnectionMessage("认证成功，正在进入游戏房间...");
       socket.emit("game:join", { gameId: game.id });
     });
 
@@ -119,6 +160,8 @@ export function GameDrawRecordsModal({
           return;
         }
 
+        setConnectionStage("joined-room");
+        setConnectionMessage("已进入游戏房间，等待实时开奖推送");
         setRoomMessage(payload.message);
       },
     );
@@ -136,6 +179,8 @@ export function GameDrawRecordsModal({
 
         setSocketError("");
         setIsSnapshotLoading(false);
+        setConnectionStage("joined-room");
+        setConnectionMessage("实时连接正常，已同步房间快照");
         setLiveCurrentIssue(payload.currentIssue);
         setLiveRecords(payload.records);
       },
@@ -152,6 +197,8 @@ export function GameDrawRecordsModal({
           return;
         }
 
+        setConnectionStage("joined-room");
+        setConnectionMessage("实时连接正常，已收到最新开奖推送");
         setLiveCurrentIssue(payload.currentIssue);
         setLiveRecords((current) => {
           const nextRecords = [
@@ -165,12 +212,36 @@ export function GameDrawRecordsModal({
 
     socket.on("game:error", (payload: { message: string }) => {
       setIsSnapshotLoading(false);
+      setConnectionStage("error");
+      setConnectionMessage(payload.message);
       setSocketError(payload.message);
     });
 
     socket.on("socket:error", (payload: { message: string }) => {
       setIsSnapshotLoading(false);
+      setConnectionStage("error");
+      setConnectionMessage(payload.message);
       setSocketError(payload.message);
+    });
+
+    socket.on("disconnect", (reason: string) => {
+      setConnectionStage("disconnected");
+      setConnectionMessage(`实时连接已断开：${reason}`);
+    });
+
+    socket.io.on("reconnect_attempt", (attempt) => {
+      setConnectionStage("reconnecting");
+      setConnectionMessage(`实时连接重试中，第 ${attempt} 次...`);
+    });
+
+    socket.io.on("reconnect", () => {
+      setConnectionStage("connecting");
+      setConnectionMessage("重连成功，等待服务器重新认证...");
+    });
+
+    socket.io.on("reconnect_error", () => {
+      setConnectionStage("reconnecting");
+      setConnectionMessage("重连失败，正在继续尝试...");
     });
 
     return () => {
@@ -186,6 +257,12 @@ export function GameDrawRecordsModal({
       onClose={onClose}
     >
       <div className="space-y-5">
+        <div
+          className={`rounded-2xl border px-4 py-3 text-sm ${connectionToneClassName}`}
+        >
+          {connectionMessage}
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <div className="text-sm text-slate-500">
             <p className="font-medium text-slate-900">游戏 ID：{game.id}</p>
