@@ -132,7 +132,7 @@ export function GameLayoutShell({
           )}
         </aside>
 
-        <div className="grid min-h-0 min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_260px] 2xl:grid-cols-[minmax(0,1fr)_240px]">
+        <div className="grid min-h-0 min-w-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_336px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
           <main className="compact-scrollbar min-h-0 min-w-0 overflow-y-auto pr-1">
             {children}
           </main>
