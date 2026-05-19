@@ -1,5 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { cn } from "../lib/cn";
-import { getAppProfileSync } from "../repositories/app-profile-repository";
+import {
+  getAppProfile,
+  getAppProfileSync,
+  type AppProfile,
+} from "../repositories/app-profile-repository";
 
 type AppBrandProps = {
   caption?: string;
@@ -15,12 +22,27 @@ type AppBrandProps = {
  * 组件统一负责渲染 Logo 和应用名称，避免首页、弹窗、控制台头部各写一套品牌结构。
  */
 export function AppBrand({
+  caption,
   secondaryText,
   variant = "default",
   size = "md",
   className,
 }: AppBrandProps) {
-  const profile = getAppProfileSync();
+  const [profile, setProfile] = useState<AppProfile>(() => getAppProfileSync());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getAppProfile().then((nextProfile) => {
+      if (!cancelled) {
+        setProfile(nextProfile);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /**
    * 统一字号与 Logo 大小，避免不同页面品牌视觉比例漂移。
@@ -64,6 +86,17 @@ export function AppBrand({
         >
           {profile.appName}
         </h1>
+        {caption ? (
+          <p
+            className={cn(
+              "truncate font-medium uppercase",
+              sizeClassName.caption,
+              isInverted ? "text-white/65" : "text-[var(--accent)]",
+            )}
+          >
+            {caption}
+          </p>
+        ) : null}
         {secondaryText ? (
           <p
             className={cn(

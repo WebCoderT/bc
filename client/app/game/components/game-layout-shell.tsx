@@ -15,7 +15,6 @@ import { AppBrand } from "@/app/shared/components/app-brand";
 import { UserAvatar } from "@/app/shared/components/user-avatar";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
-import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
 import { useGameLayoutSidebar } from "./game-layout-sidebar";
 
 type GameLayoutShellProps = {
@@ -39,7 +38,6 @@ export function GameLayoutShell({
   walletSummary,
   onLogout,
 }: GameLayoutShellProps) {
-  const appProfile = getAppProfileSync();
   const pathname = usePathname();
   const { leftSidebarContent } = useGameLayoutSidebar();
 

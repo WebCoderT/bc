@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthModal } from "./components/auth-modal";
 import { ThemeToggle } from "./components/theme-toggle";
 import { type AuthMode } from "./lib/auth";
@@ -12,7 +12,11 @@ import {
   marketingFeatureStats,
   marketingSpotlightCards,
 } from "@/app/shared/constants/marketing-content";
-import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
+import {
+  getAppProfile,
+  getAppProfileSync,
+  type AppProfile,
+} from "@/app/shared/repositories/app-profile-repository";
 
 /**
  * 公共官网首页。
@@ -21,9 +25,25 @@ import { getAppProfileSync } from "@/app/shared/repositories/app-profile-reposit
  * 不直接承载任何登录后业务逻辑。
  */
 export default function HomePage() {
-  const appProfile = getAppProfileSync();
+  const [appProfile, setAppProfile] = useState<AppProfile>(() =>
+    getAppProfileSync(),
+  );
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getAppProfile().then((profile) => {
+      if (!cancelled) {
+        setAppProfile(profile);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /**
    * 统一打开认证弹窗，并切换到目标模式。

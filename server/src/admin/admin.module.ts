@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { AppProfileModule } from '../app-profile/app-profile.module';
 import { GameDrawModule } from '../game-draw/game-draw.module';
 import { GameModule } from '../game/game.module';
 import { GameModelModule } from '../game-model/game-model.module';
@@ -7,6 +8,7 @@ import { NavigatorModule } from '../navigator/navigator.module';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersModule } from '../users/users.module';
 import { AdminGameController } from './admin-game.controller';
+import { AdminAppProfileController } from './admin-app-profile.controller';
 import { AdminGameModelsController } from './admin-game-models.controller';
 import { AdminNavigationsController } from './admin-navigations.controller';
 import { AdminUsersController } from './admin-users.controller';
@@ -14,6 +16,7 @@ import { AdminUsersController } from './admin-users.controller';
 @Module({
   imports: [
     AuthModule,
+    AppProfileModule,
     UsersModule,
     GameModule,
     GameDrawModule,
@@ -22,6 +25,7 @@ import { AdminUsersController } from './admin-users.controller';
   ],
   controllers: [
     AdminUsersController,
+    AdminAppProfileController,
     AdminGameController,
     AdminGameModelsController,
     AdminNavigationsController,

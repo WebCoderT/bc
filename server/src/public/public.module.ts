@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { AppProfileModule } from '../app-profile/app-profile.module';
 import { PublicController } from './public.controller';
 
 @Module({
+  imports: [AppProfileModule],
   controllers: [PublicController],
 })
 /**

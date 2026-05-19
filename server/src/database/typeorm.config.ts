@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
+import { AppProfileEntity } from '../app-profile/entities/app-profile.entity';
 import { Game } from '../game/entities/game.entity';
 import { GameDrawJobLogEntity } from '../game-draw/entities/game-draw-job-log.entity';
 import { GameDrawRuntimeEntity } from '../game-draw/entities/game-draw-runtime.entity';
@@ -17,6 +18,7 @@ const databaseBaseConfig = {
 };
 
 export const databaseEntities = [
+  AppProfileEntity,
   UserEntity,
   Game,
   GameModel,

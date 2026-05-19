@@ -4,6 +4,8 @@ import {
   ApiOkDataResponse,
   ApiOkStringListResponse,
 } from '../common/swagger/success-response.decorators';
+import { AppProfileResponseDto } from '../app-profile/dto/app-profile-response.dto';
+import { AppProfileService } from '../app-profile/app-profile.service';
 import { ServiceStatusDto } from './dto/service-status.dto';
 
 @ApiTags('public')
@@ -12,6 +14,8 @@ import { ServiceStatusDto } from './dto/service-status.dto';
  * 公开控制器负责承载无需登录即可访问的基础公开接口。
  */
 export class PublicController {
+  constructor(private readonly appProfileService: AppProfileService) {}
+
   /**
    * 返回服务描述、认证方式与 Swagger 文档入口。
    */
@@ -45,5 +49,12 @@ export class PublicController {
         '管理员可管理用户角色',
       ],
     };
+  }
+
+  @Get('public/app-profile')
+  @ApiOperation({ summary: '公开品牌资料' })
+  @ApiOkDataResponse(AppProfileResponseDto)
+  getAppProfile() {
+    return this.appProfileService.getProfile();
   }
 }

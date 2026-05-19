@@ -258,6 +258,22 @@ export type AdminNavigationList = {
   total: number;
 };
 
+export type AdminAppProfile = {
+  appName: string;
+  appWordmark: string;
+  logoText: string;
+  description: string;
+  officialSiteLabel: string;
+  defaultOrganizationName: string;
+  defaultEmailDomain: string;
+  defaultUserAvatar: string;
+  updatedAt: string;
+};
+
+export type UpdateAdminAppProfileInput = Partial<
+  Omit<AdminAppProfile, "updatedAt">
+>;
+
 export type AdminSession = LoginResponseDto;
 
 export {
@@ -704,6 +720,24 @@ export async function fetchServiceStatus() {
 
 export async function fetchAnnouncements() {
   return requestJson<{ items: string[] }>("/public/announcements");
+}
+
+export async function fetchAdminAppProfile(accessToken: string) {
+  return requestJson<SwaggerEnvelope<AdminAppProfile>>("/admin/app-profile", {
+    method: "GET",
+    accessToken,
+  }).then((response) => response.data);
+}
+
+export async function updateAdminAppProfile(
+  accessToken: string,
+  input: UpdateAdminAppProfileInput,
+) {
+  return requestJson<SwaggerEnvelope<AdminAppProfile>>("/admin/app-profile", {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(input),
+  }).then((response) => response.data);
 }
 
 export async function fetchAdminUsers(

@@ -20,6 +20,12 @@ export const routeItems: RouteItem[] = [
     icon: "▤",
   },
   {
+    label: "品牌管理",
+    description: "统一维护站点品牌信息与默认资料",
+    path: "/brand",
+    icon: "⬢",
+  },
+  {
     label: "游戏管理",
     description: "游戏运营状态与数据维护",
     path: "/games",

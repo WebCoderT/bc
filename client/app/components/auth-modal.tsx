@@ -11,7 +11,6 @@ import {
 import { AppBrand } from "@/app/shared/components/app-brand";
 import { ModalShell } from "@/app/shared/components/ui/modal-shell";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
-import { getAppProfileSync } from "@/app/shared/repositories/app-profile-repository";
 
 /**
  * 登录/注册弹窗组件。
@@ -29,7 +28,6 @@ export function AuthModal({
   onModeChange: (mode: AuthMode) => void;
   onClose: () => void;
 }) {
-  const appProfile = getAppProfileSync();
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +60,7 @@ export function AuthModal({
       writeStoredSession(session);
       setPassword("");
       onClose();
-      router.push("/game");
+      router.push("/game/vip");
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "认证失败，请稍后重试",
