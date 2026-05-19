@@ -60,11 +60,28 @@ export type AdminRole = SafeUserDto["role"];
 
 export type AdminRoleFilter = RoleEnum;
 
-export type AdminSafeUser = SafeUserDto;
+export type AdminSafeUser = Omit<
+  SafeUserDto,
+  | "isOnline"
+  | "onlineStatus"
+  | "currentGameRoomId"
+  | "currentGameRoomLabel"
+  | "lastActiveAt"
+> & {
+  isOnline: boolean;
+  onlineStatus: "online" | "offline";
+  currentGameRoomId: number | null;
+  currentGameRoomLabel: string | null;
+  lastActiveAt: string | null;
+};
 
-export type PaginatedAdminUsers = SwaggerEnvelopeData<
-  SwaggerUsersApi["adminUsersControllerGetUsers"]
->;
+export type PaginatedAdminUsers = {
+  items: AdminSafeUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 
 export type UpdateAdminUserInput = UpdateAdminUserDto;
 
@@ -75,6 +92,38 @@ export type AdminGameStatus = GameResponseDto["status"];
 export type PaginatedAdminGames = SwaggerEnvelopeData<
   SwaggerGamesApi["adminGameControllerGetGames"]
 >;
+
+export type AdminGameDrawRecord = {
+  id: number;
+  issueNo: string;
+  openCode: string;
+  openCodeJson: number[];
+  resultPayload: Record<string, unknown> | null;
+  drawTime: string;
+  drawStatus: string;
+  sourceType: string;
+  algorithmVersion: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PaginatedAdminGameDrawRecords = {
+  items: AdminGameDrawRecord[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type AdminGameCurrentIssue = {
+  gameId: number;
+  serverTime: string;
+  currentIssue: string | null;
+  lastDrawAt: string | null;
+  nextDrawAt: string;
+  drawInterval: number;
+  status: string;
+};
 
 export type SaveAdminGameInput = Omit<CreateGameDto, "status"> & {
   status?: AdminGameStatus;
@@ -601,16 +650,35 @@ export async function fetchAdminUsers(
     role?: AdminUsersControllerGetUsersParams["role"] | "all";
   },
 ) {
-  const { users } = createSwaggerClients(accessToken);
+  const query = new URLSearchParams();
 
-  return requestFromSwagger(() =>
-    users.adminUsersControllerGetUsers({
-      page: params.page,
-      pageSize: params.pageSize,
-      role: params.role && params.role !== "all" ? params.role : undefined,
-      keyword: normalizeOptionalKeyword(params.keyword),
-    }),
-  );
+  if (typeof params.page === "number") {
+    query.set("page", String(params.page));
+  }
+
+  if (typeof params.pageSize === "number") {
+    query.set("pageSize", String(params.pageSize));
+  }
+
+  if (params.role && params.role !== "all") {
+    query.set("role", params.role);
+  }
+
+  const keyword = normalizeOptionalKeyword(params.keyword);
+
+  if (keyword) {
+    query.set("keyword", keyword);
+  }
+
+  const search = query.toString();
+
+  return requestJson<SwaggerEnvelope<PaginatedAdminUsers>>(
+    `/admin/users${search ? `?${search}` : ""}`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
 }
 
 export async function updateAdminUser(
@@ -681,6 +749,43 @@ export async function deleteAdminGame(accessToken: string, gameId: number) {
       id: gameId,
     }),
   );
+}
+
+export async function fetchAdminGameDrawRecords(
+  accessToken: string,
+  gameId: number,
+  query: { page?: number; pageSize?: number } = {},
+) {
+  return requestJson<SwaggerEnvelope<PaginatedAdminGameDrawRecords>>(
+    `/admin/games/${gameId}/draw-records?page=${query.page ?? 1}&pageSize=${query.pageSize ?? 20}`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
+}
+
+export async function fetchAdminGameCurrentIssue(
+  accessToken: string,
+  gameId: number,
+) {
+  return requestJson<SwaggerEnvelope<AdminGameCurrentIssue>>(
+    `/admin/games/${gameId}/current-issue`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
+}
+
+export async function drawOnceAdminGame(accessToken: string, gameId: number) {
+  return requestJson<SwaggerEnvelope<AdminGameDrawRecord>>(
+    `/admin/games/${gameId}/draw-once`,
+    {
+      method: "POST",
+      accessToken,
+    },
+  ).then((response) => response.data);
 }
 
 export async function fetchAdminGameModels(

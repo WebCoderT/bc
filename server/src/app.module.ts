@@ -13,6 +13,7 @@ import { VipModule } from './vip/vip.module';
 import { GameDrawModule } from './game-draw/game-draw.module';
 import { GameModule } from './game/game.module';
 import { NavigatorModule } from './navigator/navigator.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { NavigatorModule } from './navigator/navigator.module';
     GameDrawModule,
     GameModule,
     NavigatorModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

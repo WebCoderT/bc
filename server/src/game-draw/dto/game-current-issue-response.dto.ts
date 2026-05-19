@@ -5,6 +5,9 @@ export class GameCurrentIssueResponseDto {
   @ApiProperty({ example: 101 })
   gameId!: number;
 
+  @ApiProperty({ example: '2026-05-19T08:01:30.000Z' })
+  serverTime!: string;
+
   @ApiProperty({ example: '2026051900002', required: false, nullable: true })
   currentIssue!: string | null;
 

@@ -9,6 +9,7 @@ import { Role } from '../common/enums/role.enum';
 import { createPaginatedResult } from '../common/utils/pagination.util';
 import { DEFAULT_USER_AVATAR } from './default-avatar';
 import { UserEntity } from './entities/user.entity';
+import { UserPresenceService } from './user-presence.service';
 
 type UpdateUserInput = {
   username: string;
@@ -29,7 +30,10 @@ export class UsersService {
   /**
    * 通过数据源动态获取用户仓储，避免在模块外重复维护仓储实例。
    */
-  constructor(private readonly dataSource: DataSource) {
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly userPresenceService: UserPresenceService,
+  ) {
     this.usersRepository = this.dataSource.getRepository<UserEntity>('users');
   }
 
@@ -143,6 +147,7 @@ export class UsersService {
       user.createdAt instanceof Date
         ? user.createdAt.toISOString()
         : new Date(user.createdAt).toISOString();
+    const presence = this.userPresenceService.findSnapshotByUserId(user.id);
 
     return {
       id: user.id,
@@ -154,6 +159,11 @@ export class UsersService {
       totalBalance:
         Number(user.rechargeAmount ?? 0) + Number(user.bonusAmount ?? 0),
       createdAt,
+      isOnline: presence?.isOnline ?? false,
+      onlineStatus: presence?.onlineStatus ?? 'offline',
+      currentGameRoomId: presence?.currentGameRoomId ?? null,
+      currentGameRoomLabel: presence?.currentGameRoomLabel ?? null,
+      lastActiveAt: presence?.lastActiveAt ?? null,
     };
   }
 }

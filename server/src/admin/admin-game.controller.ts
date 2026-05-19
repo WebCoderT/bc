@@ -22,6 +22,7 @@ import {
   ApiOkPaginatedResponse,
 } from '../common/swagger/success-response.decorators';
 import { DrawRecordQueryDto } from '../game-draw/dto/draw-record-query.dto';
+import { GameCurrentIssueResponseDto } from '../game-draw/dto/game-current-issue-response.dto';
 import { GameDrawRecordResponseDto } from '../game-draw/dto/game-draw-record-response.dto';
 import { GameDrawService } from '../game-draw/game-draw.service';
 import { CreateGameDto } from '../game/dto/create-game.dto';
@@ -109,6 +110,16 @@ export class AdminGameController {
     @Query() query: DrawRecordQueryDto,
   ) {
     return this.gameDrawService.listRecentDraws(id, query);
+  }
+
+  /**
+   * 管理员查询当前期号与下一次开奖时间。
+   */
+  @Get(':id/current-issue')
+  @ApiOperation({ summary: '管理员查询当前期号' })
+  @ApiOkDataResponse(GameCurrentIssueResponseDto)
+  getCurrentIssue(@Param('id', ParseIntPipe) id: number) {
+    return this.gameDrawService.getCurrentIssue(id);
   }
 
   /**

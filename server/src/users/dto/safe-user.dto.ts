@@ -28,4 +28,23 @@ export class SafeUserDto {
 
   @ApiProperty({ example: '2026-05-14T08:30:00.000Z' })
   createdAt!: string;
+
+  @ApiProperty({ example: true })
+  isOnline!: boolean;
+
+  @ApiProperty({ example: 'online' })
+  onlineStatus!: 'online' | 'offline';
+
+  @ApiProperty({ example: 101, required: false, nullable: true })
+  currentGameRoomId!: number | null;
+
+  @ApiProperty({ example: '排列5', required: false, nullable: true })
+  currentGameRoomLabel!: string | null;
+
+  @ApiProperty({
+    example: '2026-05-19T08:30:00.000Z',
+    required: false,
+    nullable: true,
+  })
+  lastActiveAt!: string | null;
 }

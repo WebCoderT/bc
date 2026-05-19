@@ -1,8 +1,16 @@
 export type P5DrawRecord = {
-  id: string;
+  id: string | number;
   issue: string;
   digits: number[];
   drawnAt: string;
+};
+
+export type P5CurrentIssue = {
+  issue: string | null;
+  serverTime: string;
+  nextDrawAt: string;
+  status: string;
+  lastDrawAt: string | null;
 };
 
 export type P5SelectedDigit = number | null;

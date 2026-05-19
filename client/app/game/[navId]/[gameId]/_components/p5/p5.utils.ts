@@ -1,7 +1,9 @@
 import { P5_BALL_COUNT } from "./p5.constants";
+import type { ClientGameDrawRecord } from "@/app/lib/client-api";
 import type {
   P5BetAmount,
   P5BetItem,
+  P5CurrentIssue,
   P5DrawRecord,
   P5SelectedDigit,
 } from "./p5.types";
@@ -30,21 +32,6 @@ export function createIssueNumber(recordIndex: number) {
   return `${y}${m}${d}-${issueIndex}`;
 }
 
-export function createDrawRecord(recordIndex: number): P5DrawRecord {
-  const now = new Date();
-
-  return {
-    id: `${now.getTime()}-${recordIndex}`,
-    issue: createIssueNumber(recordIndex),
-    digits: createRandomDigits(),
-    drawnAt: now.toLocaleTimeString("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-  };
-}
-
 export function createBetItem(
   digits: number[],
   source: P5BetItem["source"],
@@ -66,4 +53,83 @@ export function formatDigits(digits: P5SelectedDigit[]) {
 
 export function formatCompactDigits(digits: Array<number | null>) {
   return digits.map((digit) => (digit === null ? "—" : String(digit))).join("");
+}
+
+export function formatP5DateTime(value: string | null) {
+  if (!value) {
+    return "--";
+  }
+
+  try {
+    return new Date(value).toLocaleString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return value;
+  }
+}
+
+export function resolveServerTimeOffset(serverTime: string | null | undefined) {
+  if (!serverTime) {
+    return 0;
+  }
+
+  const serverNow = new Date(serverTime).getTime();
+
+  if (Number.isNaN(serverNow)) {
+    return 0;
+  }
+
+  return serverNow - Date.now();
+}
+
+export function mapClientDrawRecordToP5Record(
+  record: ClientGameDrawRecord,
+): P5DrawRecord {
+  return {
+    id: record.id,
+    issue: record.issueNo,
+    digits: Array.isArray(record.openCodeJson)
+      ? record.openCodeJson
+      : record.openCode
+          .split(",")
+          .map((item) => Number(item.trim()))
+          .filter((item) => Number.isInteger(item)),
+    drawnAt: formatP5DateTime(record.drawTime),
+  };
+}
+
+export function formatNextDrawCountdown(currentIssue: P5CurrentIssue | null) {
+  if (!currentIssue) {
+    return "--";
+  }
+
+  return formatServerDrivenCountdown(currentIssue.nextDrawAt, Date.now(), 0);
+}
+
+export function formatServerDrivenCountdown(
+  nextDrawAt: string | null | undefined,
+  nowMs: number,
+  serverTimeOffsetMs: number,
+) {
+  if (!nextDrawAt) {
+    return "--";
+  }
+
+  const target = new Date(nextDrawAt).getTime();
+
+  if (Number.isNaN(target)) {
+    return formatP5DateTime(nextDrawAt);
+  }
+
+  const diff = Math.max(0, target - (nowMs + serverTimeOffsetMs));
+  const hours = String(Math.floor(diff / 1000 / 60 / 60)).padStart(2, "0");
+  const minutes = String(Math.floor((diff / 1000 / 60) % 60)).padStart(2, "0");
+  const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
 }

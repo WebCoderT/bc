@@ -17,6 +17,7 @@ import {
   updateAdminUser,
   type UpdateAdminUserInput,
 } from "@/app/lib/admin-api";
+import { createAdminRealtimeSocket } from "@/app/lib/admin-realtime";
 import type { UserItem } from "@/app/types/ui";
 import {
   formatCurrency,
@@ -41,6 +42,45 @@ export default function UsersRoute() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    const socket = createAdminRealtimeSocket(session.accessToken);
+
+    socket.on("socket:ready", () => {
+      socket.emit("admin:subscribe-users");
+    });
+
+    socket.on(
+      "admin:user-presence-updated",
+      (payload: {
+        userId: number;
+        isOnline: boolean;
+        onlineStatus: "online" | "offline";
+        currentGameRoomId: number | null;
+        currentGameRoomLabel: string | null;
+        lastActiveAt: string | null;
+      }) => {
+        setUsers((current) =>
+          current.map((item) =>
+            item.id === payload.userId
+              ? {
+                  ...item,
+                  isOnline: payload.isOnline,
+                  onlineStatus: payload.onlineStatus,
+                  currentGameRoomId: payload.currentGameRoomId,
+                  currentGameRoomLabel: payload.currentGameRoomLabel,
+                  lastActiveAt: payload.lastActiveAt,
+                }
+              : item,
+          ),
+        );
+      },
+    );
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [session.accessToken]);
 
   const loadUsers = useCallback(async () => {
     await executeAdminRequest({
@@ -158,6 +198,9 @@ export default function UsersRoute() {
               <tr>
                 <th className="px-4 py-3 font-medium">用户</th>
                 <th className="px-4 py-3 font-medium">角色</th>
+                <th className="px-4 py-3 font-medium">在线状态</th>
+                <th className="px-4 py-3 font-medium">当前房间</th>
+                <th className="px-4 py-3 font-medium">最近活跃</th>
                 <th className="px-4 py-3 font-medium">充值额度</th>
                 <th className="px-4 py-3 font-medium">赠送额度</th>
                 <th className="px-4 py-3 font-medium">总余额</th>
@@ -170,7 +213,7 @@ export default function UsersRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={7}
+                    colSpan={10}
                   >
                     正在读取管理员用户列表...
                   </td>
@@ -202,6 +245,15 @@ export default function UsersRoute() {
                     <StatusPill status={formatRole(item.role)} />
                   </td>
                   <td className="px-4 py-4">
+                    <StatusPill status={item.isOnline ? "在线" : "离线"} />
+                  </td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {item.currentGameRoomLabel ?? "未进入房间"}
+                  </td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {item.lastActiveAt ? formatDate(item.lastActiveAt) : "--"}
+                  </td>
+                  <td className="px-4 py-4">
                     {formatCurrency(item.rechargeAmount)}
                   </td>
                   <td className="px-4 py-4">
@@ -229,7 +281,7 @@ export default function UsersRoute() {
                 <tr>
                   <td
                     className="px-4 py-8 text-center text-slate-500"
-                    colSpan={7}
+                    colSpan={10}
                   >
                     没有匹配到用户数据。
                   </td>

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Game } from '../game/entities/game.entity';
 import { GameModel } from '../game-model/entities/game-model.entity';
+import { RealtimeCoreModule } from '../realtime/realtime-core.module';
 import { GameDrawJobLogEntity } from './entities/game-draw-job-log.entity';
 import { GameDrawRuntimeEntity } from './entities/game-draw-runtime.entity';
 import { GameDrawHistoryService } from './game-draw-history.service';
@@ -14,6 +15,7 @@ import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 
 @Module({
   imports: [
+    RealtimeCoreModule,
     TypeOrmModule.forFeature([
       Game,
       GameModel,

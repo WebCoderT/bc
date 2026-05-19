@@ -65,6 +65,8 @@ type GamesTableProps = {
   categoryNameMap: ReadonlyMap<number, string>;
   gameModelNameMap: ReadonlyMap<string, string>;
   onEdit: (game: AdminGame) => void;
+  onViewDraws: (game: AdminGame) => void;
+  onDrawOnce: (game: AdminGame) => void;
   onDelete: (gameId: number) => void;
 };
 
@@ -74,6 +76,8 @@ export function GamesTable({
   categoryNameMap,
   gameModelNameMap,
   onEdit,
+  onViewDraws,
+  onDrawOnce,
   onDelete,
 }: GamesTableProps) {
   return (
@@ -124,6 +128,8 @@ export function GamesTable({
               categoryNameMap={categoryNameMap}
               gameModelNameMap={gameModelNameMap}
               onEdit={onEdit}
+              onViewDraws={onViewDraws}
+              onDrawOnce={onDrawOnce}
               onDelete={onDelete}
             />
           ))}
@@ -138,6 +144,8 @@ type GameTableRowProps = {
   categoryNameMap: ReadonlyMap<number, string>;
   gameModelNameMap: ReadonlyMap<string, string>;
   onEdit: (game: AdminGame) => void;
+  onViewDraws: (game: AdminGame) => void;
+  onDrawOnce: (game: AdminGame) => void;
   onDelete: (gameId: number) => void;
 };
 
@@ -146,6 +154,8 @@ function GameTableRow({
   categoryNameMap,
   gameModelNameMap,
   onEdit,
+  onViewDraws,
+  onDrawOnce,
   onDelete,
 }: GameTableRowProps) {
   return (
@@ -203,6 +213,20 @@ function GameTableRow({
             className="rounded-xl border border-slate-200 px-3 py-2 text-slate-600 transition hover:border-slate-300"
           >
             编辑
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewDraws(game)}
+            className="rounded-xl border border-violet-200 px-3 py-2 text-violet-600 transition hover:border-violet-300"
+          >
+            开奖历史
+          </button>
+          <button
+            type="button"
+            onClick={() => onDrawOnce(game)}
+            className="rounded-xl border border-emerald-200 px-3 py-2 text-emerald-600 transition hover:border-emerald-300"
+          >
+            立即开奖
           </button>
           <button
             type="button"

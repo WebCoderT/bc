@@ -31,6 +31,10 @@ type SwaggerErrorPayload = {
   message?: string | string[];
 };
 
+type RequestOptions = RequestInit & {
+  accessToken?: string;
+};
+
 export type AuthUser = SafeUserDto;
 export type AuthSession = LoginResponseDto;
 export type LoginInput = LoginDto;
@@ -50,6 +54,28 @@ export type ClientGameDetailQuery = MemberGamesControllerGetGameParams;
 export type ClientNavigation = NavigationResponseDto;
 export type ClientNavigationsQuery =
   MemberNavigationsControllerGetNavigationsParams;
+export type ClientGameDrawRecord = {
+  id: number;
+  issueNo: string;
+  openCode: string;
+  openCodeJson: number[];
+  resultPayload: Record<string, unknown> | null;
+  drawTime: string;
+  drawStatus: string;
+  sourceType: string;
+  algorithmVersion: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type ClientCurrentIssue = {
+  gameId: number;
+  serverTime: string;
+  currentIssue: string | null;
+  lastDrawAt: string | null;
+  nextDrawAt: string;
+  drawInterval: number;
+  status: string;
+};
 
 export {
   NavigationResponseDtoStatusEnum,
@@ -180,6 +206,46 @@ async function requestFromSwagger<T>(
   } catch (error) {
     throw normalizeClientApiError(error);
   }
+}
+
+async function requestJson<T>(path: string, options: RequestOptions = {}) {
+  const headers = new Headers(options.headers);
+
+  if (!headers.has("Content-Type") && options.body) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (options.accessToken) {
+    headers.set("Authorization", `Bearer ${options.accessToken}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+
+  const text = await response.text();
+  const data = text ? (JSON.parse(text) as unknown) : null;
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? Array.isArray((data as { message?: unknown }).message)
+          ? (data as { message: string[] }).message.join("，")
+          : String((data as { message?: unknown }).message)
+        : `请求失败：${response.status}`;
+
+    if (
+      (response.status === 401 || response.status === 403) &&
+      typeof window !== "undefined"
+    ) {
+      clearStoredSession();
+    }
+
+    throw new ClientApiError(message, response.status);
+  }
+
+  return data as T;
 }
 
 function isStoredSession(value: unknown) {
@@ -342,6 +408,35 @@ export async function fetchMemberGame(accessToken: string, gameId: number) {
       },
     ),
   );
+}
+
+export async function fetchMemberGameDrawRecords(
+  accessToken: string,
+  gameId: number,
+  query: { page?: number; pageSize?: number } = {},
+) {
+  return requestJson<
+    SwaggerEnvelope<ClientPaginatedResult<ClientGameDrawRecord>>
+  >(
+    `/member/games/${gameId}/draw-records?page=${query.page ?? 1}&pageSize=${query.pageSize ?? 20}`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
+}
+
+export async function fetchMemberCurrentIssue(
+  accessToken: string,
+  gameId: number,
+) {
+  return requestJson<SwaggerEnvelope<ClientCurrentIssue>>(
+    `/member/games/${gameId}/current-issue`,
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
 }
 
 export async function fetchVipInsights(accessToken: string) {

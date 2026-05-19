@@ -6,6 +6,7 @@ import { ADMIN_DEFAULT_PAGE_SIZE } from "@/app/config/pagination";
 import {
   createAdminGame,
   deleteAdminGame,
+  drawOnceAdminGame,
   executeAdminRequest,
   fetchAdminGameModels,
   fetchAdminGames,
@@ -53,6 +54,11 @@ export function useGamesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [pagination, setPagination] = useState(INITIAL_PAGINATION);
+  const [drawHistoryGame, setDrawHistoryGame] = useState<AdminGame | null>(
+    null,
+  );
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawError, setDrawError] = useState("");
 
   const categoryNameMap = useMemo(
     () => new Map(categoryOptions.map((item) => [item.id, item.name] as const)),
@@ -190,6 +196,46 @@ export function useGamesPage() {
     [games.length, loadGames, logout, page, session.accessToken],
   );
 
+  const openDrawHistoryModal = useCallback((game: AdminGame) => {
+    setDrawHistoryGame(game);
+    setDrawError("");
+  }, []);
+
+  const closeDrawHistoryModal = useCallback(() => {
+    setDrawHistoryGame(null);
+    setDrawError("");
+    setIsDrawing(false);
+  }, []);
+
+  const handleDrawOnce = useCallback(
+    (game: AdminGame) => {
+      const confirmed = window.confirm(
+        `确认立即为“${game.label}”执行一次开奖吗？`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      void executeAdminRequest({
+        onStart: () => {
+          setIsDrawing(true);
+          setDrawError("");
+          setDrawHistoryGame(game);
+        },
+        request: () => drawOnceAdminGame(session.accessToken, game.id),
+        fallbackMessage: "立即开奖失败",
+        onSuccess: async () => {
+          await loadGames();
+        },
+        onError: (message) => setDrawError(message),
+        onAuthError: logout,
+        onFinally: () => setIsDrawing(false),
+      });
+    },
+    [loadGames, logout, session.accessToken],
+  );
+
   const openCreateModal = useCallback(() => {
     setSubmitError("");
     setSelectedGame(null);
@@ -226,15 +272,21 @@ export function useGamesPage() {
     isSubmitting,
     submitError,
     pagination,
+    drawHistoryGame,
+    isDrawing,
+    drawError,
     categoryNameMap,
     gameModelNameMap,
     setPage,
     handleKeywordChange,
     handleSaveGame,
     handleDeleteGame,
+    handleDrawOnce,
     openCreateModal,
     openEditModal,
+    openDrawHistoryModal,
     closeModal,
+    closeDrawHistoryModal,
   };
 }
 

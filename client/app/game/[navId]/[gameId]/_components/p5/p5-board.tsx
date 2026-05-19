@@ -5,13 +5,22 @@ import { cn } from "@/app/shared/lib/cn";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import { P5_POSITIONS } from "./p5.constants";
 import { formatCompactDigits } from "./p5.utils";
-import type { P5BetAmount, P5BetItem, P5SelectedDigit } from "./p5.types";
+import type {
+  P5BetAmount,
+  P5BetItem,
+  P5CurrentIssue,
+  P5SelectedDigit,
+} from "./p5.types";
 
 type P5SelectionMode = "random" | "manual";
 
 type P5BoardProps = {
   digits: P5SelectedDigit[];
   latestDrawDigits: number[];
+  currentIssue: P5CurrentIssue | null;
+  countdownText: string;
+  drawStatusText: string;
+  drawError: string;
   betItems: P5BetItem[];
   selectionMode: P5SelectionMode;
   totalAmount: number;
@@ -37,6 +46,10 @@ const PLAY_RULES = [
 export function P5Board({
   digits,
   latestDrawDigits,
+  currentIssue,
+  countdownText,
+  drawStatusText,
+  drawError,
   betItems,
   selectionMode,
   totalAmount,
@@ -71,9 +84,20 @@ export function P5Board({
                 <h3 className="text-lg font-semibold text-[var(--foreground)]">
                   当前开奖号码
                   <span className="ml-2 text-sm font-medium text-[var(--muted)]">
-                    距离下次开奖剩余：00:12:34
+                    {currentIssue?.issue
+                      ? `当前期号：${currentIssue.issue} · 剩余 ${countdownText}`
+                      : `距离下次开奖剩余：${countdownText}`}
                   </span>
                 </h3>
+                <p className="mt-2 text-sm text-[var(--muted)]">
+                  状态：{drawStatusText}
+                  {currentIssue?.lastDrawAt
+                    ? ` · 上期开奖：${currentIssue.lastDrawAt}`
+                    : ""}
+                </p>
+                {drawError ? (
+                  <p className="mt-2 text-sm text-rose-300">{drawError}</p>
+                ) : null}
               </div>
 
               <ActionButton

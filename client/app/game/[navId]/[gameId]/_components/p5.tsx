@@ -1,35 +1,217 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { P5Board } from "./p5/p5-board";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
 import { P5History } from "./p5/p5-history";
+import { readStoredSession } from "@/app/lib/auth";
+import { createClientRealtimeSocket } from "@/app/lib/client-realtime";
 import {
   createBetItem,
   createEmptyDigits,
-  createDrawRecord,
   createRandomDigits,
+  formatP5DateTime,
+  formatServerDrivenCountdown,
+  mapClientDrawRecordToP5Record,
   P5_AMOUNT_OPTIONS,
+  resolveServerTimeOffset,
 } from "./p5/p5.utils";
-import type { P5BetAmount, P5BetItem, P5SelectedDigit } from "./p5/p5.types";
+import type {
+  P5BetAmount,
+  P5BetItem,
+  P5CurrentIssue,
+  P5DrawRecord,
+  P5SelectedDigit,
+} from "./p5/p5.types";
 
 type P5SelectionMode = "random" | "manual";
 
+type RealtimeDrawRecordPayload = {
+  id: number;
+  issueNo: string;
+  openCode: string;
+  openCodeJson: number[];
+  drawTime: string;
+};
+
+function mapRealtimeRecord(payload: RealtimeDrawRecordPayload) {
+  return mapClientDrawRecordToP5Record({
+    id: payload.id,
+    issueNo: payload.issueNo,
+    openCode: payload.openCode,
+    openCodeJson: payload.openCodeJson,
+    drawTime: payload.drawTime,
+    resultPayload: null,
+    drawStatus: "open",
+    sourceType: "system",
+    algorithmVersion: "realtime",
+    createdAt: payload.drawTime,
+    updatedAt: payload.drawTime,
+  });
+}
+
 export default function GamePage() {
+  const params = useParams<{ gameId: string }>();
+  const session = useMemo(() => readStoredSession(), []);
   const [digits, setDigits] = useState<P5SelectedDigit[]>(() =>
     createEmptyDigits(),
   );
-  const [records, setRecords] = useState(() =>
-    Array.from({ length: 4 }, (_, index) => createDrawRecord(index + 1)),
-  );
+  const [records, setRecords] = useState<P5DrawRecord[]>([]);
   const [betItems, setBetItems] = useState<P5BetItem[]>([]);
   const [selectionMode, setSelectionMode] = useState<P5SelectionMode>("manual");
+  const [currentIssue, setCurrentIssue] = useState<P5CurrentIssue | null>(null);
+  const [drawError, setDrawError] = useState("");
+  const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
+  const [tickNowMs, setTickNowMs] = useState(() => Date.now());
+  const [roomNotice, setRoomNotice] = useState("");
+  const gameId = Number(params.gameId);
+  const canLoadDrawData = Boolean(
+    session?.accessToken && Number.isInteger(gameId) && gameId > 0,
+  );
+  const [isDrawLoading, setIsDrawLoading] = useState(canLoadDrawData);
 
   const latestDrawDigits = records[0]?.digits ?? [];
   const totalAmount = useMemo(
     () => betItems.reduce((sum, item) => sum + item.amount, 0),
     [betItems],
   );
+  const countdownText = useMemo(
+    () =>
+      formatServerDrivenCountdown(
+        currentIssue?.nextDrawAt,
+        tickNowMs,
+        serverTimeOffsetMs,
+      ),
+    [currentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
+  );
+  const drawErrorText = canLoadDrawData
+    ? drawError
+    : "无法读取当前游戏的开奖信息";
+  const drawStatusText = currentIssue ? currentIssue.status : "读取中";
+
+  useEffect(() => {
+    if (!canLoadDrawData) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setTickNowMs(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [canLoadDrawData]);
+
+  useEffect(() => {
+    if (!canLoadDrawData || !session?.accessToken) {
+      return;
+    }
+
+    const socket = createClientRealtimeSocket(session.accessToken);
+
+    socket.on("socket:ready", () => {
+      setIsDrawLoading(true);
+      setDrawError("");
+      socket.emit("game:join", { gameId });
+    });
+
+    socket.on("game:joined", (payload: { gameId: number; message: string }) => {
+      if (payload.gameId !== gameId) {
+        return;
+      }
+
+      setRoomNotice(payload.message);
+    });
+
+    socket.on(
+      "game:snapshot",
+      (payload: {
+        gameId: number;
+        currentIssue: {
+          serverTime: string;
+          currentIssue: string | null;
+          nextDrawAt: string;
+          status: string;
+          lastDrawAt: string | null;
+        };
+        records: RealtimeDrawRecordPayload[];
+      }) => {
+        if (payload.gameId !== gameId) {
+          return;
+        }
+
+        setDrawError("");
+        setIsDrawLoading(false);
+        setRecords(payload.records.map(mapRealtimeRecord));
+        setServerTimeOffsetMs(
+          resolveServerTimeOffset(payload.currentIssue.serverTime),
+        );
+        setTickNowMs(Date.now());
+        setCurrentIssue({
+          issue: payload.currentIssue.currentIssue,
+          serverTime: payload.currentIssue.serverTime,
+          nextDrawAt: payload.currentIssue.nextDrawAt,
+          status: payload.currentIssue.status,
+          lastDrawAt: formatP5DateTime(payload.currentIssue.lastDrawAt),
+        });
+      },
+    );
+
+    socket.on(
+      "game:draw-updated",
+      (payload: {
+        gameId: number;
+        currentIssue: {
+          serverTime: string;
+          currentIssue: string | null;
+          nextDrawAt: string;
+          status: string;
+          lastDrawAt: string | null;
+        };
+        record: RealtimeDrawRecordPayload;
+      }) => {
+        if (payload.gameId !== gameId) {
+          return;
+        }
+
+        setServerTimeOffsetMs(
+          resolveServerTimeOffset(payload.currentIssue.serverTime),
+        );
+        setTickNowMs(Date.now());
+        setCurrentIssue({
+          issue: payload.currentIssue.currentIssue,
+          serverTime: payload.currentIssue.serverTime,
+          nextDrawAt: payload.currentIssue.nextDrawAt,
+          status: payload.currentIssue.status,
+          lastDrawAt: formatP5DateTime(payload.currentIssue.lastDrawAt),
+        });
+        setRecords((current) => {
+          const nextRecord = mapRealtimeRecord(payload.record);
+          return [
+            nextRecord,
+            ...current.filter((item) => item.id !== nextRecord.id),
+          ].slice(0, 20);
+        });
+      },
+    );
+
+    socket.on("game:error", (payload: { message: string }) => {
+      setIsDrawLoading(false);
+      setDrawError(payload.message);
+    });
+
+    socket.on("socket:error", (payload: { message: string }) => {
+      setIsDrawLoading(false);
+      setDrawError(payload.message);
+    });
+
+    return () => {
+      socket.emit("game:leave");
+      socket.disconnect();
+    };
+  }, [canLoadDrawData, gameId, session?.accessToken]);
 
   const handleModeChange = (mode: P5SelectionMode) => {
     setSelectionMode(mode);
@@ -81,26 +263,35 @@ export default function GamePage() {
       return;
     }
 
-    setRecords((current) =>
-      [
-        {
-          ...createDrawRecord(current.length + 1),
-          digits: betItems[0].digits,
-        },
-        ...current,
-      ].slice(0, 6),
-    );
+    window.alert("当前仅接入真实开奖数据，投注提交流程将在后续版本接入。");
   };
 
   return (
     <main className="space-y-6">
+      {roomNotice ? (
+        <div className="rounded-[var(--surface-radius-lg)] border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          {roomNotice}
+        </div>
+      ) : null}
+
       <GameLayoutLeftSidebarSlot
-        content={<P5History records={records} variant="sidebar" />}
+        content={
+          <P5History
+            records={records}
+            variant="sidebar"
+            isLoading={isDrawLoading}
+            error={drawErrorText}
+          />
+        }
       />
 
       <P5Board
         digits={digits}
         latestDrawDigits={latestDrawDigits}
+        currentIssue={currentIssue}
+        countdownText={countdownText}
+        drawStatusText={drawStatusText}
+        drawError={drawErrorText}
         betItems={betItems}
         selectionMode={selectionMode}
         totalAmount={totalAmount}

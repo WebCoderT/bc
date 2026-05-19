@@ -1,5 +1,7 @@
 import type {
   AdminGame,
+  AdminGameCurrentIssue,
+  AdminGameDrawRecord,
   SaveAdminGameInput,
   UpdateAdminGameInput,
 } from "@/app/lib/admin-api";
@@ -16,6 +18,15 @@ export type GamesPaginationState = {
 export type GamesModalState = {
   selectedGame: AdminGame | null;
   isCreating: boolean;
+};
+
+export type GameDrawModalState = {
+  game: AdminGame | null;
+  currentIssue: AdminGameCurrentIssue | null;
+  records: AdminGameDrawRecord[];
+  isLoading: boolean;
+  isDrawing: boolean;
+  error: string;
 };
 
 export type CategoryNameMap = ReadonlyMap<number, string>;

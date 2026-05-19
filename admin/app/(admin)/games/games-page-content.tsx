@@ -1,4 +1,5 @@
 import { GameEditModal } from "@/app/components/admin/game-edit-modal";
+import { GameDrawRecordsModal } from "@/app/components/admin/game-draw-records-modal";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
 import { GamesErrorBanner, GamesTable, GamesToolbar } from "./page-components";
@@ -16,15 +17,21 @@ export function GamesPageContent({
   isSubmitting,
   submitError,
   pagination,
+  drawHistoryGame,
+  isDrawing,
+  drawError,
   categoryNameMap,
   gameModelNameMap,
   setPage,
   handleKeywordChange,
   handleSaveGame,
   handleDeleteGame,
+  handleDrawOnce,
   openCreateModal,
   openEditModal,
+  openDrawHistoryModal,
   closeModal,
+  closeDrawHistoryModal,
 }: GamesPageState) {
   return (
     <div className="space-y-6">
@@ -47,6 +54,8 @@ export function GamesPageContent({
           categoryNameMap={categoryNameMap}
           gameModelNameMap={gameModelNameMap}
           onEdit={openEditModal}
+          onViewDraws={openDrawHistoryModal}
+          onDrawOnce={handleDrawOnce}
           onDelete={handleDeleteGame}
         />
 
@@ -69,6 +78,16 @@ export function GamesPageContent({
           submitError={submitError}
           onClose={closeModal}
           onSubmit={handleSaveGame}
+        />
+      ) : null}
+
+      {drawHistoryGame ? (
+        <GameDrawRecordsModal
+          game={drawHistoryGame}
+          isDrawing={isDrawing}
+          error={drawError}
+          onClose={closeDrawHistoryModal}
+          onDrawOnce={() => handleDrawOnce(drawHistoryGame)}
         />
       ) : null}
     </div>

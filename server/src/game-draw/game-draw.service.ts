@@ -22,6 +22,7 @@ import { GameDrawHistoryService } from './game-draw-history.service';
 import { GameDrawRuntimeService } from './game-draw-runtime.service';
 import { GameDrawStrategyRegistry } from './game-draw-strategy.registry';
 import { GameDrawTableService } from './game-draw-table.service';
+import { RealtimeEventsService } from '../realtime/realtime-events.service';
 
 @Injectable()
 export class GameDrawService {
@@ -38,6 +39,7 @@ export class GameDrawService {
     private readonly gameDrawStrategyRegistry: GameDrawStrategyRegistry,
     private readonly gameDrawTableService: GameDrawTableService,
     private readonly gameDrawHistoryService: GameDrawHistoryService,
+    private readonly realtimeEventsService: RealtimeEventsService,
   ) {}
 
   async initializeGameResources(gameId: number) {
@@ -150,6 +152,13 @@ export class GameDrawService {
         message: `开奖成功，号码 ${record.openCode}`,
         startedAt,
         finishedAt: new Date(),
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      this.realtimeEventsService.emitGameDrawUpdated({
+        gameId,
+        record,
+        currentIssue: await this.getCurrentIssue(gameId),
       });
 
       return record;
@@ -292,6 +301,7 @@ export class GameDrawService {
   }): GameCurrentIssueResponseDto {
     return {
       gameId: runtime.gameId,
+      serverTime: new Date().toISOString(),
       currentIssue: runtime.currentIssue,
       lastDrawAt: runtime.lastDrawAt ? runtime.lastDrawAt.toISOString() : null,
       nextDrawAt: runtime.nextDrawAt.toISOString(),
