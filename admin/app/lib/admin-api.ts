@@ -8,6 +8,9 @@ import {
   type AdminNavigationsControllerGetNavigationsParams,
   type AdminGameControllerGetGamesParams,
   type AdminUsersControllerGetUsersParams,
+  type AppProfileResponseDto,
+  type GameCurrentIssueResponseDto,
+  type GameDrawRecordResponseDto,
   CreateGameModelDtoStatusEnum,
   CreateGameDtoOddsModeEnum,
   CreateNavigatorDtoStatusEnum,
@@ -27,6 +30,7 @@ import {
   RoleEnum,
   type SafeUserDto,
   StatusEnum,
+  type UpdateAppProfileDto,
   type UpdateGameModelDto,
   UpdateGameModelDtoStatusEnum,
   type UpdateAdminUserDto,
@@ -98,36 +102,12 @@ export type PaginatedAdminGames = SwaggerEnvelopeData<
   SwaggerGamesApi["adminGameControllerGetGames"]
 >;
 
-export type AdminGameDrawRecord = {
-  id: number;
-  issueNo: string;
-  openCode: string;
-  openCodeJson: number[];
-  resultPayload: Record<string, unknown> | null;
-  drawTime: string;
-  drawStatus: string;
-  sourceType: string;
-  algorithmVersion: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type PaginatedAdminGameDrawRecords = {
-  items: AdminGameDrawRecord[];
+  items: GameDrawRecordResponseDto[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-};
-
-export type AdminGameCurrentIssue = {
-  gameId: number;
-  serverTime: string;
-  currentIssue: string | null;
-  lastDrawAt: string | null;
-  nextDrawAt: string;
-  drawInterval: number;
-  status: string;
 };
 export type AdminBetStatus = "placed" | "settled" | "cancelled";
 export type AdminBetItem = {
@@ -257,22 +237,6 @@ export type AdminNavigationList = {
   items: AdminNavigation[];
   total: number;
 };
-
-export type AdminAppProfile = {
-  appName: string;
-  appWordmark: string;
-  logoText: string;
-  description: string;
-  officialSiteLabel: string;
-  defaultOrganizationName: string;
-  defaultEmailDomain: string;
-  defaultUserAvatar: string;
-  updatedAt: string;
-};
-
-export type UpdateAdminAppProfileInput = Partial<
-  Omit<AdminAppProfile, "updatedAt">
->;
 
 export type AdminSession = LoginResponseDto;
 
@@ -723,21 +687,27 @@ export async function fetchAnnouncements() {
 }
 
 export async function fetchAdminAppProfile(accessToken: string) {
-  return requestJson<SwaggerEnvelope<AdminAppProfile>>("/admin/app-profile", {
-    method: "GET",
-    accessToken,
-  }).then((response) => response.data);
+  return requestJson<SwaggerEnvelope<AppProfileResponseDto>>(
+    "/admin/app-profile",
+    {
+      method: "GET",
+      accessToken,
+    },
+  ).then((response) => response.data);
 }
 
 export async function updateAdminAppProfile(
   accessToken: string,
-  input: UpdateAdminAppProfileInput,
+  input: UpdateAppProfileDto,
 ) {
-  return requestJson<SwaggerEnvelope<AdminAppProfile>>("/admin/app-profile", {
-    method: "PATCH",
-    accessToken,
-    body: JSON.stringify(input),
-  }).then((response) => response.data);
+  return requestJson<SwaggerEnvelope<AppProfileResponseDto>>(
+    "/admin/app-profile",
+    {
+      method: "PATCH",
+      accessToken,
+      body: JSON.stringify(input),
+    },
+  ).then((response) => response.data);
 }
 
 export async function fetchAdminUsers(
@@ -865,7 +835,7 @@ export async function fetchAdminGameCurrentIssue(
   accessToken: string,
   gameId: number,
 ) {
-  return requestJson<SwaggerEnvelope<AdminGameCurrentIssue>>(
+  return requestJson<SwaggerEnvelope<GameCurrentIssueResponseDto>>(
     `/admin/games/${gameId}/current-issue`,
     {
       method: "GET",
@@ -875,7 +845,7 @@ export async function fetchAdminGameCurrentIssue(
 }
 
 export async function drawOnceAdminGame(accessToken: string, gameId: number) {
-  return requestJson<SwaggerEnvelope<AdminGameDrawRecord>>(
+  return requestJson<SwaggerEnvelope<GameDrawRecordResponseDto>>(
     `/admin/games/${gameId}/draw-once`,
     {
       method: "POST",

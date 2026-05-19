@@ -93,7 +93,7 @@ export function NavigationEditModal({
           void onSubmit({
             ...formState,
             name: formState.name.trim(),
-            path: formState.path.trim(),
+            path: formState.path?.trim() || "",
             description: formState.description?.trim() || "",
             icon: formState.icon?.trim() || "",
             parentId: formState.parentId ?? null,

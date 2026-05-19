@@ -9,11 +9,15 @@ const projectRoot = path.resolve(currentDirectoryPath, "..");
 const swaggerUrl =
   process.env.CLIENT_SWAGGER_URL ?? "http://127.0.0.1:8000/docs/member-json";
 
-async function main() {
+const publicSwaggerUrl =
+  process.env.CLIENT_PUBLIC_SWAGGER_URL ??
+  "http://127.0.0.1:8000/docs/public-json";
+
+async function generateSwaggerClient(url: string, outputPath: string) {
   await generateApi({
-    url: swaggerUrl,
+    url,
     fileName: "index.ts",
-    output: path.resolve(projectRoot, "app/generated/api"),
+    output: outputPath,
     httpClientType: "fetch",
     modular: true,
     generateClient: true,
@@ -28,8 +32,23 @@ async function main() {
     moduleNameFirstTag: true,
     singleHttpClient: true,
   });
+}
+
+async function main() {
+  await generateSwaggerClient(
+    swaggerUrl,
+    path.resolve(projectRoot, "app/generated/api"),
+  );
+
+  await generateSwaggerClient(
+    publicSwaggerUrl,
+    path.resolve(projectRoot, "app/generated/public-api"),
+  );
 
   console.log(`Client Swagger client generated from ${swaggerUrl}`);
+  console.log(
+    `Client Public Swagger client generated from ${publicSwaggerUrl}`,
+  );
 }
 
 main().catch((error) => {

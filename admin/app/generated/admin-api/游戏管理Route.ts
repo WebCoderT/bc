@@ -12,6 +12,8 @@
 
 import {
   CreateGameDto,
+  GameCurrentIssueResponseDto,
+  GameDrawRecordResponseDto,
   GameResponseDto,
   IdDataDto,
   UpdateGameDto,
@@ -173,6 +175,136 @@ export namespace 游戏管理 {
       /** @example "游戏删除成功" */
       message: string;
       data: IdDataDto;
+    };
+  }
+
+  /**
+ * No description
+ * @tags 游戏管理
+ * @name AdminGameControllerGetDrawRecords
+ * @summary 管理员查询游戏开奖历史
+ * @request GET:/api/admin/games/{id}/draw-records
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "success" *\/
+    message: string,
+    data: {
+    items: (GameDrawRecordResponseDto)[],
+  /** @example 20 *\/
+    total: number,
+  /** @example 1 *\/
+    page: number,
+  /** @example 10 *\/
+    pageSize: number,
+  /** @example 2 *\/
+    totalPages: number,
+
+},
+
+}`
+*/
+  export namespace AdminGameControllerGetDrawRecords {
+    export type RequestParams = {
+      id: number;
+    };
+    export type RequestQuery = {
+      /**
+       * 页码
+       * @default 1
+       * @example 1
+       */
+      page?: number;
+      /**
+       * 每页数量
+       * @default 20
+       * @example 20
+       */
+      pageSize?: number;
+    };
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = {
+      /** @example 0 */
+      code: number;
+      /** @example "success" */
+      message: string;
+      data: {
+        items: GameDrawRecordResponseDto[];
+        /** @example 20 */
+        total: number;
+        /** @example 1 */
+        page: number;
+        /** @example 10 */
+        pageSize: number;
+        /** @example 2 */
+        totalPages: number;
+      };
+    };
+  }
+
+  /**
+ * No description
+ * @tags 游戏管理
+ * @name AdminGameControllerGetCurrentIssue
+ * @summary 管理员查询当前期号
+ * @request GET:/api/admin/games/{id}/current-issue
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "success" *\/
+    message: string,
+    data: GameCurrentIssueResponseDto,
+
+}`
+*/
+  export namespace AdminGameControllerGetCurrentIssue {
+    export type RequestParams = {
+      id: number;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = {
+      /** @example 0 */
+      code: number;
+      /** @example "success" */
+      message: string;
+      data: GameCurrentIssueResponseDto;
+    };
+  }
+
+  /**
+ * No description
+ * @tags 游戏管理
+ * @name AdminGameControllerDrawOnce
+ * @summary 管理员手动触发一次开奖
+ * @request POST:/api/admin/games/{id}/draw-once
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "手动开奖成功" *\/
+    message: string,
+    data: GameDrawRecordResponseDto,
+
+}`
+*/
+  export namespace AdminGameControllerDrawOnce {
+    export type RequestParams = {
+      id: number;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = {
+      /** @example 0 */
+      code: number;
+      /** @example "手动开奖成功" */
+      message: string;
+      data: GameDrawRecordResponseDto;
     };
   }
 }

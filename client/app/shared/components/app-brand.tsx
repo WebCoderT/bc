@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { AppProfileResponseDto } from "@/app/generated/public-api/data-contracts";
 import { cn } from "../lib/cn";
 import {
   getAppProfile,
   getAppProfileSync,
-  type AppProfile,
 } from "../repositories/app-profile-repository";
 
 type AppBrandProps = {
@@ -28,7 +28,9 @@ export function AppBrand({
   size = "md",
   className,
 }: AppBrandProps) {
-  const [profile, setProfile] = useState<AppProfile>(() => getAppProfileSync());
+  const [profile, setProfile] = useState<AppProfileResponseDto | null>(() =>
+    getAppProfileSync(),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +75,7 @@ export function AppBrand({
         )}
         aria-hidden="true"
       >
-        {profile.logoText}
+        {profile?.logoText ?? ""}
       </div>
 
       <div className="min-w-0">
@@ -84,7 +86,7 @@ export function AppBrand({
             isInverted ? "text-white" : "text-[var(--foreground)]",
           )}
         >
-          {profile.appName}
+          {profile?.appName ?? ""}
         </h1>
         {caption ? (
           <p

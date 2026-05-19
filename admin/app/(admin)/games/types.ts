@@ -1,10 +1,12 @@
 import type {
-  AdminGame,
-  AdminGameCurrentIssue,
-  AdminGameDrawRecord,
   SaveAdminGameInput,
   UpdateAdminGameInput,
+  AdminGame,
 } from "@/app/lib/admin-api";
+import type {
+  GameCurrentIssueResponseDto,
+  GameDrawRecordResponseDto,
+} from "@/app/generated/admin-api/data-contracts";
 
 export type GameFormInput = SaveAdminGameInput | UpdateAdminGameInput;
 
@@ -22,8 +24,8 @@ export type GamesModalState = {
 
 export type GameDrawModalState = {
   game: AdminGame | null;
-  currentIssue: AdminGameCurrentIssue | null;
-  records: AdminGameDrawRecord[];
+  currentIssue: GameCurrentIssueResponseDto | null;
+  records: GameDrawRecordResponseDto[];
   isLoading: boolean;
   isDrawing: boolean;
   error: string;

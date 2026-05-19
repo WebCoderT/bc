@@ -1,5 +1,6 @@
 import { P5_BALL_COUNT } from "./p5.constants";
-import type { ClientGame, ClientGameDrawRecord } from "@/app/lib/client-api";
+import type { GameDrawRecordResponseDto } from "@/app/generated/api/data-contracts";
+import type { ClientGame } from "@/app/lib/client-api";
 import type {
   P5BetAmount,
   P5BetItem,
@@ -136,7 +137,7 @@ export function resolveServerTimeOffset(serverTime: string | null | undefined) {
 }
 
 export function mapClientDrawRecordToP5Record(
-  record: ClientGameDrawRecord,
+  record: GameDrawRecordResponseDto,
 ): P5DrawRecord {
   return {
     id: record.id,

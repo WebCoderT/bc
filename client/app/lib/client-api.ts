@@ -4,6 +4,8 @@ import { 导航查询 as SwaggerNavigationQueryApi } from "@/app/generated/api/�
 import { 用户中心 as SwaggerMemberDashboardApi } from "@/app/generated/api/用户中心";
 import { 游戏浏览 as SwaggerGamesApi } from "@/app/generated/api/游戏浏览";
 import {
+  type GameCurrentIssueResponseDto,
+  type GameDrawRecordResponseDto,
   type GameResponseDto,
   type LoginDto,
   type LoginResponseDto,
@@ -54,28 +56,6 @@ export type ClientGameDetailQuery = MemberGamesControllerGetGameParams;
 export type ClientNavigation = NavigationResponseDto;
 export type ClientNavigationsQuery =
   MemberNavigationsControllerGetNavigationsParams;
-export type ClientGameDrawRecord = {
-  id: number;
-  issueNo: string;
-  openCode: string;
-  openCodeJson: number[];
-  resultPayload: Record<string, unknown> | null;
-  drawTime: string;
-  drawStatus: string;
-  sourceType: string;
-  algorithmVersion: string;
-  createdAt: string;
-  updatedAt: string;
-};
-export type ClientCurrentIssue = {
-  gameId: number;
-  serverTime: string;
-  currentIssue: string | null;
-  lastDrawAt: string | null;
-  nextDrawAt: string;
-  drawInterval: number;
-  status: string;
-};
 export type ClientBetStatus = "placed" | "settled" | "cancelled";
 export type ClientBetItem = {
   id: number;
@@ -463,7 +443,7 @@ export async function fetchMemberGameDrawRecords(
   query: { page?: number; pageSize?: number } = {},
 ) {
   return requestJson<
-    SwaggerEnvelope<ClientPaginatedResult<ClientGameDrawRecord>>
+    SwaggerEnvelope<ClientPaginatedResult<GameDrawRecordResponseDto>>
   >(
     `/member/games/${gameId}/draw-records?page=${query.page ?? 1}&pageSize=${query.pageSize ?? 20}`,
     {
@@ -477,7 +457,7 @@ export async function fetchMemberCurrentIssue(
   accessToken: string,
   gameId: number,
 ) {
-  return requestJson<SwaggerEnvelope<ClientCurrentIssue>>(
+  return requestJson<SwaggerEnvelope<GameCurrentIssueResponseDto>>(
     `/member/games/${gameId}/current-issue`,
     {
       method: "GET",

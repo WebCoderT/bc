@@ -7,12 +7,12 @@ import { AppProfileEntity } from './entities/app-profile.entity';
 const APP_PROFILE_PRIMARY_ID = 1;
 
 const defaultAppProfile = {
-  appName: '疾跃竞技科技',
+  appName: '',
   appWordmark: 'PULSEPLAY',
   logoText: 'PP',
   description: '未登录官网与 `/game` 已登录模块分离的运动科技风示例。',
   officialSiteLabel: 'PULSEPLAY LAB',
-  defaultOrganizationName: '疾跃竞技科技',
+  defaultOrganizationName: '',
   defaultEmailDomain: 'pulseplay.com',
   defaultUserAvatar:
     "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%232563eb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='96' height='96' rx='28' fill='url(%23g)'/%3E%3Ccircle cx='48' cy='34' r='16' fill='rgba(255,255,255,0.92)'/%3E%3Cpath d='M24 78c3-13 14-22 24-22s21 9 24 22' fill='rgba(255,255,255,0.92)'/%3E%3C/svg%3E",

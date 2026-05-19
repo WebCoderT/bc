@@ -27,6 +27,16 @@ export interface SafeUserDto {
   totalBalance: number;
   /** @example "2026-05-14T08:30:00.000Z" */
   createdAt: string;
+  /** @example true */
+  isOnline: boolean;
+  /** @example "online" */
+  onlineStatus: string;
+  /** @example 101 */
+  currentGameRoomId?: object | null;
+  /** @example "排列5" */
+  currentGameRoomLabel?: object | null;
+  /** @example "2026-05-19T08:30:00.000Z" */
+  lastActiveAt?: object | null;
 }
 
 export interface RegisterDto {
@@ -64,6 +74,82 @@ export interface UpdateAdminUserDto {
   createdAt: string;
 }
 
+export interface AppProfileResponseDto {
+  /**
+   * 应用名称
+   * @example ""
+   */
+  appName: string;
+  /**
+   * 英文品牌字标
+   * @example ""
+   */
+  appWordmark: string;
+  /**
+   * Logo 简写
+   * @example ""
+   */
+  logoText: string;
+  /** 品牌描述 */
+  description: string;
+  /**
+   * 官网标识
+   * @example ""
+   */
+  officialSiteLabel: string;
+  /** 默认组织名称 */
+  defaultOrganizationName: string;
+  /**
+   * 默认邮箱域名
+   * @example ""
+   */
+  defaultEmailDomain: string;
+  /** 默认头像 SVG / URL */
+  defaultUserAvatar: string;
+  /** 更新时间 */
+  updatedAt: string;
+}
+
+export interface UpdateAppProfileDto {
+  /**
+   * 应用名称
+   * @maxLength 120
+   */
+  appName?: string;
+  /**
+   * 英文品牌字标
+   * @maxLength 120
+   */
+  appWordmark?: string;
+  /**
+   * Logo 简写
+   * @maxLength 20
+   */
+  logoText?: string;
+  /**
+   * 品牌描述
+   * @maxLength 255
+   */
+  description?: string;
+  /**
+   * 官网标识
+   * @maxLength 120
+   */
+  officialSiteLabel?: string;
+  /**
+   * 默认组织名称
+   * @maxLength 120
+   */
+  defaultOrganizationName?: string;
+  /**
+   * 默认邮箱域名
+   * @maxLength 120
+   */
+  defaultEmailDomain?: string;
+  /** 默认用户头像 SVG / URL */
+  defaultUserAvatar?: string;
+}
+
 export interface GameResponseDto {
   /** @example 1 */
   id: number;
@@ -90,18 +176,21 @@ export interface GameResponseDto {
    * @example 60
    */
   drawInterval: number;
-  /** @example "fixed" */
+  /**
+   * 赔率模式
+   * @example "fixed"
+   */
   oddsMode: GameResponseDtoOddsModeEnum;
   /**
    * 固定赔率值，若为自定义赔付则为空
    * @example 1.98
    */
-  fixedOdds: number | null;
+  fixedOdds: object | null;
   /**
    * 自定义赔付配置，当前仅预留字段
    * @example {"formula":"future-config"}
    */
-  customPayoutConfig: Record<string, any> | null;
+  customPayoutConfig: object | null;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */
@@ -154,7 +243,7 @@ export interface CreateGameDto {
    * 自定义赔付配置，当前仅预留字段
    * @example {"formula":"future-config"}
    */
-  customPayoutConfig?: Record<string, any>;
+  customPayoutConfig?: Record<string, any> | null;
   /**
    * 游戏状态
    * @default "online"
@@ -209,7 +298,7 @@ export interface UpdateGameDto {
    * 自定义赔付配置，当前仅预留字段
    * @example {"formula":"future-config"}
    */
-  customPayoutConfig?: Record<string, any>;
+  customPayoutConfig?: Record<string, any> | null;
   /**
    * 游戏状态
    * @default "online"
@@ -223,6 +312,48 @@ export interface IdDataDto {
   id: object;
 }
 
+export interface GameDrawRecordResponseDto {
+  /** @example 1 */
+  id: number;
+  /** @example "2026051900001" */
+  issueNo: string;
+  /** @example "1,4,7,2,9" */
+  openCode: string;
+  /** @example [1,4,7,2,9] */
+  openCodeJson: object;
+  /** @example {"sum":23,"span":8} */
+  resultPayload: object;
+  /** @example "2026-05-19T08:00:00.000Z" */
+  drawTime: string;
+  /** @example "open" */
+  drawStatus: GameDrawRecordResponseDtoDrawStatusEnum;
+  /** @example "system" */
+  sourceType: GameDrawRecordResponseDtoSourceTypeEnum;
+  /** @example "p5-v1" */
+  algorithmVersion: string;
+  /** @example "2026-05-19T08:00:00.000Z" */
+  createdAt: string;
+  /** @example "2026-05-19T08:00:00.000Z" */
+  updatedAt: string;
+}
+
+export interface GameCurrentIssueResponseDto {
+  /** @example 101 */
+  gameId: number;
+  /** @example "2026-05-19T08:01:30.000Z" */
+  serverTime: string;
+  /** @example "2026051900002" */
+  currentIssue?: object | null;
+  /** @example "2026-05-19T08:01:00.000Z" */
+  lastDrawAt?: object | null;
+  /** @example "2026-05-19T08:02:00.000Z" */
+  nextDrawAt: string;
+  /** @example 60 */
+  drawInterval: number;
+  /** @example "idle" */
+  status: GameCurrentIssueResponseDtoStatusEnum;
+}
+
 export interface GameModelResponseDto {
   /** @example "60" */
   id: string;
@@ -232,6 +363,10 @@ export interface GameModelResponseDto {
   description: string;
   /** @example "1.0.0" */
   version: string;
+  /** @example {"digits":5,"min":0,"max":9,"allowRepeat":true} */
+  drawConfigJson?: object | null;
+  /** @example {"openCode":"string","resultPayload":{"sum":"number"}} */
+  resultSchemaJson?: object | null;
   /** @example "active" */
   status: GameModelResponseDtoStatusEnum;
   /** @example "2024-01-01T00:00:00.000Z" */
@@ -262,6 +397,16 @@ export interface CreateGameModelDto {
    */
   version: string;
   /**
+   * 开奖配置JSON
+   * @example {"digits":5,"min":0,"max":9,"allowRepeat":true}
+   */
+  drawConfigJson?: object;
+  /**
+   * 开奖结果结构描述JSON
+   * @example {"openCode":"string","resultPayload":{"sum":"number"}}
+   */
+  resultSchemaJson?: object;
+  /**
    * 模型状态
    * @default "active"
    * @example "active"
@@ -286,6 +431,16 @@ export interface UpdateGameModelDto {
    */
   version?: string;
   /**
+   * 开奖配置JSON
+   * @example {"digits":5,"min":0,"max":9,"allowRepeat":true}
+   */
+  drawConfigJson?: object;
+  /**
+   * 开奖结果结构描述JSON
+   * @example {"openCode":"string","resultPayload":{"sum":"number"}}
+   */
+  resultSchemaJson?: object;
+  /**
    * 模型状态
    * @default "active"
    * @example "active"
@@ -298,7 +453,10 @@ export interface NavigationResponseDto {
   id: number;
   /** @example "电子竞技" */
   name: string;
-  /** @example "/game/esports" */
+  /**
+   * 导航访问路径；当未配置 path 时，这里返回导航 id 字符串
+   * @example "/game/esports"
+   */
   path: string;
   /** @example "前台电子竞技业务导航入口" */
   description: string;
@@ -328,8 +486,11 @@ export interface NavigationResponseDto {
 export interface CreateNavigatorDto {
   /** @example "电子竞技" */
   name: string;
-  /** @example "/game/esports" */
-  path: string;
+  /**
+   * 导航访问路径；不配置时，接口返回会自动回退为导航 id
+   * @example "/game/esports"
+   */
+  path?: string;
   /** @example "前台电子竞技业务导航入口" */
   description?: string;
   /** @example "🎮" */
@@ -353,7 +514,10 @@ export interface CreateNavigatorDto {
 export interface UpdateNavigatorDto {
   /** @example "电子竞技" */
   name?: string;
-  /** @example "/game/esports" */
+  /**
+   * 导航访问路径；不配置时，接口返回会自动回退为导航 id
+   * @example "/game/esports"
+   */
   path?: string;
   /** @example "前台电子竞技业务导航入口" */
   description?: string;
@@ -395,7 +559,21 @@ export enum GameResponseDtoStatusEnum {
   Offline = "offline",
 }
 
+/**
+ * 赔率模式
+ * @example "fixed"
+ */
 export enum GameResponseDtoOddsModeEnum {
+  Fixed = "fixed",
+  Custom = "custom",
+}
+
+/**
+ * 赔率模式，固定赔率或自定义赔付
+ * @default "fixed"
+ * @example "fixed"
+ */
+export enum CreateGameDtoOddsModeEnum {
   Fixed = "fixed",
   Custom = "custom",
 }
@@ -410,7 +588,12 @@ export enum CreateGameDtoStatusEnum {
   Offline = "offline",
 }
 
-export enum CreateGameDtoOddsModeEnum {
+/**
+ * 赔率模式，固定赔率或自定义赔付
+ * @default "fixed"
+ * @example "fixed"
+ */
+export enum UpdateGameDtoOddsModeEnum {
   Fixed = "fixed",
   Custom = "custom",
 }
@@ -425,9 +608,25 @@ export enum UpdateGameDtoStatusEnum {
   Offline = "offline",
 }
 
-export enum UpdateGameDtoOddsModeEnum {
-  Fixed = "fixed",
-  Custom = "custom",
+/** @example "open" */
+export enum GameDrawRecordResponseDtoDrawStatusEnum {
+  Open = "open",
+  Cancelled = "cancelled",
+  Retry = "retry",
+}
+
+/** @example "system" */
+export enum GameDrawRecordResponseDtoSourceTypeEnum {
+  System = "system",
+  Manual = "manual",
+}
+
+/** @example "idle" */
+export enum GameCurrentIssueResponseDtoStatusEnum {
+  Idle = "idle",
+  Drawing = "drawing",
+  Paused = "paused",
+  Error = "error",
 }
 
 /** @example "active" */
@@ -556,6 +755,30 @@ export interface AdminGameControllerUpdateGameParams {
 }
 
 export interface AdminGameControllerDeleteGameParams {
+  id: number;
+}
+
+export interface AdminGameControllerGetDrawRecordsParams {
+  /**
+   * 页码
+   * @default 1
+   * @example 1
+   */
+  page?: number;
+  /**
+   * 每页数量
+   * @default 20
+   * @example 20
+   */
+  pageSize?: number;
+  id: number;
+}
+
+export interface AdminGameControllerGetCurrentIssueParams {
+  id: number;
+}
+
+export interface AdminGameControllerDrawOnceParams {
   id: number;
 }
 

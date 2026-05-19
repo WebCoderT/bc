@@ -12,9 +12,14 @@
 
 import {
   AdminGameControllerDeleteGameParams,
+  AdminGameControllerDrawOnceParams,
+  AdminGameControllerGetCurrentIssueParams,
+  AdminGameControllerGetDrawRecordsParams,
   AdminGameControllerGetGamesParams,
   AdminGameControllerUpdateGameParams,
   CreateGameDto,
+  GameCurrentIssueResponseDto,
+  GameDrawRecordResponseDto,
   GameResponseDto,
   IdDataDto,
   UpdateGameDto,
@@ -199,6 +204,139 @@ export class 游戏管理<SecurityDataType = unknown> {
     >({
       path: `/api/admin/games/${id}`,
       method: "DELETE",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+ * No description
+ *
+ * @tags 游戏管理
+ * @name AdminGameControllerGetDrawRecords
+ * @summary 管理员查询游戏开奖历史
+ * @request GET:/api/admin/games/{id}/draw-records
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "success" *\/
+    message: string,
+    data: {
+    items: (GameDrawRecordResponseDto)[],
+  /** @example 20 *\/
+    total: number,
+  /** @example 1 *\/
+    page: number,
+  /** @example 10 *\/
+    pageSize: number,
+  /** @example 2 *\/
+    totalPages: number,
+
+},
+
+}`
+ */
+  adminGameControllerGetDrawRecords = (
+    { id, ...query }: AdminGameControllerGetDrawRecordsParams,
+    params: RequestParams = {},
+  ) =>
+    this.http.request<
+      {
+        /** @example 0 */
+        code: number;
+        /** @example "success" */
+        message: string;
+        data: {
+          items: GameDrawRecordResponseDto[];
+          /** @example 20 */
+          total: number;
+          /** @example 1 */
+          page: number;
+          /** @example 10 */
+          pageSize: number;
+          /** @example 2 */
+          totalPages: number;
+        };
+      },
+      any
+    >({
+      path: `/api/admin/games/${id}/draw-records`,
+      method: "GET",
+      query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+ * No description
+ *
+ * @tags 游戏管理
+ * @name AdminGameControllerGetCurrentIssue
+ * @summary 管理员查询当前期号
+ * @request GET:/api/admin/games/{id}/current-issue
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "success" *\/
+    message: string,
+    data: GameCurrentIssueResponseDto,
+
+}`
+ */
+  adminGameControllerGetCurrentIssue = (
+    { id }: AdminGameControllerGetCurrentIssueParams,
+    params: RequestParams = {},
+  ) =>
+    this.http.request<
+      {
+        /** @example 0 */
+        code: number;
+        /** @example "success" */
+        message: string;
+        data: GameCurrentIssueResponseDto;
+      },
+      any
+    >({
+      path: `/api/admin/games/${id}/current-issue`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+ * No description
+ *
+ * @tags 游戏管理
+ * @name AdminGameControllerDrawOnce
+ * @summary 管理员手动触发一次开奖
+ * @request POST:/api/admin/games/{id}/draw-once
+ * @secure
+ * @response `200` `{
+  /** @example 0 *\/
+    code: number,
+  /** @example "手动开奖成功" *\/
+    message: string,
+    data: GameDrawRecordResponseDto,
+
+}`
+ */
+  adminGameControllerDrawOnce = (
+    { id }: AdminGameControllerDrawOnceParams,
+    params: RequestParams = {},
+  ) =>
+    this.http.request<
+      {
+        /** @example 0 */
+        code: number;
+        /** @example "手动开奖成功" */
+        message: string;
+        data: GameDrawRecordResponseDto;
+      },
+      any
+    >({
+      path: `/api/admin/games/${id}/draw-once`,
+      method: "POST",
       secure: true,
       format: "json",
       ...params,

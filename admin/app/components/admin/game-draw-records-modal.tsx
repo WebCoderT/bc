@@ -8,19 +8,25 @@ import {
 } from "@/app/components/admin/ui/floating-notification-bubbles";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import { createAdminRealtimeSocket } from "@/app/lib/admin-realtime";
+import type { AdminGame } from "@/app/lib/admin-api";
 import type {
-  AdminGame,
-  AdminGameCurrentIssue,
-  AdminGameDrawRecord,
-} from "@/app/lib/admin-api";
+  GameCurrentIssueResponseDto,
+  GameDrawRecordResponseDto,
+} from "@/app/generated/admin-api/data-contracts";
 import { formatDate } from "@/app/utils/admin-format";
 
-function formatOpenCode(record: AdminGameDrawRecord) {
+function formatOpenCode(record: GameDrawRecordResponseDto) {
   if (Array.isArray(record.openCodeJson) && record.openCodeJson.length > 0) {
     return record.openCodeJson.join(" ");
   }
 
   return record.openCode || "--";
+}
+
+function formatCurrentIssue(
+  value: GameCurrentIssueResponseDto["currentIssue"],
+) {
+  return typeof value === "string" ? value : "--";
 }
 
 function resolveServerTimeOffset(serverTime: string | null | undefined) {
@@ -75,9 +81,11 @@ export function GameDrawRecordsModal({
 }) {
   const { session } = useAdminSession();
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
-  const [liveRecords, setLiveRecords] = useState<AdminGameDrawRecord[]>([]);
+  const [liveRecords, setLiveRecords] = useState<GameDrawRecordResponseDto[]>(
+    [],
+  );
   const [liveCurrentIssue, setLiveCurrentIssue] =
-    useState<AdminGameCurrentIssue | null>(null);
+    useState<GameCurrentIssueResponseDto | null>(null);
   const [socketError, setSocketError] = useState("");
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(true);
   const { items: notificationItems, pushBubble } =
@@ -159,8 +167,8 @@ export function GameDrawRecordsModal({
       "game:snapshot",
       (payload: {
         gameId: number;
-        currentIssue: AdminGameCurrentIssue;
-        records: AdminGameDrawRecord[];
+        currentIssue: GameCurrentIssueResponseDto;
+        records: GameDrawRecordResponseDto[];
       }) => {
         if (payload.gameId !== game.id) {
           return;
@@ -183,8 +191,8 @@ export function GameDrawRecordsModal({
       "game:draw-updated",
       (payload: {
         gameId: number;
-        currentIssue: AdminGameCurrentIssue;
-        record: AdminGameDrawRecord;
+        currentIssue: GameCurrentIssueResponseDto;
+        record: GameDrawRecordResponseDto;
       }) => {
         if (payload.gameId !== game.id) {
           return;
@@ -279,7 +287,7 @@ export function GameDrawRecordsModal({
             <p className="font-medium text-slate-900">游戏 ID：{game.id}</p>
             <p className="mt-1">模型：{game.gameModelId}</p>
             <p className="mt-1">
-              当前期号：{liveCurrentIssue?.currentIssue ?? "--"}
+              当前期号：{formatCurrentIssue(liveCurrentIssue?.currentIssue)}
             </p>
             <p className="mt-1">
               距离下次开奖：{countdownText}

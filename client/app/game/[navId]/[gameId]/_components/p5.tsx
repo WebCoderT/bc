@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import {
+  GameDrawRecordResponseDtoDrawStatusEnum,
+  GameDrawRecordResponseDtoSourceTypeEnum,
+} from "@/app/generated/api/data-contracts";
 import { P5Board } from "./p5/p5-board";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
 import { P5History } from "./p5/p5-history";
@@ -54,9 +58,9 @@ function mapRealtimeRecord(payload: RealtimeDrawRecordPayload) {
     openCode: payload.openCode,
     openCodeJson: payload.openCodeJson,
     drawTime: payload.drawTime,
-    resultPayload: null,
-    drawStatus: "open",
-    sourceType: "system",
+    resultPayload: {},
+    drawStatus: GameDrawRecordResponseDtoDrawStatusEnum.Open,
+    sourceType: GameDrawRecordResponseDtoSourceTypeEnum.System,
     algorithmVersion: "realtime",
     createdAt: payload.drawTime,
     updatedAt: payload.drawTime,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "./theme/theme-provider";
-import { getAppProfileSync } from "./shared/repositories/app-profile-repository";
+import { getAppProfile } from "./shared/repositories/app-profile-repository";
 import "./globals.scss";
 
 const geistSans = Geist({
@@ -14,12 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const appProfile = getAppProfileSync();
+export async function generateMetadata(): Promise<Metadata> {
+  const appProfile = await getAppProfile();
 
-export const metadata: Metadata = {
-  title: `${appProfile.appName} | 运动科技互动平台`,
-  description: appProfile.description,
-};
+  return {
+    title: appProfile?.appName
+      ? `${appProfile.appName} | 运动科技互动平台`
+      : "运动科技互动平台",
+    description: appProfile?.description ?? "运动科技互动平台",
+  };
+}
 
 export default function RootLayout({
   children,

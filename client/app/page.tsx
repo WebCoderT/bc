@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { AppProfileResponseDto } from "@/app/generated/public-api/data-contracts";
 import { AuthModal } from "./components/auth-modal";
 import { ThemeToggle } from "./components/theme-toggle";
 import { type AuthMode } from "./lib/auth";
@@ -15,7 +16,6 @@ import {
 import {
   getAppProfile,
   getAppProfileSync,
-  type AppProfile,
 } from "@/app/shared/repositories/app-profile-repository";
 
 /**
@@ -25,8 +25,8 @@ import {
  * 不直接承载任何登录后业务逻辑。
  */
 export default function HomePage() {
-  const [appProfile, setAppProfile] = useState<AppProfile>(() =>
-    getAppProfileSync(),
+  const [appProfile, setAppProfile] = useState<AppProfileResponseDto | null>(
+    () => getAppProfileSync(),
   );
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -57,7 +57,7 @@ export default function HomePage() {
     <>
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
         <header className="compact-shell--wide flex items-center justify-between gap-4 pb-5 pt-16 lg:pt-20">
-          <AppBrand caption={appProfile.officialSiteLabel} size="lg" />
+          <AppBrand caption={appProfile?.officialSiteLabel} size="lg" />
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -78,15 +78,11 @@ export default function HomePage() {
               className="rounded-[var(--surface-radius-xl)]"
             >
               <p className="inline-flex rounded-[var(--control-radius)] border border-[var(--border)] px-3 py-1.5 text-xs font-semibold tracking-[0.18em] text-[var(--accent)]">
-                {appProfile.appWordmark} OFFICIAL SITE
+                {appProfile?.appWordmark ?? ""} OFFICIAL SITE
               </p>
               <h2 className="mt-5 max-w-4xl text-[length:var(--title-size-lg)] font-semibold leading-tight tracking-tight">
                 为运动品牌、战队与赛事组织打造更有冲刺感的数字主场。
               </h2>
-              <p className="mt-4 max-w-2xl text-base leading-[var(--body-line-height)] text-[var(--muted)]">
-                首页保持无前缀访问，用更强的速度感和竞技科技视觉承接官网展示；登录或注册成功后，再进入独立的
-                `/game` 已登录空间。
-              </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <ActionButton size="lg" onClick={() => openAuth("register")}>

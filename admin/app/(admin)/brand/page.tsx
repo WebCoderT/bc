@@ -1,18 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type {
+  AppProfileResponseDto,
+  UpdateAppProfileDto,
+} from "@/app/generated/admin-api/data-contracts";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { MetricPanel } from "@/app/components/admin/ui/metric-panel";
 import {
   executeAdminRequest,
   fetchAdminAppProfile,
-  type AdminAppProfile,
   updateAdminAppProfile,
-  type UpdateAdminAppProfileInput,
 } from "@/app/lib/admin-api";
 
-type BrandFormState = Omit<AdminAppProfile, "updatedAt">;
+type BrandFormState = Omit<AppProfileResponseDto, "updatedAt">;
 
 function createEmptyFormState(): BrandFormState {
   return {
@@ -27,7 +29,7 @@ function createEmptyFormState(): BrandFormState {
   };
 }
 
-function toFormState(profile: AdminAppProfile): BrandFormState {
+function toFormState(profile: AppProfileResponseDto): BrandFormState {
   return {
     appName: profile.appName,
     appWordmark: profile.appWordmark,
@@ -59,7 +61,7 @@ function formatUpdatedAt(value: string | null) {
 
 export default function BrandRoute() {
   const { session, logout } = useAdminSession();
-  const [profile, setProfile] = useState<AdminAppProfile | null>(null);
+  const [profile, setProfile] = useState<AppProfileResponseDto | null>(null);
   const [form, setForm] = useState<BrandFormState>(() =>
     createEmptyFormState(),
   );
@@ -117,7 +119,7 @@ export default function BrandRoute() {
   const handleSubmit = async () => {
     const payload = Object.fromEntries(
       Object.entries(form).map(([key, value]) => [key, value.trim()]),
-    ) as UpdateAdminAppProfileInput;
+    ) as UpdateAppProfileDto;
 
     if (!payload.appName) {
       setSubmitError("应用名称不能为空");
@@ -189,7 +191,7 @@ export default function BrandRoute() {
                   handleChange("appName", event.target.value)
                 }
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
-                placeholder="例如：疾跃竞技科技"
+                placeholder="应用名称"
                 disabled={isLoading || isSubmitting}
               />
             </label>
@@ -202,7 +204,7 @@ export default function BrandRoute() {
                   handleChange("appWordmark", event.target.value)
                 }
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
-                placeholder="例如：PULSEPLAY"
+                placeholder="英文品牌字标"
                 disabled={isLoading || isSubmitting}
               />
             </label>
