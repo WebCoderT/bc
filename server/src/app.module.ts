@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
+import { AppProfileModule } from './app-profile/app-profile.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { DatabaseSeedService } from './database/database-seed.service';
 import { typeOrmModuleOptions } from './database/typeorm.config';
 import { MemberModule } from './member/member.module';
 import { PublicModule } from './public/public.module';
@@ -20,6 +22,7 @@ import { BetModule } from './bet/bet.module';
   imports: [
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot(typeOrmModuleOptions),
+    AppProfileModule,
     UsersModule,
     AuthModule,
     PublicModule,
@@ -33,9 +36,9 @@ import { BetModule } from './bet/bet.module';
     BetModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DatabaseSeedService],
 })
 /**
  * 应用根模块，负责汇总数据库连接和各业务子模块。
  */
-export class AppModule {}
+export class AppModule { }

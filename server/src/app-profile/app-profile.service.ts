@@ -23,7 +23,11 @@ export class AppProfileService {
   constructor(
     @InjectRepository(AppProfileEntity)
     private readonly appProfileRepository: Repository<AppProfileEntity>,
-  ) {}
+  ) { }
+
+  async ensureProfileInitialized() {
+    await this.ensureProfile();
+  }
 
   async getProfile() {
     const profile = await this.ensureProfile();

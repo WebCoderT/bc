@@ -20,6 +20,30 @@ type UpdateUserInput = {
   createdAt: string;
 };
 
+type DefaultUserSeed = {
+  username: string;
+  password: string;
+  role: Role;
+};
+
+const DEFAULT_USER_SEEDS: DefaultUserSeed[] = [
+  {
+    username: 'normal_demo',
+    password: 'User@123',
+    role: Role.User,
+  },
+  {
+    username: 'vip_demo',
+    password: 'Vip@123',
+    role: Role.Vip,
+  },
+  {
+    username: 'admin_root',
+    password: 'Admin@123',
+    role: Role.Admin,
+  },
+];
+
 @Injectable()
 /**
  * 用户服务负责用户创建、查询、后台分页和安全用户对象转换。
@@ -59,6 +83,29 @@ export class UsersService {
     });
 
     return this.usersRepository.save(user);
+  }
+
+  async ensureDemoUsers() {
+    for (const seed of DEFAULT_USER_SEEDS) {
+      const existingUser = await this.usersRepository.findOne({
+        where: { username: seed.username },
+      });
+
+      if (existingUser) {
+        continue;
+      }
+
+      const user = this.usersRepository.create({
+        username: seed.username,
+        avatar: DEFAULT_USER_AVATAR,
+        passwordHash: await bcrypt.hash(seed.password, 10),
+        role: seed.role,
+        rechargeAmount: 0,
+        bonusAmount: 0,
+      });
+
+      await this.usersRepository.save(user);
+    }
   }
 
   /**
