@@ -9,6 +9,7 @@ import {
   type AdminGameControllerGetGamesParams,
   type AdminUsersControllerGetUsersParams,
   CreateGameModelDtoStatusEnum,
+  CreateGameDtoOddsModeEnum,
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
   type CreateGameDto,
@@ -17,6 +18,7 @@ import {
   type GameResponseDto,
   type GameModelResponseDto,
   GameModelResponseDtoStatusEnum,
+  GameResponseDtoOddsModeEnum,
   GameResponseDtoStatusEnum,
   type LoginResponseDto,
   type NavigationResponseDto,
@@ -29,6 +31,7 @@ import {
   UpdateGameModelDtoStatusEnum,
   type UpdateAdminUserDto,
   type UpdateGameDto,
+  UpdateGameDtoOddsModeEnum,
   type UpdateNavigatorDto,
   UpdateNavigatorDtoStatusEnum,
   UpdateNavigatorDtoTypeEnum,
@@ -89,6 +92,8 @@ export type AdminGame = GameResponseDto;
 
 export type AdminGameStatus = GameResponseDto["status"];
 
+export type AdminGameOddsMode = GameResponseDto["oddsMode"];
+
 export type PaginatedAdminGames = SwaggerEnvelopeData<
   SwaggerGamesApi["adminGameControllerGetGames"]
 >;
@@ -125,11 +130,16 @@ export type AdminGameCurrentIssue = {
   status: string;
 };
 
-export type SaveAdminGameInput = Omit<CreateGameDto, "status"> & {
+export type SaveAdminGameInput = Omit<CreateGameDto, "status" | "oddsMode"> & {
+  oddsMode?: AdminGameOddsMode;
   status?: AdminGameStatus;
 };
 
-export type UpdateAdminGameInput = Omit<UpdateGameDto, "status"> & {
+export type UpdateAdminGameInput = Omit<
+  UpdateGameDto,
+  "status" | "oddsMode"
+> & {
+  oddsMode?: AdminGameOddsMode;
   status?: AdminGameStatus;
 };
 
@@ -205,15 +215,18 @@ export type AdminSession = LoginResponseDto;
 
 export {
   CreateGameModelDtoStatusEnum,
+  CreateGameDtoOddsModeEnum,
   CreateNavigatorDtoStatusEnum,
   CreateNavigatorDtoTypeEnum,
   GameModelResponseDtoStatusEnum,
+  GameResponseDtoOddsModeEnum,
   GameResponseDtoStatusEnum,
   NavigationResponseDtoStatusEnum,
   NavigationResponseDtoTypeEnum,
   RoleEnum,
   StatusEnum,
   UpdateGameModelDtoStatusEnum,
+  UpdateGameDtoOddsModeEnum,
   UpdateNavigatorDtoStatusEnum,
   UpdateNavigatorDtoTypeEnum,
   UpdateAdminUserDtoRoleEnum,
@@ -332,6 +345,7 @@ function normalizeAdminGameModel(
 function toSwaggerCreateGameInput(input: SaveAdminGameInput): CreateGameDto {
   return {
     ...input,
+    oddsMode: input.oddsMode as unknown as CreateGameDto["oddsMode"],
     status: input.status as unknown as CreateGameDto["status"],
   };
 }
@@ -339,6 +353,7 @@ function toSwaggerCreateGameInput(input: SaveAdminGameInput): CreateGameDto {
 function toSwaggerUpdateGameInput(input: UpdateAdminGameInput): UpdateGameDto {
   return {
     ...input,
+    oddsMode: input.oddsMode as unknown as UpdateGameDto["oddsMode"],
     status: input.status as unknown as UpdateGameDto["status"],
   };
 }

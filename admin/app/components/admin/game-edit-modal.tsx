@@ -10,7 +10,10 @@ import type {
   SaveAdminGameInput,
   UpdateAdminGameInput,
 } from "@/app/lib/admin-api";
-import { GameResponseDtoStatusEnum } from "@/app/lib/admin-api";
+import {
+  GameResponseDtoOddsModeEnum,
+  GameResponseDtoStatusEnum,
+} from "@/app/lib/admin-api";
 
 type GameFormInput = SaveAdminGameInput | UpdateAdminGameInput;
 
@@ -21,6 +24,8 @@ type GameFormState = {
   category: string;
   gameModelId: string;
   drawInterval: string;
+  oddsMode: GameResponseDtoOddsModeEnum;
+  fixedOdds: string;
   status: AdminGameStatus;
 };
 
@@ -32,6 +37,8 @@ function createEmptyGameInput(): GameFormState {
     category: "",
     gameModelId: "",
     drawInterval: "60",
+    oddsMode: GameResponseDtoOddsModeEnum.Fixed,
+    fixedOdds: "1.98",
     status: GameResponseDtoStatusEnum.Online,
   };
 }
@@ -48,6 +55,8 @@ function createGameFormState(game?: AdminGame | null): GameFormState {
     category: String(game.category),
     gameModelId: game.gameModelId,
     drawInterval: String(game.drawInterval),
+    oddsMode: game.oddsMode,
+    fixedOdds: game.fixedOdds === null ? "" : String(game.fixedOdds),
     status: game.status,
   };
 }
@@ -56,6 +65,7 @@ function buildGameFormInput(formState: GameFormState): GameFormInput | null {
   const category = Number(formState.category);
   const gameModelId = formState.gameModelId.trim();
   const drawInterval = Number(formState.drawInterval);
+  const fixedOdds = Number(formState.fixedOdds);
 
   if (!Number.isInteger(category) || category < 1) {
     return null;
@@ -69,6 +79,13 @@ function buildGameFormInput(formState: GameFormState): GameFormInput | null {
     return null;
   }
 
+  if (
+    formState.oddsMode === GameResponseDtoOddsModeEnum.Fixed &&
+    (!Number.isFinite(fixedOdds) || fixedOdds <= 0)
+  ) {
+    return null;
+  }
+
   return {
     ...formState,
     label: formState.label.trim(),
@@ -77,6 +94,12 @@ function buildGameFormInput(formState: GameFormState): GameFormInput | null {
     category,
     gameModelId,
     drawInterval,
+    oddsMode: formState.oddsMode,
+    fixedOdds:
+      formState.oddsMode === GameResponseDtoOddsModeEnum.Fixed
+        ? fixedOdds
+        : undefined,
+    customPayoutConfig: undefined,
     status: formState.status,
   };
 }
@@ -143,6 +166,12 @@ export function GameEditModal({
           </p>
           <p className="mt-2 text-slate-500">
             开奖间隔：{formState.drawInterval || "未设置"} 秒
+          </p>
+          <p className="mt-2 text-slate-500">
+            赔率模式：
+            {formState.oddsMode === GameResponseDtoOddsModeEnum.Fixed
+              ? `固定赔率 · ${formState.fixedOdds || "未设置"}`
+              : "自定义赔付（预留）"}
           </p>
         </div>
 
@@ -271,6 +300,63 @@ export function GameEditModal({
               required
             />
           </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              赔率模式
+            </span>
+            <select
+              value={formState.oddsMode}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  oddsMode: event.target.value as GameResponseDtoOddsModeEnum,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white"
+            >
+              <option value={GameResponseDtoOddsModeEnum.Fixed}>
+                固定赔率
+              </option>
+              <option value={GameResponseDtoOddsModeEnum.Custom}>
+                自定义赔付（预留）
+              </option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-600">
+              固定赔率
+            </span>
+            <input
+              type="number"
+              min={0.0001}
+              step={0.0001}
+              value={formState.fixedOdds}
+              onChange={(event) =>
+                setFormState((current) => ({
+                  ...current,
+                  fixedOdds: event.target.value,
+                }))
+              }
+              disabled={
+                formState.oddsMode !== GameResponseDtoOddsModeEnum.Fixed
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-violet-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder="例如 1.98"
+              required={
+                formState.oddsMode === GameResponseDtoOddsModeEnum.Fixed
+              }
+            />
+          </label>
+
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+            <p className="font-medium text-slate-700">自定义赔付配置</p>
+            <p className="mt-2">
+              当前阶段先预留为单游戏可切换的赔付模式入口，后续可在这里补充 JSON
+              规则、公式或分段赔付配置。
+            </p>
+          </div>
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-600">

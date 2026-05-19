@@ -3,6 +3,7 @@ import type { AdminGame } from "@/app/lib/admin-api";
 import { formatDate } from "@/app/utils/admin-format";
 import {
   GAME_TABLE_COLUMN_COUNT,
+  getGameOddsText,
   getGamePreviewText,
   getGameStatusClassName,
   getGameStatusText,
@@ -89,6 +90,7 @@ export function GamesTable({
             <th className="px-4 py-3 font-medium">分类</th>
             <th className="px-4 py-3 font-medium">游戏模型</th>
             <th className="px-4 py-3 font-medium">开奖间隔</th>
+            <th className="px-4 py-3 font-medium">赔率配置</th>
             <th className="px-4 py-3 font-medium">状态</th>
             <th className="px-4 py-3 font-medium">简介</th>
             <th className="px-4 py-3 font-medium">图标</th>
@@ -176,6 +178,8 @@ function GameTableRow({
       </td>
 
       <td className="px-4 py-4 text-slate-600">{game.drawInterval} 秒</td>
+
+      <td className="px-4 py-4 text-slate-600">{getGameOddsText(game)}</td>
 
       <td className="px-4 py-4">
         <span

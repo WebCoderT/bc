@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
+import {
+  FloatingNotificationBubbles,
+  useFloatingNotificationBubbles,
+} from "@/app/components/admin/ui/floating-notification-bubbles";
 import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import { createAdminRealtimeSocket } from "@/app/lib/admin-realtime";
 import type {
@@ -10,16 +14,6 @@ import type {
   AdminGameDrawRecord,
 } from "@/app/lib/admin-api";
 import { formatDate } from "@/app/utils/admin-format";
-
-type RealtimeConnectionStage =
-  | "idle"
-  | "connecting"
-  | "authenticated"
-  | "joining-room"
-  | "joined-room"
-  | "reconnecting"
-  | "disconnected"
-  | "error";
 
 function formatOpenCode(record: AdminGameDrawRecord) {
   if (Array.isArray(record.openCodeJson) && record.openCodeJson.length > 0) {
@@ -85,11 +79,9 @@ export function GameDrawRecordsModal({
   const [liveCurrentIssue, setLiveCurrentIssue] =
     useState<AdminGameCurrentIssue | null>(null);
   const [socketError, setSocketError] = useState("");
-  const [roomMessage, setRoomMessage] = useState("");
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(true);
-  const [connectionStage, setConnectionStage] =
-    useState<RealtimeConnectionStage>("idle");
-  const [connectionMessage, setConnectionMessage] = useState("等待连接");
+  const { items: notificationItems, pushBubble } =
+    useFloatingNotificationBubbles();
 
   const serverTimeOffsetMs = useMemo(
     () => resolveServerTimeOffset(liveCurrentIssue?.serverTime),
@@ -105,24 +97,6 @@ export function GameDrawRecordsModal({
       ),
     [liveCurrentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
   );
-  const connectionToneClassName = useMemo(() => {
-    if (connectionStage === "joined-room") {
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
-    }
-
-    if (connectionStage === "error") {
-      return "border-rose-200 bg-rose-50 text-rose-700";
-    }
-
-    if (
-      connectionStage === "reconnecting" ||
-      connectionStage === "disconnected"
-    ) {
-      return "border-amber-200 bg-amber-50 text-amber-700";
-    }
-
-    return "border-sky-200 bg-sky-50 text-sky-700";
-  }, [connectionStage]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -137,19 +111,31 @@ export function GameDrawRecordsModal({
   useEffect(() => {
     const socket = createAdminRealtimeSocket(session.accessToken);
 
-    setConnectionStage("connecting");
-    setConnectionMessage("实时连接建立中...");
+    pushBubble({
+      title: "实时连接",
+      message: "实时连接建立中...",
+      tone: "info",
+      durationMs: 2200,
+    });
 
     socket.on("connect", () => {
-      setConnectionStage("connecting");
-      setConnectionMessage("连接成功，等待服务器认证...");
+      pushBubble({
+        title: "实时连接",
+        message: "连接成功，等待服务器认证...",
+        tone: "info",
+        durationMs: 2200,
+      });
     });
 
     socket.on("socket:ready", () => {
       setIsSnapshotLoading(true);
       setSocketError("");
-      setConnectionStage("authenticated");
-      setConnectionMessage("认证成功，正在进入游戏房间...");
+      pushBubble({
+        title: "身份认证",
+        message: "认证成功，正在进入游戏房间...",
+        tone: "info",
+        durationMs: 2400,
+      });
       socket.emit("game:join", { gameId: game.id });
     });
 
@@ -160,9 +146,12 @@ export function GameDrawRecordsModal({
           return;
         }
 
-        setConnectionStage("joined-room");
-        setConnectionMessage("已进入游戏房间，等待实时开奖推送");
-        setRoomMessage(payload.message);
+        pushBubble({
+          title: "房间提示",
+          message: payload.message,
+          tone: "success",
+          durationMs: 3000,
+        });
       },
     );
 
@@ -179,8 +168,12 @@ export function GameDrawRecordsModal({
 
         setSocketError("");
         setIsSnapshotLoading(false);
-        setConnectionStage("joined-room");
-        setConnectionMessage("实时连接正常，已同步房间快照");
+        pushBubble({
+          title: "房间同步",
+          message: "实时连接正常，已同步房间快照",
+          tone: "success",
+          durationMs: 2200,
+        });
         setLiveCurrentIssue(payload.currentIssue);
         setLiveRecords(payload.records);
       },
@@ -197,8 +190,6 @@ export function GameDrawRecordsModal({
           return;
         }
 
-        setConnectionStage("joined-room");
-        setConnectionMessage("实时连接正常，已收到最新开奖推送");
         setLiveCurrentIssue(payload.currentIssue);
         setLiveRecords((current) => {
           const nextRecords = [
@@ -212,43 +203,67 @@ export function GameDrawRecordsModal({
 
     socket.on("game:error", (payload: { message: string }) => {
       setIsSnapshotLoading(false);
-      setConnectionStage("error");
-      setConnectionMessage(payload.message);
+      pushBubble({
+        title: "房间异常",
+        message: payload.message,
+        tone: "error",
+        durationMs: 3600,
+      });
       setSocketError(payload.message);
     });
 
     socket.on("socket:error", (payload: { message: string }) => {
       setIsSnapshotLoading(false);
-      setConnectionStage("error");
-      setConnectionMessage(payload.message);
+      pushBubble({
+        title: "连接异常",
+        message: payload.message,
+        tone: "error",
+        durationMs: 3600,
+      });
       setSocketError(payload.message);
     });
 
     socket.on("disconnect", (reason: string) => {
-      setConnectionStage("disconnected");
-      setConnectionMessage(`实时连接已断开：${reason}`);
+      pushBubble({
+        title: "连接断开",
+        message: `实时连接已断开：${reason}`,
+        tone: "warning",
+        durationMs: 3200,
+      });
     });
 
     socket.io.on("reconnect_attempt", (attempt) => {
-      setConnectionStage("reconnecting");
-      setConnectionMessage(`实时连接重试中，第 ${attempt} 次...`);
+      pushBubble({
+        title: "正在重连",
+        message: `实时连接重试中，第 ${attempt} 次...`,
+        tone: "warning",
+        durationMs: 2400,
+      });
     });
 
     socket.io.on("reconnect", () => {
-      setConnectionStage("connecting");
-      setConnectionMessage("重连成功，等待服务器重新认证...");
+      pushBubble({
+        title: "重连成功",
+        message: "重连成功，等待服务器重新认证...",
+        tone: "info",
+        durationMs: 2400,
+      });
     });
 
     socket.io.on("reconnect_error", () => {
-      setConnectionStage("reconnecting");
-      setConnectionMessage("重连失败，正在继续尝试...");
+      pushBubble({
+        title: "重连失败",
+        message: "重连失败，正在继续尝试...",
+        tone: "warning",
+        durationMs: 2600,
+      });
     });
 
     return () => {
       socket.emit("game:leave");
       socket.disconnect();
     };
-  }, [game.id, session.accessToken]);
+  }, [game.id, pushBubble, session.accessToken]);
 
   return (
     <ModalShell
@@ -257,19 +272,12 @@ export function GameDrawRecordsModal({
       onClose={onClose}
     >
       <div className="space-y-5">
-        <div
-          className={`rounded-2xl border px-4 py-3 text-sm ${connectionToneClassName}`}
-        >
-          {connectionMessage}
-        </div>
+        <FloatingNotificationBubbles items={notificationItems} />
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <div className="text-sm text-slate-500">
             <p className="font-medium text-slate-900">游戏 ID：{game.id}</p>
             <p className="mt-1">模型：{game.gameModelId}</p>
-            {roomMessage ? (
-              <p className="mt-1 text-emerald-600">{roomMessage}</p>
-            ) : null}
             <p className="mt-1">
               当前期号：{liveCurrentIssue?.currentIssue ?? "--"}
             </p>

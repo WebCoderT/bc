@@ -21,10 +21,7 @@ export function P5History({
     <SurfaceCard className="h-full" padding="md">
       <div className="flex h-full flex-col gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
-            RECENT RECORDS
-          </p>
-          <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
+          <h3 className="text-xl font-semibold text-[var(--foreground)]">
             历史记录
           </h3>
         </div>

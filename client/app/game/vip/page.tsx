@@ -157,25 +157,6 @@ export default function ProfileHome() {
             ))}
           </div>
         </SurfaceCard>
-
-        <SurfaceCard padding="lg">
-          <SectionHeading eyebrow="ACCOUNT NOTICE" title="账户说明" />
-          <div className="mt-6 space-y-3">
-            {[
-              "当前个人中心字段直接来自服务端 `SafeUserDto`。",
-              "登录态会在进入 `/game` 时通过 `/api/auth/profile` 自动校验。",
-              "余额充值与提现入口已保留，可继续对接真实资金接口。",
-              "如服务端补充更多资料字段，重新生成 Swagger 后可直接扩展展示。",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[1.35rem] border border-[var(--border)] bg-[var(--panel)] p-4 text-sm leading-7 text-[var(--foreground)]"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </SurfaceCard>
       </section>
     </main>
   );

@@ -4,8 +4,8 @@ import {
   type AdminNavigation,
 } from "@/app/lib/admin-api";
 // 游戏列表页面相关的工具函数和常量。
-// 游戏列表表格一共 10 列，其中操作列固定宽度 120px，其他列等分剩余空间。
-export const GAME_TABLE_COLUMN_COUNT = 10;
+// 游戏列表表格一共 11 列，其中操作列固定宽度 120px，其他列等分剩余空间。
+export const GAME_TABLE_COLUMN_COUNT = 11;
 // 游戏分类选项来源于导航接口，且仅限于一级分类，因此需要把嵌套的导航数据扁平化成列表供表单选择。
 export function flattenGameCategoryOptions(items: AdminNavigation[]) {
   return items.flatMap((item) => [item, ...item.children]);
@@ -34,4 +34,14 @@ export function getGameStatusText(status: AdminGame["status"]) {
     [GameResponseDtoStatusEnum.Offline]: "离线",
   };
   return statusTextMap[status] || "未知";
+}
+
+export function getGameOddsText(game: AdminGame) {
+  if (game.oddsMode === "custom") {
+    return "自定义赔付";
+  }
+
+  return game.fixedOdds === null
+    ? "固定赔率未设置"
+    : `固定赔率 ${game.fixedOdds}`;
 }

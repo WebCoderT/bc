@@ -81,6 +81,18 @@ export interface GameResponseDto {
    * @example 60
    */
   drawInterval: number;
+  /** @example "fixed" */
+  oddsMode: GameResponseDtoOddsModeEnum;
+  /**
+   * 固定赔率值，若为自定义赔付则为空
+   * @example 1.98
+   */
+  fixedOdds: number | null;
+  /**
+   * 自定义赔付配置，当前仅预留字段
+   * @example {"formula":"future-config"}
+   */
+  customPayoutConfig: Record<string, any> | null;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */
@@ -136,6 +148,11 @@ export enum SafeUserDtoRoleEnum {
 export enum GameResponseDtoStatusEnum {
   Online = "online",
   Offline = "offline",
+}
+
+export enum GameResponseDtoOddsModeEnum {
+  Fixed = "fixed",
+  Custom = "custom",
 }
 
 /** @example "顶部导航" */

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GameType } from '../enums/game-type.enum';
+import { GameOddsMode } from '../enums/game-odds-mode.enum';
 
 /**
  * 游戏响应 DTO，定义游戏对外返回字段。
@@ -28,6 +29,27 @@ export class GameResponseDto {
 
   @ApiProperty({ example: 60, description: '开奖间隔时间，单位秒' })
   drawInterval!: number;
+
+  @ApiProperty({
+    enum: GameOddsMode,
+    example: GameOddsMode.FIXED,
+    description: '赔率模式',
+  })
+  oddsMode!: GameOddsMode;
+
+  @ApiProperty({
+    example: 1.98,
+    description: '固定赔率值，若为自定义赔付则为空',
+    nullable: true,
+  })
+  fixedOdds!: number | null;
+
+  @ApiProperty({
+    example: { formula: 'future-config' },
+    description: '自定义赔付配置，当前仅预留字段',
+    nullable: true,
+  })
+  customPayoutConfig!: Record<string, unknown> | null;
 
   @ApiProperty({ example: '2026-05-16T06:30:00.000Z' })
   createdAt!: string;

@@ -139,10 +139,7 @@ export function GameLayoutShell({
 
           <aside className="h-full space-y-5 overflow-hidden">
             <SurfaceCard className="p-5" tone="card" padding="md">
-              <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
-                RIGHT NAV
-              </p>
-              <h3 className="mt-3 text-xl font-semibold">钱包与快捷入口</h3>
+              <h3 className="text-xl font-semibold">钱包</h3>
               <div className="mt-5 space-y-3">
                 {walletSummary.map((item) => (
                   <div
@@ -159,10 +156,8 @@ export function GameLayoutShell({
             </SurfaceCard>
 
             <SurfaceCard className="p-5" tone="card" padding="md">
-              <p className="text-xs font-semibold tracking-[0.28em] text-[var(--accent)]">
-                SERVICE PANEL
-              </p>
-              <div className="mt-4 space-y-3">
+              <h3 className="text-xl font-semibold">快捷入口</h3>
+              <div className="space-y-3 mt-4">
                 {[
                   "余额充值入口",
                   "余额提现入口",

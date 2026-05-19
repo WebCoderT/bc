@@ -1,14 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsObject,
   IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { GameType } from '../enums/game-type.enum';
+import { GameOddsMode } from '../enums/game-odds-mode.enum';
 
 /**
  * 创建游戏 DTO，约束后台创建游戏时允许提交的字段。
@@ -62,6 +66,38 @@ export class CreateGameDto {
   @IsInt()
   @Min(1)
   drawInterval!: number;
+
+  @ApiPropertyOptional({
+    description: '赔率模式，固定赔率或自定义赔付',
+    enum: GameOddsMode,
+    example: GameOddsMode.FIXED,
+    default: GameOddsMode.FIXED,
+  })
+  @IsOptional()
+  @IsEnum(GameOddsMode)
+  oddsMode?: GameOddsMode;
+
+  @ApiPropertyOptional({
+    description: '固定赔率值，赔率模式为 fixed 时生效',
+    example: 1.98,
+  })
+  @ValidateIf(
+    (payload: CreateGameDto) => payload.oddsMode !== GameOddsMode.CUSTOM,
+  )
+  @IsNumber({ maxDecimalPlaces: 4 })
+  @Min(0.0001)
+  fixedOdds?: number;
+
+  @ApiPropertyOptional({
+    description: '自定义赔付配置，当前仅预留字段',
+    example: { formula: 'future-config' },
+    type: 'object',
+    additionalProperties: true,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsObject()
+  customPayoutConfig?: Record<string, unknown>;
 
   @ApiPropertyOptional({
     description: '游戏状态',

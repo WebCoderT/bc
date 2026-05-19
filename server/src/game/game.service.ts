@@ -14,6 +14,7 @@ import { ListGamesQueryDto } from './dto/list-games-query.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
 import { GameType } from './enums/game-type.enum';
+import { GameOddsMode } from './enums/game-odds-mode.enum';
 import { GameResponseDto } from './dto/game-response.dto';
 import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { NavigationType } from '../navigator/enums/navigation-type.enum';
@@ -30,6 +31,9 @@ type NormalizedGameInput = {
   gameModelId: string;
   drawInterval: number;
   status: GameType;
+  oddsMode: GameOddsMode;
+  fixedOdds: number | null;
+  customPayoutConfig: Record<string, unknown> | null;
 };
 
 @Injectable()
@@ -57,6 +61,7 @@ export class GameService {
     const normalizedInput = this.normalizeInput(createGameDto);
     await this.ensureCategoryIsValid(normalizedInput.categoryId);
     await this.ensureGameModelIsValid(normalizedInput.gameModelId);
+    this.ensureOddsConfigIsValid(normalizedInput);
     const existingGame = await this.gameRepository.findOne({
       where: { label: normalizedInput.label },
     });
@@ -276,6 +281,7 @@ export class GameService {
     const normalizedInput = this.normalizeInput(updateGameDto, game);
     await this.ensureCategoryIsValid(normalizedInput.categoryId);
     await this.ensureGameModelIsValid(normalizedInput.gameModelId);
+    this.ensureOddsConfigIsValid(normalizedInput);
 
     if (normalizedInput.label !== game.label) {
       const existingGame = await this.gameRepository.findOne({
@@ -343,7 +349,37 @@ export class GameService {
           ? input.drawInterval
           : Number(fallback?.drawInterval ?? 0),
       status: input.status || fallback?.status || GameType.ONLINE,
+      oddsMode: input.oddsMode || fallback?.oddsMode || GameOddsMode.FIXED,
+      fixedOdds:
+        typeof input.fixedOdds === 'number'
+          ? input.fixedOdds
+          : typeof fallback?.fixedOdds === 'number'
+            ? Number(fallback.fixedOdds)
+            : null,
+      customPayoutConfig:
+        input.customPayoutConfig ?? fallback?.customPayoutConfig ?? null,
     };
+  }
+
+  /**
+   * 校验赔率配置是否合法。
+   */
+  private ensureOddsConfigIsValid(input: NormalizedGameInput) {
+    if (input.oddsMode === GameOddsMode.FIXED) {
+      if (typeof input.fixedOdds !== 'number' || input.fixedOdds <= 0) {
+        throw new BadRequestException('固定赔率必须大于 0');
+      }
+
+      return;
+    }
+
+    if (
+      input.customPayoutConfig !== null &&
+      (typeof input.customPayoutConfig !== 'object' ||
+        Array.isArray(input.customPayoutConfig))
+    ) {
+      throw new BadRequestException('自定义赔付配置格式不正确');
+    }
   }
 
   /**
@@ -426,6 +462,12 @@ export class GameService {
       gameModel: { id: input.gameModelId } as GameModel,
       drawInterval: input.drawInterval,
       status: input.status,
+      oddsMode: input.oddsMode,
+      fixedOdds: input.oddsMode === GameOddsMode.FIXED ? input.fixedOdds : null,
+      customPayoutConfig:
+        input.oddsMode === GameOddsMode.CUSTOM
+          ? input.customPayoutConfig
+          : null,
     };
   }
 
@@ -476,6 +518,10 @@ export class GameService {
       gameModelId: game.gameModelId ?? this.extractGameModelId(game.gameModel),
       status: game.status,
       drawInterval: Number(game.drawInterval ?? 0),
+      oddsMode: game.oddsMode ?? GameOddsMode.FIXED,
+      fixedOdds:
+        typeof game.fixedOdds === 'number' ? Number(game.fixedOdds) : null,
+      customPayoutConfig: game.customPayoutConfig ?? null,
       createdAt:
         game.createdAt instanceof Date
           ? game.createdAt.toISOString()

@@ -90,6 +90,18 @@ export interface GameResponseDto {
    * @example 60
    */
   drawInterval: number;
+  /** @example "fixed" */
+  oddsMode: GameResponseDtoOddsModeEnum;
+  /**
+   * 固定赔率值，若为自定义赔付则为空
+   * @example 1.98
+   */
+  fixedOdds: number | null;
+  /**
+   * 自定义赔付配置，当前仅预留字段
+   * @example {"formula":"future-config"}
+   */
+  customPayoutConfig: Record<string, any> | null;
   /** @example "2026-05-16T06:30:00.000Z" */
   createdAt: string;
   /** @example "2026-05-16T08:00:00.000Z" */
@@ -127,6 +139,22 @@ export interface CreateGameDto {
    * @example 60
    */
   drawInterval: number;
+  /**
+   * 赔率模式，固定赔率或自定义赔付
+   * @default "fixed"
+   * @example "fixed"
+   */
+  oddsMode?: CreateGameDtoOddsModeEnum;
+  /**
+   * 固定赔率值，赔率模式为 fixed 时生效
+   * @example 1.98
+   */
+  fixedOdds?: number;
+  /**
+   * 自定义赔付配置，当前仅预留字段
+   * @example {"formula":"future-config"}
+   */
+  customPayoutConfig?: Record<string, any>;
   /**
    * 游戏状态
    * @default "online"
@@ -166,6 +194,22 @@ export interface UpdateGameDto {
    * @example 60
    */
   drawInterval?: number;
+  /**
+   * 赔率模式，固定赔率或自定义赔付
+   * @default "fixed"
+   * @example "fixed"
+   */
+  oddsMode?: UpdateGameDtoOddsModeEnum;
+  /**
+   * 固定赔率值，赔率模式为 fixed 时生效
+   * @example 1.98
+   */
+  fixedOdds?: number;
+  /**
+   * 自定义赔付配置，当前仅预留字段
+   * @example {"formula":"future-config"}
+   */
+  customPayoutConfig?: Record<string, any>;
   /**
    * 游戏状态
    * @default "online"
@@ -351,6 +395,11 @@ export enum GameResponseDtoStatusEnum {
   Offline = "offline",
 }
 
+export enum GameResponseDtoOddsModeEnum {
+  Fixed = "fixed",
+  Custom = "custom",
+}
+
 /**
  * 游戏状态
  * @default "online"
@@ -361,6 +410,11 @@ export enum CreateGameDtoStatusEnum {
   Offline = "offline",
 }
 
+export enum CreateGameDtoOddsModeEnum {
+  Fixed = "fixed",
+  Custom = "custom",
+}
+
 /**
  * 游戏状态
  * @default "online"
@@ -369,6 +423,11 @@ export enum CreateGameDtoStatusEnum {
 export enum UpdateGameDtoStatusEnum {
   Online = "online",
   Offline = "offline",
+}
+
+export enum UpdateGameDtoOddsModeEnum {
+  Fixed = "fixed",
+  Custom = "custom",
 }
 
 /** @example "active" */
