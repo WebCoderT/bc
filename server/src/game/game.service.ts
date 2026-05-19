@@ -19,6 +19,7 @@ import { NavigationEntity } from '../navigator/entities/navigator.entity';
 import { NavigationType } from '../navigator/enums/navigation-type.enum';
 import { NavigationStatus } from '../navigator/enums/navigation-status.enum';
 import { resolveNavigationPath } from '../navigator/utils/navigation-path.util';
+import { GameDrawService } from '../game-draw/game-draw.service';
 import { GameModel } from '../game-model/entities/game-model.entity';
 
 type NormalizedGameInput = {
@@ -46,6 +47,7 @@ export class GameService {
     private readonly navigationRepository: Repository<NavigationEntity>,
     @InjectRepository(GameModel)
     private readonly gameModelRepository: Repository<GameModel>,
+    private readonly gameDrawService: GameDrawService,
   ) {}
 
   /**
@@ -67,6 +69,13 @@ export class GameService {
       this.toEntityPayload(normalizedInput),
     );
     const savedGame = await this.gameRepository.save(game);
+
+    try {
+      await this.gameDrawService.initializeGameResources(savedGame.id);
+    } catch (error) {
+      await this.gameRepository.remove(savedGame);
+      throw error;
+    }
 
     return this.findOne(savedGame.id);
   }
@@ -280,6 +289,8 @@ export class GameService {
 
     Object.assign(game, this.toEntityPayload(normalizedInput));
     const savedGame = await this.gameRepository.save(game);
+
+    await this.gameDrawService.syncGameResources(savedGame.id);
 
     return this.findOne(savedGame.id);
   }

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
+  IsObject,
   IsOptional,
   IsString,
   MaxLength,
@@ -35,6 +36,22 @@ export class CreateGameModelDto {
   @MinLength(1)
   @MaxLength(20)
   version!: string;
+
+  @ApiPropertyOptional({
+    description: '开奖配置JSON',
+    example: { digits: 5, min: 0, max: 9, allowRepeat: true },
+  })
+  @IsOptional()
+  @IsObject()
+  drawConfigJson?: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    description: '开奖结果结构描述JSON',
+    example: { openCode: 'string', resultPayload: { sum: 'number' } },
+  })
+  @IsOptional()
+  @IsObject()
+  resultSchemaJson?: Record<string, unknown>;
 
   @ApiPropertyOptional({
     description: '模型状态',

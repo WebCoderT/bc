@@ -180,6 +180,9 @@ export class GameModelService {
       name: input.name?.trim() || fallback?.name || '',
       description: input.description?.trim() || fallback?.description || '',
       version: input.version?.trim() || fallback?.version || '',
+      drawConfigJson: input.drawConfigJson ?? fallback?.drawConfigJson ?? null,
+      resultSchemaJson:
+        input.resultSchemaJson ?? fallback?.resultSchemaJson ?? null,
       status: input.status || fallback?.status || GameModelStatus.ACTIVE,
     };
   }
@@ -193,6 +196,8 @@ export class GameModelService {
       name: gameModel.name,
       description: gameModel.description,
       version: gameModel.version,
+      drawConfigJson: gameModel.drawConfigJson ?? null,
+      resultSchemaJson: gameModel.resultSchemaJson ?? null,
       status: gameModel.status,
       createdAt:
         gameModel.createdAt instanceof Date

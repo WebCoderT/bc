@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
@@ -9,11 +10,13 @@ import { MemberModule } from './member/member.module';
 import { PublicModule } from './public/public.module';
 import { UsersModule } from './users/users.module';
 import { VipModule } from './vip/vip.module';
+import { GameDrawModule } from './game-draw/game-draw.module';
 import { GameModule } from './game/game.module';
 import { NavigatorModule } from './navigator/navigator.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot(typeOrmModuleOptions),
     UsersModule,
     AuthModule,
@@ -21,6 +24,7 @@ import { NavigatorModule } from './navigator/navigator.module';
     MemberModule,
     VipModule,
     AdminModule,
+    GameDrawModule,
     GameModule,
     NavigatorModule,
   ],

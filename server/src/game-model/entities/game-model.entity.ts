@@ -23,6 +23,24 @@ export class GameModel {
   @Column({ name: 'version', length: 20 })
   version!: string;
 
+  @ApiProperty({
+    description: '开奖配置JSON，如位数、号码范围、是否允许重复',
+    example: { digits: 5, min: 0, max: 9, allowRepeat: true },
+    required: false,
+    nullable: true,
+  })
+  @Column({ name: 'draw_config_json', type: 'json', nullable: true })
+  drawConfigJson!: Record<string, unknown> | null;
+
+  @ApiProperty({
+    description: '开奖结果结构描述JSON',
+    example: { openCode: 'string', resultPayload: { sum: 'number' } },
+    required: false,
+    nullable: true,
+  })
+  @Column({ name: 'result_schema_json', type: 'json', nullable: true })
+  resultSchemaJson!: Record<string, unknown> | null;
+
   @ApiProperty({ description: '模型状态', example: 'active' })
   @Column({
     name: 'status',

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { GameDrawModule } from '../game-draw/game-draw.module';
 import { GameService } from './game.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Game } from './entities/game.entity';
@@ -9,6 +10,7 @@ import { GameModel } from 'src/game-model/entities/game-model.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Game, NavigationEntity, GameModel]),
+    GameDrawModule,
     NavigatorModule,
   ],
   providers: [GameService],

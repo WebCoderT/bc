@@ -17,6 +17,20 @@ export class GameModelResponseDto {
   @ApiProperty({ example: '1.0.0' })
   version!: string;
 
+  @ApiProperty({
+    example: { digits: 5, min: 0, max: 9, allowRepeat: true },
+    required: false,
+    nullable: true,
+  })
+  drawConfigJson!: Record<string, unknown> | null;
+
+  @ApiProperty({
+    example: { openCode: 'string', resultPayload: { sum: 'number' } },
+    required: false,
+    nullable: true,
+  })
+  resultSchemaJson!: Record<string, unknown> | null;
+
   @ApiProperty({ enum: GameModelStatus, example: GameModelStatus.ACTIVE })
   status!: GameModelStatus;
 
