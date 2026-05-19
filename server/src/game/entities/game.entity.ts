@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 import { GameType } from '../enums/game-type.enum';
 import { NavigationEntity } from 'src/navigator/entities/navigator.entity';
 import { GameModel } from 'src/game-model/entities/game-model.entity';
@@ -22,15 +29,21 @@ export class Game {
   description!: string;
 
   @ApiProperty({ description: '游戏图标URL' })
-  @Column({ name: 'icon_url', nullable: true })
-  iconUrl!: string;
+  @Column({ name: 'icon_url', type: 'varchar', nullable: true })
+  iconUrl!: string | null;
 
   @ApiProperty({
     description: '游戏分类，表示游戏所属的类别，必须选择左侧导航栏中的一个分类',
   })
-  @ManyToOne(() => NavigationEntity, (n) => n.id)
-  @Column({ name: 'category_id' })
-  category!: number;
+  @ManyToOne(() => NavigationEntity, {
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'categoryId', referencedColumnName: 'id' })
+  category!: NavigationEntity;
+
+  @RelationId((game: Game) => game.category)
+  categoryId!: number;
 
   @ApiProperty({
     description: '游戏状态，表示游戏当前的运营状态，如运营中、已下线等',
@@ -44,8 +57,14 @@ export class Game {
   status!: GameType;
 
   @ApiProperty({ description: '游戏模型ID' })
-  @ManyToOne(() => GameModel, (gm) => gm.id)
-  @Column({ name: 'game_model_id' })
+  @ManyToOne(() => GameModel, {
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'gameModelId', referencedColumnName: 'id' })
+  gameModel!: GameModel;
+
+  @RelationId((game: Game) => game.gameModel)
   gameModelId!: string;
 
   @ApiProperty({ description: '开奖间隔时间(秒)', example: 60 })

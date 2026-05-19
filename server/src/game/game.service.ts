@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { createPaginatedResult } from '../common/utils/pagination.util';
 import { ApiPaginatedData } from '../common/interfaces/api-response.interface';
 import { CreateGameDto } from './dto/create-game.dto';
@@ -20,6 +20,16 @@ import { NavigationType } from '../navigator/enums/navigation-type.enum';
 import { NavigationStatus } from '../navigator/enums/navigation-status.enum';
 import { resolveNavigationPath } from '../navigator/utils/navigation-path.util';
 import { GameModel } from '../game-model/entities/game-model.entity';
+
+type NormalizedGameInput = {
+  label: string;
+  description: string;
+  iconUrl: string;
+  categoryId: number;
+  gameModelId: string;
+  drawInterval: number;
+  status: GameType;
+};
 
 @Injectable()
 /**
@@ -43,7 +53,7 @@ export class GameService {
    */
   async create(createGameDto: CreateGameDto) {
     const normalizedInput = this.normalizeInput(createGameDto);
-    await this.ensureCategoryIsValid(normalizedInput.category);
+    await this.ensureCategoryIsValid(normalizedInput.categoryId);
     await this.ensureGameModelIsValid(normalizedInput.gameModelId);
     const existingGame = await this.gameRepository.findOne({
       where: { label: normalizedInput.label },
@@ -53,10 +63,12 @@ export class GameService {
       throw new ConflictException('游戏名称已存在');
     }
 
-    const game = this.gameRepository.create(normalizedInput);
+    const game = this.gameRepository.create(
+      this.toEntityPayload(normalizedInput),
+    );
     const savedGame = await this.gameRepository.save(game);
 
-    return this.toGameResponse(savedGame);
+    return this.findOne(savedGame.id);
   }
 
   /**
@@ -67,20 +79,26 @@ export class GameService {
     const pageSize = query?.pageSize ?? 10;
     const keyword = query?.keyword?.trim();
 
-    const where = keyword
-      ? [
-          { label: Like(`%${keyword}%`) },
-          { description: Like(`%${keyword}%`) },
-          { gameModelId: Like(`%${keyword}%`) },
-        ]
-      : undefined;
+    const queryBuilder = this.gameRepository
+      .createQueryBuilder('game')
+      .leftJoinAndSelect('game.category', 'category')
+      .leftJoinAndSelect('game.gameModel', 'gameModel');
 
-    const [games, total] = await this.gameRepository.findAndCount({
-      where,
-      order: { updatedAt: 'DESC', id: 'ASC' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
+    if (keyword) {
+      queryBuilder.where(
+        '(game.label LIKE :keyword OR game.description LIKE :keyword OR gameModel.id LIKE :keyword)',
+        {
+          keyword: `%${keyword}%`,
+        },
+      );
+    }
+
+    const [games, total] = await queryBuilder
+      .orderBy('game.updatedAt', 'DESC')
+      .addOrderBy('game.id', 'ASC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
 
     return createPaginatedResult(
       games.map((game) => this.toGameResponse(game)),
@@ -94,7 +112,12 @@ export class GameService {
    * 根据游戏 ID 查询单个游戏详情。
    */
   async findOne(id: number) {
-    const game = await this.gameRepository.findOne({ where: { id } });
+    const game = await this.gameRepository
+      .createQueryBuilder('game')
+      .leftJoinAndSelect('game.category', 'category')
+      .leftJoinAndSelect('game.gameModel', 'gameModel')
+      .where('game.id = :id', { id })
+      .getOne();
 
     if (!game) {
       throw new NotFoundException('游戏不存在');
@@ -133,13 +156,15 @@ export class GameService {
 
     const queryBuilder = this.gameRepository
       .createQueryBuilder('game')
-      .where('game.category IN (:...categoryIds)', {
+      .leftJoinAndSelect('game.category', 'category')
+      .leftJoinAndSelect('game.gameModel', 'gameModel')
+      .where('category.id IN (:...categoryIds)', {
         categoryIds,
       });
 
     if (keyword) {
       queryBuilder.andWhere(
-        '(game.label LIKE :keyword OR game.description LIKE :keyword OR game.gameModelId LIKE :keyword)',
+        '(game.label LIKE :keyword OR game.description LIKE :keyword OR gameModel.id LIKE :keyword)',
         {
           keyword: `%${keyword}%`,
         },
@@ -203,12 +228,16 @@ export class GameService {
 
     const groupedItems = await Promise.all(
       childNavigations.map(async (navigation) => {
-        const [games, gamesTotal] = await this.gameRepository.findAndCount({
-          where: { category: navigation.id },
-          order: { updatedAt: 'DESC', id: 'ASC' },
-          skip: (gamePage - 1) * gamePageSize,
-          take: gamePageSize,
-        });
+        const [games, gamesTotal] = await this.gameRepository
+          .createQueryBuilder('game')
+          .leftJoinAndSelect('game.category', 'category')
+          .leftJoinAndSelect('game.gameModel', 'gameModel')
+          .where('category.id = :categoryId', { categoryId: navigation.id })
+          .orderBy('game.updatedAt', 'DESC')
+          .addOrderBy('game.id', 'ASC')
+          .skip((gamePage - 1) * gamePageSize)
+          .take(gamePageSize)
+          .getManyAndCount();
 
         return {
           navigation: this.toNavigationResponse(navigation),
@@ -236,7 +265,7 @@ export class GameService {
     }
 
     const normalizedInput = this.normalizeInput(updateGameDto, game);
-    await this.ensureCategoryIsValid(normalizedInput.category);
+    await this.ensureCategoryIsValid(normalizedInput.categoryId);
     await this.ensureGameModelIsValid(normalizedInput.gameModelId);
 
     if (normalizedInput.label !== game.label) {
@@ -249,10 +278,10 @@ export class GameService {
       }
     }
 
-    Object.assign(game, normalizedInput);
+    Object.assign(game, this.toEntityPayload(normalizedInput));
     const savedGame = await this.gameRepository.save(game);
 
-    return this.toGameResponse(savedGame);
+    return this.findOne(savedGame.id);
   }
 
   /**
@@ -279,16 +308,25 @@ export class GameService {
   private normalizeInput(
     input: Partial<CreateGameDto>,
     fallback?: Partial<Game>,
-  ) {
+  ): NormalizedGameInput {
+    const fallbackCategoryId =
+      typeof fallback?.categoryId === 'number'
+        ? fallback.categoryId
+        : this.extractNavigationId(fallback?.category);
+    const fallbackGameModelId =
+      typeof fallback?.gameModelId === 'string'
+        ? fallback.gameModelId
+        : this.extractGameModelId(fallback?.gameModel);
+
     return {
       label: input.label?.trim() || fallback?.label || '',
       description: input.description?.trim() || fallback?.description || '',
       iconUrl: input.iconUrl?.trim() || fallback?.iconUrl || '',
-      category:
+      categoryId:
         typeof input.category === 'number'
           ? input.category
-          : Number(fallback?.category ?? 0),
-      gameModelId: input.gameModelId?.trim() || fallback?.gameModelId || '',
+          : fallbackCategoryId,
+      gameModelId: input.gameModelId?.trim() || fallbackGameModelId || '',
       drawInterval:
         typeof input.drawInterval === 'number'
           ? input.drawInterval
@@ -366,6 +404,21 @@ export class GameService {
   }
 
   /**
+   * 将标准化入参转换为实体可持久化的字段结构。
+   */
+  private toEntityPayload(input: NormalizedGameInput) {
+    return {
+      label: input.label,
+      description: input.description,
+      iconUrl: input.iconUrl,
+      category: { id: input.categoryId } as NavigationEntity,
+      gameModel: { id: input.gameModelId } as GameModel,
+      drawInterval: input.drawInterval,
+      status: input.status,
+    };
+  }
+
+  /**
    * 判断导航是否为前台可见状态。
    */
   private isVisibleNavigation(navigation: NavigationEntity) {
@@ -408,8 +461,8 @@ export class GameService {
       label: game.label,
       description: game.description,
       iconUrl: game.iconUrl || '',
-      category: Number(game.category ?? 0),
-      gameModelId: String(game.gameModelId ?? ''),
+      category: game.categoryId ?? this.extractNavigationId(game.category),
+      gameModelId: game.gameModelId ?? this.extractGameModelId(game.gameModel),
       status: game.status,
       drawInterval: Number(game.drawInterval ?? 0),
       createdAt:
@@ -421,5 +474,35 @@ export class GameService {
           ? game.updatedAt.toISOString()
           : new Date(game.updatedAt).toISOString(),
     };
+  }
+
+  /**
+   * 从导航关系或其 ID 中提取导航编号。
+   */
+  private extractNavigationId(value: unknown) {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (typeof value === 'object' && value && 'id' in value) {
+      return Number((value as { id?: number }).id ?? 0);
+    }
+
+    return 0;
+  }
+
+  /**
+   * 从游戏模型关系或其 ID 中提取模型编号。
+   */
+  private extractGameModelId(value: unknown) {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (typeof value === 'object' && value && 'id' in value) {
+      return String((value as { id?: string }).id ?? '');
+    }
+
+    return '';
   }
 }
