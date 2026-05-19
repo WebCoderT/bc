@@ -30,10 +30,7 @@ export class AdminAppProfileController {
   @ApiOkDataResponse(AppProfileResponseDto, {
     messageExample: '品牌数据更新成功',
   })
-  async updateProfile(@Body() input: UpdateAppProfileDto) {
-    return {
-      message: '品牌数据更新成功',
-      profile: await this.appProfileService.updateProfile(input),
-    };
+  updateProfile(@Body() input: UpdateAppProfileDto) {
+    return this.appProfileService.updateProfile(input);
   }
 }
