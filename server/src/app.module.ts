@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseSeedService } from './database/database-seed.service';
 import { typeOrmModuleOptions } from './database/typeorm.config';
+import { GameModelModule } from './game-model/game-model.module';
 import { MemberModule } from './member/member.module';
 import { PublicModule } from './public/public.module';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { BetModule } from './bet/bet.module';
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot(typeOrmModuleOptions),
     AppProfileModule,
+    GameModelModule,
     UsersModule,
     AuthModule,
     PublicModule,

@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateGameModelDto } from './dto/create-game-model.dto';
 import { ListGameModelsQueryDto } from './dto/list-game-models-query.dto';
 import { UpdateGameModelDto } from './dto/update-game-model.dto';
+import { DEFAULT_GAME_MODELS } from './default-game-models';
 import { GameModel } from './entities/game-model.entity';
 import { Like, Repository } from 'typeorm';
 import { createPaginatedResult } from '../common/utils/pagination.util';
@@ -23,7 +24,21 @@ export class GameModelService {
   constructor(
     @InjectRepository(GameModel)
     private readonly gameModelRepository: Repository<GameModel>,
-  ) {}
+  ) { }
+
+  async ensureDefaultGameModels() {
+    for (const model of DEFAULT_GAME_MODELS) {
+      const existingGameModel = await this.gameModelRepository.findOne({
+        where: { id: model.id },
+      });
+
+      if (existingGameModel) {
+        continue;
+      }
+
+      await this.gameModelRepository.save(this.gameModelRepository.create(model));
+    }
+  }
 
   /**
    * 创建游戏模型，并校验模型编号与名称版本组合唯一性。
@@ -66,23 +81,23 @@ export class GameModelService {
 
     const where = keyword
       ? [
-          {
-            ...(query?.status ? { status: query.status } : {}),
-            id: Like(`%${keyword}%`),
-          },
-          {
-            ...(query?.status ? { status: query.status } : {}),
-            name: Like(`%${keyword}%`),
-          },
-          {
-            ...(query?.status ? { status: query.status } : {}),
-            description: Like(`%${keyword}%`),
-          },
-          {
-            ...(query?.status ? { status: query.status } : {}),
-            version: Like(`%${keyword}%`),
-          },
-        ]
+        {
+          ...(query?.status ? { status: query.status } : {}),
+          id: Like(`%${keyword}%`),
+        },
+        {
+          ...(query?.status ? { status: query.status } : {}),
+          name: Like(`%${keyword}%`),
+        },
+        {
+          ...(query?.status ? { status: query.status } : {}),
+          description: Like(`%${keyword}%`),
+        },
+        {
+          ...(query?.status ? { status: query.status } : {}),
+          version: Like(`%${keyword}%`),
+        },
+      ]
       : query?.status
         ? { status: query.status }
         : undefined;
