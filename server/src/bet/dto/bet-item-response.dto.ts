@@ -43,6 +43,24 @@ export class BetItemResponseDto {
   })
   extraPayload!: Record<string, unknown> | null;
 
+  @ApiPropertyOptional({
+    description: '是否中奖，未结算时为空',
+    nullable: true,
+  })
+  isWinning!: boolean | null;
+
+  @ApiProperty({
+    description: '实际派彩金额',
+    example: 19.8,
+  })
+  payoutAmount!: number;
+
+  @ApiPropertyOptional({
+    description: '结算时间，未结算时为空',
+    nullable: true,
+  })
+  settledAt!: string | null;
+
   @ApiProperty({ description: '创建时间' })
   createdAt!: string;
 }

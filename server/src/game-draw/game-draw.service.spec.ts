@@ -1,6 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BetSettlementService } from 'src/bet/bet-settlement.service';
 import { GameType } from '../game/enums/game-type.enum';
 import { RealtimeEventsService } from '../realtime/realtime-events.service';
+import { DataSource } from 'typeorm';
 import { GameDrawJobStatus } from './enums/game-draw-job-status.enum';
 import { GameDrawSourceType } from './enums/game-draw-source-type.enum';
 import { GameDrawService } from './game-draw.service';
@@ -30,6 +32,7 @@ describe('GameDrawService', () => {
     const tableService = {
       createDrawTableIfNotExists: jest.fn(),
       insertDrawRecord: jest.fn(),
+      getDrawRecordByIssueNo: jest.fn(),
       getLatestIssueNo: jest.fn(),
       getDrawTableName: jest.fn((gameId: number) => `game_draw_${gameId}`),
     };
@@ -37,6 +40,14 @@ describe('GameDrawService', () => {
       listRecentDraws: jest.fn(),
       getLatestDrawRecord: jest.fn(),
     };
+    const betSettlementService = new BetSettlementService({} as DataSource);
+    const settleOrdersForDrawSpy = jest
+      .spyOn(betSettlementService, 'settleOrdersForDraw')
+      .mockResolvedValue({
+        settledOrderCount: 0,
+        settledItemCount: 0,
+        totalPayoutAmount: 0,
+      });
     const realtimeEventsService = new RealtimeEventsService();
     const emitGameDrawUpdatedSpy = jest.spyOn(
       realtimeEventsService,
@@ -52,6 +63,7 @@ describe('GameDrawService', () => {
       tableService as never,
       historyService as never,
       realtimeEventsService,
+      betSettlementService,
     );
 
     return {
@@ -62,6 +74,8 @@ describe('GameDrawService', () => {
       strategyRegistry,
       tableService,
       historyService,
+      betSettlementService,
+      settleOrdersForDrawSpy,
       realtimeEventsService,
       emitGameDrawUpdatedSpy,
     };
@@ -75,6 +89,7 @@ describe('GameDrawService', () => {
       runtimeService,
       strategyRegistry,
       tableService,
+      settleOrdersForDrawSpy,
       emitGameDrawUpdatedSpy,
     } = createService();
 
@@ -133,6 +148,12 @@ describe('GameDrawService', () => {
     expect(result?.issueNo).toBe('2026051900001');
     expect(strategyRegistry.getStrategy).toHaveBeenCalledWith('p5');
     expect(tableService.insertDrawRecord).toHaveBeenCalled();
+    expect(settleOrdersForDrawSpy).toHaveBeenCalledWith({
+      gameId: 1,
+      issueNo: '2026051900001',
+      openCode: '1,2,3,4,5',
+      openCodeJson: [1, 2, 3, 4, 5],
+    });
     expect(runtimeService.markSuccess).toHaveBeenCalled();
     expect(emitGameDrawUpdatedSpy).toHaveBeenCalled();
     expect(jobLogRepository.save).toHaveBeenCalledWith(
@@ -163,6 +184,87 @@ describe('GameDrawService', () => {
       BadRequestException,
     );
     expect(runtimeService.markPaused).toHaveBeenCalled();
+  });
+
+  it('should reuse existing draw record when issue number already exists', async () => {
+    const {
+      service,
+      gameRepository,
+      runtimeService,
+      strategyRegistry,
+      tableService,
+      settleOrdersForDrawSpy,
+    } = createService();
+
+    runtimeService.tryLockByGameId.mockResolvedValue({
+      currentIssue: '2026051900201',
+    });
+    runtimeService.findByGameId.mockResolvedValue({
+      gameId: 1,
+      currentIssue: '2026051900202',
+      lastDrawAt: new Date('2026-05-19T08:00:00.000Z'),
+      nextDrawAt: new Date('2026-05-19T08:01:00.000Z'),
+      drawInterval: 60,
+      status: 'idle',
+    });
+
+    gameRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue({
+        id: 1,
+        drawInterval: 60,
+        status: GameType.ONLINE,
+        gameModelId: 'p5',
+        gameModel: {
+          id: 'p5',
+          drawConfigJson: { digits: 5, min: 0, max: 9, allowRepeat: true },
+        },
+      }),
+    });
+
+    strategyRegistry.getStrategy.mockReturnValue({
+      generateDraw: jest.fn().mockReturnValue({
+        openCode: '1,2,3,4,5',
+        openCodeJson: [1, 2, 3, 4, 5],
+        resultPayload: { sum: 15, span: 4 },
+        algorithmVersion: 'p5-v1',
+      }),
+    });
+
+    tableService.insertDrawRecord.mockRejectedValue(
+      new Error(
+        "Duplicate entry '2026051900201' for key 'game_draw_1.uk_issue_no'",
+      ),
+    );
+    tableService.getDrawRecordByIssueNo.mockResolvedValue({
+      id: 99,
+      issueNo: '2026051900201',
+      openCode: '1,2,3,4,5',
+      openCodeJson: [1, 2, 3, 4, 5],
+      resultPayload: { sum: 15, span: 4 },
+      drawTime: '2026-05-19T08:00:00.000Z',
+      drawStatus: 'open',
+      sourceType: GameDrawSourceType.System,
+      algorithmVersion: 'p5-v1',
+      createdAt: '2026-05-19T08:00:00.000Z',
+      updatedAt: '2026-05-19T08:00:00.000Z',
+    });
+
+    const result = await service.drawOnce(1);
+
+    expect(result?.issueNo).toBe('2026051900201');
+    expect(tableService.getDrawRecordByIssueNo).toHaveBeenCalledWith(
+      1,
+      '2026051900201',
+    );
+    expect(settleOrdersForDrawSpy).toHaveBeenCalledWith({
+      gameId: 1,
+      issueNo: '2026051900201',
+      openCode: '1,2,3,4,5',
+      openCodeJson: [1, 2, 3, 4, 5],
+    });
+    expect(runtimeService.markSuccess).toHaveBeenCalled();
   });
 
   it('should throw when current issue target game does not exist', async () => {

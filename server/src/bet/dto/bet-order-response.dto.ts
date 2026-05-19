@@ -47,6 +47,21 @@ export class BetOrderResponseDto {
   @ApiProperty({ description: '投注摘要' })
   selectionSummary!: string;
 
+  @ApiPropertyOptional({
+    description: '是否中奖，未结算时为空',
+    nullable: true,
+  })
+  isWinning!: boolean | null;
+
+  @ApiProperty({ description: '实际派彩金额' })
+  payoutAmount!: number;
+
+  @ApiPropertyOptional({ description: '开奖号快照', nullable: true })
+  settlementOpenCode!: string | null;
+
+  @ApiPropertyOptional({ description: '结算时间', nullable: true })
+  settledAt!: string | null;
+
   @ApiProperty({ description: '下注时间' })
   placedAt!: string;
 

@@ -134,6 +134,10 @@ export class BetService {
         fixedOddsSnapshot: game.fixedOdds,
         oddsSnapshotText: this.getOddsSummary(game),
         selectionSummary,
+        isWinning: null,
+        payoutAmount: 0,
+        settlementOpenCode: null,
+        settledAt: null,
         extraPayload: {
           gameDescription: game.description,
         },
@@ -152,6 +156,9 @@ export class BetService {
           estimatedProfit: item.estimatedProfit,
           selectionPayload: item.selection,
           extraPayload: item.extraPayload,
+          isWinning: null,
+          payoutAmount: 0,
+          settledAt: null,
         }),
       );
 
@@ -224,6 +231,7 @@ export class BetService {
     const idQuery = this.betOrderRepository
       .createQueryBuilder('bet')
       .leftJoin('bet.user', 'user')
+      .leftJoin('bet.game', 'game')
       .leftJoin('bet.items', 'item')
       .select('bet.id', 'id')
       .addSelect('bet.placedAt', 'placedAt')
@@ -234,7 +242,7 @@ export class BetService {
     }
 
     if (typeof filters.gameId === 'number') {
-      idQuery.andWhere('bet.gameId = :gameId', { gameId: filters.gameId });
+      idQuery.andWhere('game.id = :gameId', { gameId: filters.gameId });
     }
 
     if (filters.status) {
@@ -452,6 +460,10 @@ export class BetService {
         order.estimatedProfit === null ? null : Number(order.estimatedProfit),
       oddsSummary: order.oddsSnapshotText,
       selectionSummary: order.selectionSummary,
+      isWinning: order.isWinning,
+      payoutAmount: Number(order.payoutAmount ?? 0),
+      settlementOpenCode: order.settlementOpenCode,
+      settledAt: order.settledAt ? this.toIsoString(order.settledAt) : null,
       placedAt: this.toIsoString(order.placedAt),
       items: (order.items ?? [])
         .slice()
@@ -468,6 +480,9 @@ export class BetService {
             item.estimatedProfit === null ? null : Number(item.estimatedProfit),
           selection: item.selectionPayload,
           extraPayload: item.extraPayload,
+          isWinning: item.isWinning,
+          payoutAmount: Number(item.payoutAmount ?? 0),
+          settledAt: item.settledAt ? this.toIsoString(item.settledAt) : null,
           createdAt: this.toIsoString(item.createdAt),
         })),
       ...(includeUser && order.user

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BetSettlementService } from 'src/bet/bet-settlement.service';
 import { Game } from '../game/entities/game.entity';
 import { GameType } from '../game/enums/game-type.enum';
 import { GameModel } from '../game-model/entities/game-model.entity';
@@ -40,6 +41,7 @@ export class GameDrawService {
     private readonly gameDrawTableService: GameDrawTableService,
     private readonly gameDrawHistoryService: GameDrawHistoryService,
     private readonly realtimeEventsService: RealtimeEventsService,
+    private readonly betSettlementService: BetSettlementService,
   ) {}
 
   async initializeGameResources(gameId: number) {
@@ -122,15 +124,22 @@ export class GameDrawService {
         config,
       });
 
-      const record = await this.gameDrawTableService.insertDrawRecord(gameId, {
+      const record = await this.insertOrReuseDrawRecord({
+        gameId,
         issueNo,
         openCode: drawResult.openCode,
         openCodeJson: drawResult.openCodeJson,
         resultPayload: drawResult.resultPayload,
         drawTime,
-        drawStatus: GameDrawRecordStatus.Open,
         sourceType,
         algorithmVersion: drawResult.algorithmVersion,
+      });
+
+      await this.betSettlementService.settleOrdersForDraw({
+        gameId,
+        issueNo,
+        openCode: record.openCode,
+        openCodeJson: record.openCodeJson,
       });
 
       const nextIssue = generateIssueNo(issueNo, drawTime);
@@ -288,6 +297,67 @@ export class GameDrawService {
     });
 
     await this.jobLogRepository.save(log);
+  }
+
+  private async insertOrReuseDrawRecord(params: {
+    gameId: number;
+    issueNo: string;
+    openCode: string;
+    openCodeJson: unknown;
+    resultPayload: Record<string, unknown> | null;
+    drawTime: Date;
+    sourceType: GameDrawSourceType;
+    algorithmVersion: string;
+  }) {
+    try {
+      return await this.gameDrawTableService.insertDrawRecord(params.gameId, {
+        issueNo: params.issueNo,
+        openCode: params.openCode,
+        openCodeJson: params.openCodeJson,
+        resultPayload: params.resultPayload,
+        drawTime: params.drawTime,
+        drawStatus: GameDrawRecordStatus.Open,
+        sourceType: params.sourceType,
+        algorithmVersion: params.algorithmVersion,
+      });
+    } catch (error) {
+      if (!this.isDuplicateIssueError(error)) {
+        throw error;
+      }
+
+      this.logger.warn(
+        `游戏 ${params.gameId} 期号 ${params.issueNo} 已存在，复用已有开奖记录继续推进`,
+      );
+
+      const existingRecord =
+        await this.gameDrawTableService.getDrawRecordByIssueNo(
+          params.gameId,
+          params.issueNo,
+        );
+
+      if (!existingRecord) {
+        throw error;
+      }
+
+      return existingRecord;
+    }
+  }
+
+  private isDuplicateIssueError(error: unknown) {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+
+    const code = 'code' in error ? String(error.code ?? '') : '';
+    const message =
+      'message' in error && typeof error.message === 'string'
+        ? error.message
+        : '';
+
+    return (
+      code === 'ER_DUP_ENTRY' ||
+      (message.includes('Duplicate entry') && message.includes('uk_issue_no'))
+    );
   }
 
   private toCurrentIssueResponse(runtime: {

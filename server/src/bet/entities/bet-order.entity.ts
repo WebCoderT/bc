@@ -110,6 +110,38 @@ export class BetOrderEntity {
   @Column({ name: 'selection_summary', type: 'text' })
   selectionSummary!: string;
 
+  @Column({
+    name: 'is_winning',
+    type: 'boolean',
+    nullable: true,
+  })
+  isWinning!: boolean | null;
+
+  @Column({
+    name: 'payout_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    transformer: decimalTransformer,
+  })
+  payoutAmount!: number;
+
+  @Column({
+    name: 'settlement_open_code',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  settlementOpenCode!: string | null;
+
+  @Column({
+    name: 'settled_at',
+    type: 'datetime',
+    nullable: true,
+  })
+  settledAt!: Date | null;
+
   @Column({ name: 'extra_payload', type: 'json', nullable: true })
   extraPayload!: Record<string, unknown> | null;
 

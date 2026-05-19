@@ -183,6 +183,26 @@ export class GameDrawTableService {
     return latestRecord?.issueNo ?? null;
   }
 
+  async getDrawRecordByIssueNo(gameId: number, issueNo: string) {
+    const tableName = this.getDrawTableName(gameId);
+
+    if (!(await this.existsDrawTable(gameId))) {
+      return null;
+    }
+
+    const [record] = await this.queryRows<RawDrawRecord>(
+      [
+        'SELECT *',
+        `FROM \`${tableName}\``,
+        'WHERE issue_no = ?',
+        'LIMIT 1',
+      ].join('\n'),
+      [issueNo],
+    );
+
+    return record ? this.toDrawRecordResponse(record) : null;
+  }
+
   private toDrawRecordResponse(
     record: RawDrawRecord,
   ): GameDrawRecordResponseDto {

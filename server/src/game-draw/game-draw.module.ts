@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BetModule } from '../bet/bet.module';
 import { Game } from '../game/entities/game.entity';
 import { GameModel } from '../game-model/entities/game-model.entity';
 import { RealtimeCoreModule } from '../realtime/realtime-core.module';
@@ -15,6 +16,7 @@ import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 
 @Module({
   imports: [
+    BetModule,
     RealtimeCoreModule,
     TypeOrmModule.forFeature([
       Game,

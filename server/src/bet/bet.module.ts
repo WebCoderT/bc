@@ -4,6 +4,7 @@ import { Game } from '../game/entities/game.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { BetOrderEntity } from './entities/bet-order.entity';
 import { BetItemEntity } from './entities/bet-item.entity';
+import { BetSettlementService } from './bet-settlement.service';
 import { BetService } from './bet.service';
 import { MemberBetsController } from './member-bets.controller';
 import { AdminBetsController } from './admin-bets.controller';
@@ -17,7 +18,7 @@ import { UsersModule } from '../users/users.module';
     UsersModule,
   ],
   controllers: [MemberBetsController, AdminBetsController],
-  providers: [BetService],
-  exports: [BetService],
+  providers: [BetService, BetSettlementService],
+  exports: [BetService, BetSettlementService],
 })
 export class BetModule {}

@@ -87,6 +87,9 @@ export type ClientBetItem = {
   estimatedProfit: number | null;
   selection: Record<string, unknown>;
   extraPayload: Record<string, unknown> | null;
+  isWinning: boolean | null;
+  payoutAmount: number;
+  settledAt: string | null;
   createdAt: string;
 };
 export type ClientBetOrder = {
@@ -102,6 +105,10 @@ export type ClientBetOrder = {
   estimatedProfit: number | null;
   oddsSummary: string;
   selectionSummary: string;
+  isWinning: boolean | null;
+  payoutAmount: number;
+  settlementOpenCode: string | null;
+  settledAt: string | null;
   placedAt: string;
   items: ClientBetItem[];
 };

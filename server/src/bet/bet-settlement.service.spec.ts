@@ -1,0 +1,150 @@
+import { DataSource } from 'typeorm';
+import { UserEntity } from '../users/entities/user.entity';
+import { BetSettlementService } from './bet-settlement.service';
+import { BetOrderEntity } from './entities/bet-order.entity';
+import { BetItemEntity } from './entities/bet-item.entity';
+
+describe('BetSettlementService', () => {
+  const createService = () => {
+    const orderRepository = {
+      createQueryBuilder: jest.fn(),
+      save: jest.fn(),
+    };
+    const itemRepository = {
+      save: jest.fn(),
+    };
+    const userRepository = {
+      save: jest.fn(),
+    };
+    const manager = {
+      getRepository: jest.fn((entity: unknown) => {
+        if (entity === BetOrderEntity) {
+          return orderRepository;
+        }
+
+        if (entity === BetItemEntity) {
+          return itemRepository;
+        }
+
+        if (entity === UserEntity) {
+          return userRepository;
+        }
+
+        return null;
+      }),
+    };
+    const dataSource = {
+      transaction: jest.fn((handler: (input: typeof manager) => unknown) =>
+        Promise.resolve(handler(manager)),
+      ),
+    };
+    const service = new BetSettlementService(
+      dataSource as unknown as DataSource,
+    );
+
+    return {
+      service,
+      dataSource,
+      manager,
+      orderRepository,
+      itemRepository,
+      userRepository,
+    };
+  };
+
+  it('should settle placed orders and pay winning bets', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 7,
+      rechargeAmount: 100,
+      bonusAmount: 20,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 101,
+      itemIndex: 1,
+      betType: 'p5-single-number',
+      displayText: '1 2 3 4 5',
+      amount: 10,
+      estimatedPayout: 19.8,
+      estimatedProfit: 9.8,
+      selectionPayload: { digits: [1, 2, 3, 4, 5] },
+      extraPayload: null,
+    });
+    const losingItem = Object.assign(new BetItemEntity(), {
+      id: 102,
+      itemIndex: 2,
+      betType: 'p5-single-number',
+      displayText: '9 9 9 9 9',
+      amount: 12,
+      estimatedPayout: 23.76,
+      estimatedProfit: 11.76,
+      selectionPayload: { digits: [9, 9, 9, 9, 9] },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 88,
+      betStrategyKey: 'p5',
+      status: 'placed',
+      fixedOddsSnapshot: 1.98,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem, losingItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 1,
+      issueNo: '2026051900001',
+      openCode: '1,2,3,4,5',
+      openCodeJson: [1, 2, 3, 4, 5],
+    });
+
+    expect(result).toEqual({
+      settledOrderCount: 1,
+      settledItemCount: 2,
+      totalPayoutAmount: 19.8,
+    });
+    expect(order.status).toBe('settled');
+    expect(order.isWinning).toBe(true);
+    expect(order.payoutAmount).toBe(19.8);
+    expect(order.settlementOpenCode).toBe('1,2,3,4,5');
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningItem.payoutAmount).toBe(19.8);
+    expect(losingItem.isWinning).toBe(false);
+    expect(losingItem.payoutAmount).toBe(0);
+    expect(winningUser.rechargeAmount).toBe(119.8);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem, losingItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+  });
+
+  it('should skip settlement when draw digits are invalid', async () => {
+    const { service, dataSource } = createService();
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 1,
+      issueNo: '2026051900001',
+      openCode: 'invalid',
+      openCodeJson: null,
+    });
+
+    expect(result).toEqual({
+      settledOrderCount: 0,
+      settledItemCount: 0,
+      totalPayoutAmount: 0,
+    });
+    expect(dataSource.transaction).not.toHaveBeenCalled();
+  });
+});

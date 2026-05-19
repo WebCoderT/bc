@@ -79,6 +79,30 @@ export class BetItemEntity {
   extraPayload!: Record<string, unknown> | null;
 
   @Column({
+    name: 'is_winning',
+    type: 'boolean',
+    nullable: true,
+  })
+  isWinning!: boolean | null;
+
+  @Column({
+    name: 'payout_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    transformer: decimalTransformer,
+  })
+  payoutAmount!: number;
+
+  @Column({
+    name: 'settled_at',
+    type: 'datetime',
+    nullable: true,
+  })
+  settledAt!: Date | null;
+
+  @Column({
     name: 'created_at',
     type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP',

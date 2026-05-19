@@ -62,6 +62,37 @@ function getStatusClassName(status: ClientBetStatus) {
   return "border-sky-400/30 bg-sky-500/10 text-sky-200";
 }
 
+function getSettlementText(isWinning: boolean | null, status: ClientBetStatus) {
+  if (status !== "settled") {
+    return "待开奖";
+  }
+
+  if (isWinning === true) {
+    return "已中奖";
+  }
+
+  if (isWinning === false) {
+    return "未中奖";
+  }
+
+  return "已结算";
+}
+
+function getSettlementClassName(
+  isWinning: boolean | null,
+  status: ClientBetStatus,
+) {
+  if (status !== "settled") {
+    return "border-amber-400/30 bg-amber-500/10 text-amber-200";
+  }
+
+  if (isWinning === true) {
+    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
+  }
+
+  return "border-rose-400/30 bg-rose-500/10 text-rose-200";
+}
+
 export default function GameBetsPage() {
   const session = useMemo(() => readStoredSession(), []);
   const [bets, setBets] = useState<ClientBetOrder[]>([]);
@@ -265,10 +296,28 @@ export default function GameBetsPage() {
                     {bet.gameLabel}
                     {bet.issueNo ? ` · 第 ${bet.issueNo} 期` : ""}
                     {` · ${formatDateTime(bet.placedAt)}`}
+                    {bet.settledAt
+                      ? ` · 结算：${formatDateTime(bet.settledAt)}`
+                      : ""}
                   </p>
                   <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
                     {bet.selectionSummary || "暂无摘要"}
                   </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getSettlementClassName(
+                        bet.isWinning,
+                        bet.status,
+                      )}`}
+                    >
+                      {getSettlementText(bet.isWinning, bet.status)}
+                    </span>
+                    {bet.settlementOpenCode ? (
+                      <span className="inline-flex rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted)]">
+                        开奖号：{bet.settlementOpenCode}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -292,6 +341,10 @@ export default function GameBetsPage() {
                         : formatAuthCurrency(bet.estimatedProfit)
                     }
                   />
+                  <Metric
+                    title="实际派彩"
+                    value={formatAuthCurrency(bet.payoutAmount)}
+                  />
                   <Metric title="赔率快照" value={bet.oddsSummary} />
                 </div>
               </div>
@@ -310,6 +363,21 @@ export default function GameBetsPage() {
                         <p className="mt-1 text-xs text-[var(--muted)]">
                           玩法：{item.betType}
                         </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span
+                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getSettlementClassName(
+                              item.isWinning,
+                              bet.status,
+                            )}`}
+                          >
+                            {getSettlementText(item.isWinning, bet.status)}
+                          </span>
+                          {item.settledAt ? (
+                            <span className="text-[11px] text-[var(--muted)]">
+                              结算：{formatDateTime(item.settledAt)}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                       <p className="text-sm font-semibold text-[var(--foreground)]">
                         {formatAuthCurrency(item.amount)}
@@ -330,6 +398,12 @@ export default function GameBetsPage() {
                           {item.estimatedProfit === null
                             ? "待规则结算"
                             : formatAuthCurrency(item.estimatedProfit)}
+                        </span>
+                      </div>
+                      <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-xs text-[var(--muted)] sm:col-span-2">
+                        实际派彩：
+                        <span className="ml-1 font-medium text-[var(--foreground)]">
+                          {formatAuthCurrency(item.payoutAmount)}
                         </span>
                       </div>
                     </div>
