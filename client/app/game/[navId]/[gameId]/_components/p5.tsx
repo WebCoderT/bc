@@ -100,9 +100,11 @@ export default function GamePage() {
       ),
     [currentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
   );
+  // 如果 drawError 非空但无法加载开奖数据，则说明是连接问题导致的错误，此时提示更通用的错误信息
   const drawErrorText = canLoadDrawData
     ? drawError
     : "无法读取当前游戏的开奖信息";
+  // 如果 currentIssue 存在但状态为未知值，也说明是连接问题导致的错误，此时提示更通用的错误信息
   const drawStatusText = currentIssue ? currentIssue.status : "读取中";
 
   useEffect(() => {
