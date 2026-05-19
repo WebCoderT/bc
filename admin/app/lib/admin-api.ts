@@ -3,7 +3,11 @@ import { 用户管理 as SwaggerUsersApi } from "@/app/generated/admin-api/用�
 import { 游戏管理 as SwaggerGamesApi } from "@/app/generated/admin-api/游戏管理";
 import { 游戏模型管理 as SwaggerGameModelsApi } from "@/app/generated/admin-api/游戏模型管理";
 import { 导航管理 as SwaggerNavigationsApi } from "@/app/generated/admin-api/导航管理";
+import { 品牌数据管理 as SwaggerAppProfileApi } from "@/app/generated/admin-api/品牌数据管理";
 import {
+  type AdminGameControllerDrawOnceParams,
+  type AdminGameControllerGetCurrentIssueParams,
+  type AdminGameControllerGetDrawRecordsParams,
   type AdminGameModelsControllerGetGameModelsParams,
   type AdminNavigationsControllerGetNavigationsParams,
   type AdminGameControllerGetGamesParams,
@@ -102,13 +106,9 @@ export type PaginatedAdminGames = SwaggerEnvelopeData<
   SwaggerGamesApi["adminGameControllerGetGames"]
 >;
 
-export type PaginatedAdminGameDrawRecords = {
-  items: GameDrawRecordResponseDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-};
+export type PaginatedAdminGameDrawRecords = SwaggerEnvelopeData<
+  SwaggerGamesApi["adminGameControllerGetDrawRecords"]
+>;
 export type AdminBetStatus = "placed" | "settled" | "cancelled";
 export type AdminBetItem = {
   id: number;
@@ -335,6 +335,7 @@ function createSwaggerClients(accessToken?: string) {
 
   return {
     auth: new SwaggerAuthApi(httpClient),
+    appProfile: new SwaggerAppProfileApi(httpClient),
     users: new SwaggerUsersApi(httpClient),
     games: new SwaggerGamesApi(httpClient),
     gameModels: new SwaggerGameModelsApi(httpClient),
@@ -687,27 +688,26 @@ export async function fetchAnnouncements() {
 }
 
 export async function fetchAdminAppProfile(accessToken: string) {
-  return requestJson<SwaggerEnvelope<AppProfileResponseDto>>(
-    "/admin/app-profile",
-    {
-      method: "GET",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { appProfile } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    appProfile.adminAppProfileControllerGetProfile({
+      format: "json",
+    }),
+  );
 }
 
 export async function updateAdminAppProfile(
   accessToken: string,
   input: UpdateAppProfileDto,
 ) {
-  return requestJson<SwaggerEnvelope<AppProfileResponseDto>>(
-    "/admin/app-profile",
-    {
-      method: "PATCH",
-      accessToken,
-      body: JSON.stringify(input),
-    },
-  ).then((response) => response.data);
+  const { appProfile } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    appProfile.adminAppProfileControllerUpdateProfile(input, {
+      format: "json",
+    }),
+  );
 }
 
 export async function fetchAdminUsers(
@@ -822,36 +822,53 @@ export async function fetchAdminGameDrawRecords(
   gameId: number,
   query: { page?: number; pageSize?: number } = {},
 ) {
-  return requestJson<SwaggerEnvelope<PaginatedAdminGameDrawRecords>>(
-    `/admin/games/${gameId}/draw-records?page=${query.page ?? 1}&pageSize=${query.pageSize ?? 20}`,
-    {
-      method: "GET",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { games } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    games.adminGameControllerGetDrawRecords(
+      {
+        id: gameId,
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 20,
+      } satisfies AdminGameControllerGetDrawRecordsParams,
+      {
+        format: "json",
+      },
+    ),
+  );
 }
 
 export async function fetchAdminGameCurrentIssue(
   accessToken: string,
   gameId: number,
 ) {
-  return requestJson<SwaggerEnvelope<GameCurrentIssueResponseDto>>(
-    `/admin/games/${gameId}/current-issue`,
-    {
-      method: "GET",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { games } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    games.adminGameControllerGetCurrentIssue(
+      {
+        id: gameId,
+      } satisfies AdminGameControllerGetCurrentIssueParams,
+      {
+        format: "json",
+      },
+    ),
+  );
 }
 
 export async function drawOnceAdminGame(accessToken: string, gameId: number) {
-  return requestJson<SwaggerEnvelope<GameDrawRecordResponseDto>>(
-    `/admin/games/${gameId}/draw-once`,
-    {
-      method: "POST",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { games } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    games.adminGameControllerDrawOnce(
+      {
+        id: gameId,
+      } satisfies AdminGameControllerDrawOnceParams,
+      {
+        format: "json",
+      },
+    ),
+  );
 }
 
 export async function fetchAdminBets(

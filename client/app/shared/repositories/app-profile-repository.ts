@@ -1,10 +1,6 @@
+import { Public as SwaggerPublicApi } from "@/app/generated/public-api/Public";
 import type { AppProfileResponseDto } from "@/app/generated/public-api/data-contracts";
-
-type AppProfileEnvelope = {
-  code: number;
-  message: string;
-  data: AppProfileResponseDto;
-};
+import { HttpClient } from "@/app/generated/public-api/http-client";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
@@ -12,33 +8,36 @@ let cachedAppProfile: AppProfileResponseDto | null = null;
 let inFlightAppProfileRequest: Promise<AppProfileResponseDto | null> | null =
   null;
 
-function isAppProfileEnvelope(payload: unknown): payload is AppProfileEnvelope {
-  return Boolean(
-    payload &&
-    typeof payload === "object" &&
-    "data" in payload &&
-    (payload as { data?: unknown }).data &&
-    typeof (payload as { data?: unknown }).data === "object",
-  );
+function resolveSwaggerBaseUrl(apiBaseUrl: string) {
+  const normalizedApiBaseUrl = apiBaseUrl.endsWith("/")
+    ? apiBaseUrl.slice(0, -1)
+    : apiBaseUrl;
+
+  if (normalizedApiBaseUrl === "/api") {
+    return "";
+  }
+
+  if (normalizedApiBaseUrl.endsWith("/api")) {
+    return normalizedApiBaseUrl.slice(0, -4);
+  }
+
+  return normalizedApiBaseUrl;
+}
+
+function createPublicApiClient() {
+  const httpClient = new HttpClient({
+    baseUrl: resolveSwaggerBaseUrl(API_BASE_URL),
+  });
+
+  return new SwaggerPublicApi(httpClient);
 }
 
 async function requestAppProfile() {
-  const response = await fetch(`${API_BASE_URL}/public/app-profile`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const publicApi = createPublicApiClient();
+  const response = await publicApi.publicControllerGetAppProfile({
     cache: "no-store",
   });
-
-  if (!response.ok) {
-    throw new Error(`读取品牌配置失败：${response.status}`);
-  }
-
-  const payload = (await response.json()) as unknown;
-  const profile = isAppProfileEnvelope(payload)
-    ? payload.data
-    : (payload as AppProfileResponseDto);
+  const profile = response.data.data;
 
   cachedAppProfile = profile;
   return cachedAppProfile;

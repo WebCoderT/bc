@@ -10,6 +10,8 @@ import {
   type LoginDto,
   type LoginResponseDto,
   type MemberDashboardDataDto,
+  type MemberGamesControllerGetCurrentIssueParams,
+  type MemberGamesControllerGetDrawRecordsParams,
   type MemberGamesControllerGetGameParams,
   type MemberGamesControllerGetGamesParams,
   type MemberNavigationsControllerGetNavigationsParams,
@@ -442,28 +444,38 @@ export async function fetchMemberGameDrawRecords(
   gameId: number,
   query: { page?: number; pageSize?: number } = {},
 ) {
-  return requestJson<
-    SwaggerEnvelope<ClientPaginatedResult<GameDrawRecordResponseDto>>
-  >(
-    `/member/games/${gameId}/draw-records?page=${query.page ?? 1}&pageSize=${query.pageSize ?? 20}`,
-    {
-      method: "GET",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { games } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    games.memberGamesControllerGetDrawRecords(
+      {
+        id: gameId,
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 20,
+      } satisfies MemberGamesControllerGetDrawRecordsParams,
+      {
+        format: "json",
+      },
+    ),
+  );
 }
 
 export async function fetchMemberCurrentIssue(
   accessToken: string,
   gameId: number,
 ) {
-  return requestJson<SwaggerEnvelope<GameCurrentIssueResponseDto>>(
-    `/member/games/${gameId}/current-issue`,
-    {
-      method: "GET",
-      accessToken,
-    },
-  ).then((response) => response.data);
+  const { games } = createSwaggerClients(accessToken);
+
+  return requestFromSwagger(() =>
+    games.memberGamesControllerGetCurrentIssue(
+      {
+        id: gameId,
+      } satisfies MemberGamesControllerGetCurrentIssueParams,
+      {
+        format: "json",
+      },
+    ),
+  );
 }
 
 export async function createMemberGameBet(
