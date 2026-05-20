@@ -1,43 +1,34 @@
-import { P5_BALL_COUNT } from "./p5.constants";
 import type { GameDrawRecordResponseDto } from "@/app/generated/api/data-contracts";
 import type { ClientGame } from "@/app/lib/client-api";
 import type {
-  P5BetAmount,
-  P5BetItem,
-  P5CurrentIssue,
-  P5DrawRecord,
-  P5SelectedDigit,
-} from "./p5.types";
+  NumberGameBetAmount,
+  NumberGameBetItem,
+  NumberGameCurrentIssue,
+  NumberGameDrawRecord,
+  NumberGameSelectedDigit,
+} from "./number-game.types";
 
-export const P5_AMOUNT_OPTIONS: P5BetAmount[] = [2, 10, 20, 50];
+export const NUMBER_GAME_AMOUNT_OPTIONS: NumberGameBetAmount[] = [
+  2, 10, 20, 50,
+];
 
-export function createEmptyDigits(): P5SelectedDigit[] {
-  return Array.from({ length: P5_BALL_COUNT }, () => null);
+export function createEmptyDigits(
+  ballCount: number,
+): NumberGameSelectedDigit[] {
+  return Array.from({ length: ballCount }, () => null);
 }
 
-export function createRandomDigit() {
-  return Math.floor(Math.random() * 10);
-}
-
-export function createRandomDigits() {
-  return Array.from({ length: P5_BALL_COUNT }, () => createRandomDigit());
-}
-
-export function createIssueNumber(recordIndex: number) {
-  const date = new Date();
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  const issueIndex = String(recordIndex).padStart(3, "0");
-
-  return `${y}${m}${d}-${issueIndex}`;
+export function createRandomDigits(ballCount: number) {
+  return Array.from({ length: ballCount }, () =>
+    Math.floor(Math.random() * 10),
+  );
 }
 
 export function createBetItem(
   digits: number[],
-  source: P5BetItem["source"],
-  amount: P5BetAmount = 2,
-): P5BetItem {
+  source: NumberGameBetItem["source"],
+  amount: NumberGameBetAmount = 2,
+): NumberGameBetItem {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     digits,
@@ -46,17 +37,11 @@ export function createBetItem(
   };
 }
 
-export function formatDigits(digits: P5SelectedDigit[]) {
-  return digits
-    .map((digit) => (digit === null ? "—" : String(digit)))
-    .join(" ");
-}
-
 export function formatCompactDigits(digits: Array<number | null>) {
   return digits.map((digit) => (digit === null ? "—" : String(digit))).join("");
 }
 
-export function formatOddsNumber(value: number) {
+function formatOddsNumber(value: number) {
   return value.toFixed(4).replace(/\.0+$|(?:(\.\d*?[1-9])0+)$/, "$1");
 }
 
@@ -104,7 +89,7 @@ export function calculateEstimatedProfit(
   return Number((estimatedPayout - amount).toFixed(2));
 }
 
-export function formatP5DateTime(value: string | null) {
+export function formatDateTime(value: string | null) {
   if (!value) {
     return "--";
   }
@@ -136,9 +121,9 @@ export function resolveServerTimeOffset(serverTime: string | null | undefined) {
   return serverNow - Date.now();
 }
 
-export function mapClientDrawRecordToP5Record(
+export function mapClientDrawRecordToNumberGameRecord(
   record: GameDrawRecordResponseDto,
-): P5DrawRecord {
+): NumberGameDrawRecord {
   return {
     id: record.id,
     issue: record.issueNo,
@@ -148,16 +133,8 @@ export function mapClientDrawRecordToP5Record(
           .split(",")
           .map((item) => Number(item.trim()))
           .filter((item) => Number.isInteger(item)),
-    drawnAt: formatP5DateTime(record.drawTime),
+    drawnAt: formatDateTime(record.drawTime),
   };
-}
-
-export function formatNextDrawCountdown(currentIssue: P5CurrentIssue | null) {
-  if (!currentIssue) {
-    return "--";
-  }
-
-  return formatServerDrivenCountdown(currentIssue.nextDrawAt, Date.now(), 0);
 }
 
 export function formatServerDrivenCountdown(
@@ -172,7 +149,7 @@ export function formatServerDrivenCountdown(
   const target = new Date(nextDrawAt).getTime();
 
   if (Number.isNaN(target)) {
-    return formatP5DateTime(nextDrawAt);
+    return formatDateTime(nextDrawAt);
   }
 
   const diff = Math.max(0, target - (nowMs + serverTimeOffsetMs));
@@ -181,4 +158,14 @@ export function formatServerDrivenCountdown(
   const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
 
   return `${hours}:${minutes}:${seconds}`;
+}
+
+export function formatNextDrawCountdown(
+  currentIssue: NumberGameCurrentIssue | null,
+) {
+  if (!currentIssue) {
+    return "--";
+  }
+
+  return formatServerDrivenCountdown(currentIssue.nextDrawAt, Date.now(), 0);
 }

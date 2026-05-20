@@ -25,9 +25,6 @@ export function NavigationGameGroup({
           <h3 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
             # {navigation.name}
           </h3>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            当前分组已接入真实接口，展示的是该子导航下分页返回的游戏列表。
-          </p>
         </div>
         <div className="flex items-center gap-3 text-sm text-[var(--muted)]">
           <span className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2">

@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { NumberBall } from "@/app/shared/components/lottery/number-ball";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import { formatAuthCurrency, type ClientBetOrder } from "@/app/lib/client-api";
-import type { P5DrawRecord } from "./p5.types";
+import type { NumberGameDrawRecord } from "./number-game.types";
 
-type P5HistoryProps = {
-  records: P5DrawRecord[];
+type NumberGameHistoryProps = {
+  records: NumberGameDrawRecord[];
   betOrders?: ClientBetOrder[];
   variant?: "default" | "sidebar";
   isDrawLoading?: boolean;
@@ -18,7 +18,7 @@ type P5HistoryProps = {
 
 type HistoryTabKey = "draws" | "bets";
 
-export function P5History({
+export function NumberGameHistory({
   records,
   betOrders = [],
   variant = "default",
@@ -26,7 +26,7 @@ export function P5History({
   drawError = "",
   isBetHistoryLoading = false,
   betHistoryError = "",
-}: P5HistoryProps) {
+}: NumberGameHistoryProps) {
   const isSidebar = variant === "sidebar";
   const [activeTab, setActiveTab] = useState<HistoryTabKey>("draws");
   const tabOptions = useMemo(
@@ -101,7 +101,7 @@ function renderDrawHistory({
   isLoading,
   error,
 }: {
-  records: P5DrawRecord[];
+  records: NumberGameDrawRecord[];
   isSidebar: boolean;
   isLoading: boolean;
   error: string;

@@ -6,9 +6,7 @@ import {
   GameDrawRecordResponseDtoDrawStatusEnum,
   GameDrawRecordResponseDtoSourceTypeEnum,
 } from "@/app/generated/api/data-contracts";
-import { P5Board } from "./p5/p5-board";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
-import { P5History } from "./p5/p5-history";
 import { readStoredSession } from "@/app/lib/auth";
 import {
   createMemberGameBet,
@@ -23,25 +21,31 @@ import {
   useFloatingNotificationBubbles,
 } from "@/app/shared/components/ui/floating-notification-bubbles";
 import {
+  NUMBER_GAME_MODEL_CONFIGS,
+  resolveModelKeyByGameModelId,
+} from "./model-config";
+import { NumberGameBoard } from "./number-game-board";
+import { NumberGameHistory } from "./number-game-history";
+import {
   createBetItem,
   createEmptyDigits,
   createRandomDigits,
   formatCompactDigits,
-  formatP5DateTime,
+  formatDateTime,
   formatServerDrivenCountdown,
-  mapClientDrawRecordToP5Record,
-  P5_AMOUNT_OPTIONS,
+  mapClientDrawRecordToNumberGameRecord,
+  NUMBER_GAME_AMOUNT_OPTIONS,
   resolveServerTimeOffset,
-} from "./p5/p5.utils";
+} from "./number-game.utils";
 import type {
-  P5BetAmount,
-  P5BetItem,
-  P5CurrentIssue,
-  P5DrawRecord,
-  P5SelectedDigit,
-} from "./p5/p5.types";
+  NumberGameBetAmount,
+  NumberGameBetItem,
+  NumberGameCurrentIssue,
+  NumberGameDrawRecord,
+  NumberGameSelectedDigit,
+} from "./number-game.types";
 
-type P5SelectionMode = "random" | "manual";
+type NumberGameSelectionMode = "random" | "manual";
 
 type RealtimeDrawRecordPayload = {
   id: number;
@@ -52,7 +56,7 @@ type RealtimeDrawRecordPayload = {
 };
 
 function mapRealtimeRecord(payload: RealtimeDrawRecordPayload) {
-  return mapClientDrawRecordToP5Record({
+  return mapClientDrawRecordToNumberGameRecord({
     id: payload.id,
     issueNo: payload.issueNo,
     openCode: payload.openCode,
@@ -67,17 +71,16 @@ function mapRealtimeRecord(payload: RealtimeDrawRecordPayload) {
   });
 }
 
-export default function GamePage() {
+export default function NumberGameRoom() {
   const params = useParams<{ gameId: string }>();
   const session = useMemo(() => readStoredSession(), []);
-  const [digits, setDigits] = useState<P5SelectedDigit[]>(() =>
-    createEmptyDigits(),
-  );
-  const [records, setRecords] = useState<P5DrawRecord[]>([]);
-  const [betItems, setBetItems] = useState<P5BetItem[]>([]);
+  const [records, setRecords] = useState<NumberGameDrawRecord[]>([]);
+  const [betItems, setBetItems] = useState<NumberGameBetItem[]>([]);
   const [betHistory, setBetHistory] = useState<ClientBetOrder[]>([]);
-  const [selectionMode, setSelectionMode] = useState<P5SelectionMode>("manual");
-  const [currentIssue, setCurrentIssue] = useState<P5CurrentIssue | null>(null);
+  const [selectionMode, setSelectionMode] =
+    useState<NumberGameSelectionMode>("manual");
+  const [currentIssue, setCurrentIssue] =
+    useState<NumberGameCurrentIssue | null>(null);
   const [drawError, setDrawError] = useState("");
   const [betHistoryError, setBetHistoryError] = useState("");
   const [gameDetail, setGameDetail] = useState<ClientGame | null>(null);
@@ -90,11 +93,19 @@ export default function GamePage() {
   const canLoadDrawData = Boolean(
     session?.accessToken && Number.isInteger(gameId) && gameId > 0,
   );
-  const [isDrawLoading, setIsDrawLoading] = useState(canLoadDrawData);
-  const [isBetHistoryLoading, setIsBetHistoryLoading] =
-    useState(canLoadDrawData);
-  const [isGameDetailLoading, setIsGameDetailLoading] =
-    useState(canLoadDrawData);
+  const [isDrawLoading, setIsDrawLoading] = useState(false);
+  const [loadedBetHistoryGameId, setLoadedBetHistoryGameId] = useState<
+    number | null
+  >(null);
+
+  const currentModelKey = useMemo(
+    () => resolveModelKeyByGameModelId(gameDetail?.gameModelId),
+    [gameDetail?.gameModelId],
+  );
+  const modelConfig = NUMBER_GAME_MODEL_CONFIGS[currentModelKey];
+  const [digits, setDigits] = useState<NumberGameSelectedDigit[]>(() =>
+    createEmptyDigits(modelConfig.ballCount),
+  );
 
   const latestDrawDigits = records[0]?.digits ?? [];
   const totalAmount = useMemo(
@@ -110,12 +121,14 @@ export default function GamePage() {
       ),
     [currentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
   );
-  // 如果 drawError 非空但无法加载开奖数据，则说明是连接问题导致的错误，此时提示更通用的错误信息
   const drawErrorText = canLoadDrawData
     ? drawError
     : "无法读取当前游戏的开奖信息";
-  // 如果 currentIssue 存在但状态为未知值，也说明是连接问题导致的错误，此时提示更通用的错误信息
   const drawStatusText = currentIssue ? currentIssue.status : "读取中";
+  const isGameDetailLoading =
+    canLoadDrawData && gameDetail?.id !== gameId && !gameDetailError;
+  const isBetHistoryLoading =
+    canLoadDrawData && loadedBetHistoryGameId !== gameId && !betHistoryError;
 
   useEffect(() => {
     if (!canLoadDrawData) {
@@ -133,14 +146,10 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
-      setIsGameDetailLoading(false);
       return;
     }
 
     let isCancelled = false;
-
-    setIsGameDetailLoading(true);
-    setGameDetailError("");
 
     void fetchMemberGame(session.accessToken, gameId)
       .then((detail) => {
@@ -167,13 +176,7 @@ export default function GamePage() {
           durationMs: 3200,
         });
       })
-      .finally(() => {
-        if (isCancelled) {
-          return;
-        }
-
-        setIsGameDetailLoading(false);
-      });
+      .finally(() => undefined);
 
     return () => {
       isCancelled = true;
@@ -182,51 +185,15 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
-      setIsDrawLoading(false);
       return;
     }
 
     const socket = createClientRealtimeSocket(session.accessToken);
 
-    pushBubble({
-      title: "实时连接",
-      message: "实时连接建立中...",
-      tone: "info",
-      durationMs: 2200,
-    });
-
-    socket.on("connect", () => {
-      pushBubble({
-        title: "实时连接",
-        message: "连接成功，等待服务器认证...",
-        tone: "info",
-        durationMs: 2200,
-      });
-    });
-
     socket.on("socket:ready", () => {
       setIsDrawLoading(true);
       setDrawError("");
-      pushBubble({
-        title: "身份认证",
-        message: "认证成功，正在进入游戏房间...",
-        tone: "info",
-        durationMs: 2400,
-      });
       socket.emit("game:join", { gameId });
-    });
-
-    socket.on("game:joined", (payload: { gameId: number; message: string }) => {
-      if (payload.gameId !== gameId) {
-        return;
-      }
-
-      pushBubble({
-        title: "房间提示",
-        message: payload.message,
-        tone: "success",
-        durationMs: 3000,
-      });
     });
 
     socket.on(
@@ -248,12 +215,6 @@ export default function GamePage() {
 
         setDrawError("");
         setIsDrawLoading(false);
-        pushBubble({
-          title: "房间同步",
-          message: "实时连接正常，已同步房间快照",
-          tone: "success",
-          durationMs: 2200,
-        });
         setRecords(payload.records.map(mapRealtimeRecord));
         setServerTimeOffsetMs(
           resolveServerTimeOffset(payload.currentIssue.serverTime),
@@ -264,7 +225,7 @@ export default function GamePage() {
           serverTime: payload.currentIssue.serverTime,
           nextDrawAt: payload.currentIssue.nextDrawAt,
           status: payload.currentIssue.status,
-          lastDrawAt: formatP5DateTime(payload.currentIssue.lastDrawAt),
+          lastDrawAt: formatDateTime(payload.currentIssue.lastDrawAt),
         });
       },
     );
@@ -295,7 +256,7 @@ export default function GamePage() {
           serverTime: payload.currentIssue.serverTime,
           nextDrawAt: payload.currentIssue.nextDrawAt,
           status: payload.currentIssue.status,
-          lastDrawAt: formatP5DateTime(payload.currentIssue.lastDrawAt),
+          lastDrawAt: formatDateTime(payload.currentIssue.lastDrawAt),
         });
         setRecords((current) => {
           const nextRecord = mapRealtimeRecord(payload.record);
@@ -309,78 +270,26 @@ export default function GamePage() {
 
     socket.on("game:error", (payload: { message: string }) => {
       setIsDrawLoading(false);
-      pushBubble({
-        title: "房间异常",
-        message: payload.message,
-        tone: "error",
-        durationMs: 3600,
-      });
       setDrawError(payload.message);
     });
 
     socket.on("socket:error", (payload: { message: string }) => {
       setIsDrawLoading(false);
-      pushBubble({
-        title: "连接异常",
-        message: payload.message,
-        tone: "error",
-        durationMs: 3600,
-      });
       setDrawError(payload.message);
-    });
-
-    socket.on("disconnect", (reason: string) => {
-      pushBubble({
-        title: "连接断开",
-        message: `实时连接已断开：${reason}`,
-        tone: "warning",
-        durationMs: 3200,
-      });
-    });
-
-    socket.io.on("reconnect_attempt", (attempt) => {
-      pushBubble({
-        title: "正在重连",
-        message: `实时连接重试中，第 ${attempt} 次...`,
-        tone: "warning",
-        durationMs: 2400,
-      });
-    });
-
-    socket.io.on("reconnect", () => {
-      pushBubble({
-        title: "重连成功",
-        message: "重连成功，等待服务器重新认证...",
-        tone: "info",
-        durationMs: 2400,
-      });
-    });
-
-    socket.io.on("reconnect_error", () => {
-      pushBubble({
-        title: "重连失败",
-        message: "重连失败，正在继续尝试...",
-        tone: "warning",
-        durationMs: 2600,
-      });
     });
 
     return () => {
       socket.emit("game:leave");
       socket.disconnect();
     };
-  }, [canLoadDrawData, gameId, pushBubble, session?.accessToken]);
+  }, [canLoadDrawData, gameId, session?.accessToken]);
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
-      setIsBetHistoryLoading(false);
       return;
     }
 
     let isCancelled = false;
-
-    setIsBetHistoryLoading(true);
-    setBetHistoryError("");
 
     void fetchMemberBets(session.accessToken, {
       page: 1,
@@ -393,6 +302,7 @@ export default function GamePage() {
         }
 
         setBetHistory(response.items);
+        setLoadedBetHistoryGameId(gameId);
       })
       .catch((error: unknown) => {
         if (isCancelled) {
@@ -403,13 +313,7 @@ export default function GamePage() {
         setBetHistoryError(
           error instanceof Error ? error.message : "读取投注历史失败",
         );
-      })
-      .finally(() => {
-        if (isCancelled) {
-          return;
-        }
-
-        setIsBetHistoryLoading(false);
+        setLoadedBetHistoryGameId(gameId);
       });
 
     return () => {
@@ -417,7 +321,7 @@ export default function GamePage() {
     };
   }, [canLoadDrawData, gameId, session?.accessToken]);
 
-  const handleModeChange = (mode: P5SelectionMode) => {
+  const handleModeChange = (mode: NumberGameSelectionMode) => {
     setSelectionMode(mode);
   };
 
@@ -434,11 +338,11 @@ export default function GamePage() {
 
   const handleRandomPick = () => {
     setSelectionMode("random");
-    setDigits(createRandomDigits());
+    setDigits(createRandomDigits(modelConfig.ballCount));
   };
 
   const handleClear = () => {
-    setDigits(createEmptyDigits());
+    setDigits(createEmptyDigits(modelConfig.ballCount));
   };
 
   const handleSaveToBetArea = () => {
@@ -452,7 +356,10 @@ export default function GamePage() {
     ]);
   };
 
-  const handleBetAmountChange = (betId: string, amount: P5BetAmount) => {
+  const handleBetAmountChange = (
+    betId: string,
+    amount: NumberGameBetAmount,
+  ) => {
     setBetItems((current) =>
       current.map((item) => (item.id === betId ? { ...item, amount } : item)),
     );
@@ -471,7 +378,7 @@ export default function GamePage() {
       issueNo: currentIssue?.issue ?? undefined,
       items: betItems.map((item) => ({
         displayText: formatCompactDigits(item.digits),
-        betType: "p5-single-number",
+        betType: modelConfig.betType,
         amount: item.amount,
         selection: {
           digits: item.digits,
@@ -479,12 +386,13 @@ export default function GamePage() {
         },
         extraPayload: {
           source: item.source,
+          model: modelConfig.key,
         },
       })),
     })
       .then((result) => {
         setBetItems([]);
-        setDigits(createEmptyDigits());
+        setDigits(createEmptyDigits(modelConfig.ballCount));
         setBetHistory((current) => [result, ...current].slice(0, 20));
         pushBubble({
           title: "下注成功",
@@ -512,7 +420,7 @@ export default function GamePage() {
 
       <GameLayoutLeftSidebarSlot
         content={
-          <P5History
+          <NumberGameHistory
             records={records}
             betOrders={betHistory}
             variant="sidebar"
@@ -524,7 +432,10 @@ export default function GamePage() {
         }
       />
 
-      <P5Board
+      <NumberGameBoard
+        gameDisplayName={modelConfig.displayName}
+        playRules={modelConfig.playRules}
+        positions={modelConfig.positions}
         gameDetail={gameDetail}
         isGameDetailLoading={isGameDetailLoading}
         gameDetailError={gameDetailError}
@@ -537,7 +448,7 @@ export default function GamePage() {
         betItems={betItems}
         selectionMode={selectionMode}
         totalAmount={totalAmount}
-        amountOptions={P5_AMOUNT_OPTIONS}
+        amountOptions={NUMBER_GAME_AMOUNT_OPTIONS}
         onModeChange={handleModeChange}
         onDigitChange={handleDigitChange}
         onRandomPick={handleRandomPick}

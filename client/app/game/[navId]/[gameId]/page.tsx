@@ -1,11 +1,11 @@
 "use client";
 
-import P5 from "./_components/p5";
+import NumberGameRoom from "./_components/number-game/number-game-room";
 
 export default function GamePage() {
   return (
     <main className="space-y-6">
-      <P5 />
+      <NumberGameRoom />
     </main>
   );
 }

@@ -1,11 +1,11 @@
-export type P5DrawRecord = {
+export type NumberGameDrawRecord = {
   id: string | number;
   issue: string;
   digits: number[];
   drawnAt: string;
 };
 
-export type P5CurrentIssue = {
+export type NumberGameCurrentIssue = {
   issue: string | null;
   serverTime: string;
   nextDrawAt: string;
@@ -13,20 +13,18 @@ export type P5CurrentIssue = {
   lastDrawAt: string | null;
 };
 
-export type P5SelectedDigit = number | null;
+export type NumberGameSelectedDigit = number | null;
 
-export type P5BetAmount = 2 | 10 | 20 | 50;
+export type NumberGameBetAmount = 2 | 10 | 20 | 50;
 
-export type P5BetItem = {
+export type NumberGameBetItem = {
   id: string;
   digits: number[];
-  amount: P5BetAmount;
+  amount: NumberGameBetAmount;
   source: "random" | "manual";
 };
 
-export type P5OddsMode = "fixed" | "custom";
-
-export type P5Position = {
+export type NumberGamePosition = {
   key: string;
   label: string;
 };

@@ -49,7 +49,7 @@ export function GameCard({ game, index }: GameCardProps) {
         <div className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold tracking-[0.3em] text-white/70">
-              MODEL {game.gameModelId}
+              游戏模型： {game.gameModelId}
             </p>
             <h4 className="mt-2 truncate text-2xl font-semibold">
               {game.label}
@@ -67,7 +67,7 @@ export function GameCard({ game, index }: GameCardProps) {
       </div>
 
       <div className="space-y-4 p-5">
-        <p className="line-clamp-3 min-h-[5.25rem] text-sm leading-7 text-[var(--muted)]">
+        <p className="line-clamp-3 min-h-[5.25rem] whitespace-pre-line text-sm leading-7 text-[var(--muted)]">
           {game.description ||
             "当前游戏暂无更多说明，后续可继续补充更完整的介绍内容。"}
         </p>
@@ -86,11 +86,11 @@ export function GameCard({ game, index }: GameCardProps) {
 
         <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.24em] text-[var(--accent)]">
-              LIVE DATA
-            </p>
-            <p className="mt-1 text-sm text-[var(--foreground)]">
-              已接入服务端真实游戏数据
+            <p className="text-sm text-[var(--foreground)]">
+              当前状态：
+              <span className="font-medium">
+                {formatGameStatus(game.status)}
+              </span>
             </p>
           </div>
           <Link href={`${pathname}/${game.id}`} passHref>
