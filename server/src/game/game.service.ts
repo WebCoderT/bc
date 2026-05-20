@@ -22,6 +22,7 @@ import { NavigationStatus } from '../navigator/enums/navigation-status.enum';
 import { resolveNavigationPath } from '../navigator/utils/navigation-path.util';
 import { GameDrawService } from '../game-draw/game-draw.service';
 import { GameModel } from '../game-model/entities/game-model.entity';
+import { DEFAULT_GAMES } from './default-games';
 
 type NormalizedGameInput = {
   label: string;
@@ -53,6 +54,59 @@ export class GameService {
     private readonly gameModelRepository: Repository<GameModel>,
     private readonly gameDrawService: GameDrawService,
   ) {}
+
+  async ensureDefaultGames() {
+    for (const seed of DEFAULT_GAMES) {
+      const category = await this.navigationRepository.findOne({
+        where: { path: seed.categoryPath },
+      });
+
+      if (!category) {
+        throw new NotFoundException(
+          `默认游戏分类 ${seed.categoryPath} 不存在，无法同步 ${seed.label}`,
+        );
+      }
+
+      const normalizedInput = this.normalizeInput({
+        label: seed.label,
+        description: seed.description,
+        iconUrl: seed.iconUrl,
+        category: category.id,
+        gameModelId: seed.gameModelId,
+        drawInterval: seed.drawInterval,
+        status: seed.status,
+        oddsMode: seed.oddsMode,
+        fixedOdds: seed.fixedOdds ?? undefined,
+        customPayoutConfig: seed.customPayoutConfig ?? undefined,
+      });
+
+      await this.ensureCategoryIsValid(normalizedInput.categoryId);
+      await this.ensureGameModelIsValid(normalizedInput.gameModelId);
+      this.ensureOddsConfigIsValid(normalizedInput);
+
+      const existingGame = await this.gameRepository.findOne({
+        where: { label: normalizedInput.label },
+        relations: { category: true, gameModel: true },
+      });
+
+      if (!existingGame) {
+        const game = this.gameRepository.create(
+          this.toEntityPayload(normalizedInput),
+        );
+        const savedGame = await this.gameRepository.save(game);
+
+        await this.gameDrawService.initializeGameResources(savedGame.id);
+        continue;
+      }
+
+      if (this.hasGameChanged(existingGame, normalizedInput)) {
+        Object.assign(existingGame, this.toEntityPayload(normalizedInput));
+        await this.gameRepository.save(existingGame);
+      }
+
+      await this.gameDrawService.syncGameResources(existingGame.id);
+    }
+  }
 
   /**
    * 创建游戏，并校验游戏名称、分类导航和游戏模型合法性。
@@ -469,6 +523,34 @@ export class GameService {
           ? input.customPayoutConfig
           : null,
     };
+  }
+
+  private hasGameChanged(game: Game, input: NormalizedGameInput) {
+    const currentCategoryId =
+      game.categoryId ?? this.extractNavigationId(game.category);
+    const currentGameModelId =
+      game.gameModelId ?? this.extractGameModelId(game.gameModel);
+    const currentFixedOdds =
+      typeof game.fixedOdds === 'number' ? Number(game.fixedOdds) : null;
+    const currentCustomPayoutConfig = JSON.stringify(
+      game.customPayoutConfig ?? null,
+    );
+    const nextCustomPayoutConfig = JSON.stringify(
+      input.customPayoutConfig ?? null,
+    );
+
+    return (
+      game.label !== input.label ||
+      game.description !== input.description ||
+      (game.iconUrl ?? '') !== input.iconUrl ||
+      currentCategoryId !== input.categoryId ||
+      currentGameModelId !== input.gameModelId ||
+      Number(game.drawInterval ?? 0) !== input.drawInterval ||
+      game.status !== input.status ||
+      (game.oddsMode ?? GameOddsMode.FIXED) !== input.oddsMode ||
+      currentFixedOdds !== input.fixedOdds ||
+      currentCustomPayoutConfig !== nextCustomPayoutConfig
+    );
   }
 
   /**

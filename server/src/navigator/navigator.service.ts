@@ -13,6 +13,7 @@ import { NavigationEntity } from './entities/navigator.entity';
 import { NavigationStatus } from './enums/navigation-status.enum';
 import { Repository } from 'typeorm';
 import { resolveNavigationPath } from './utils/navigation-path.util';
+import { DEFAULT_GAME_NAVIGATIONS } from './default-game-navigations';
 
 @Injectable()
 /**
@@ -26,6 +27,66 @@ export class NavigatorService {
     @InjectRepository(NavigationEntity)
     private readonly navigationRepository: Repository<NavigationEntity>,
   ) {}
+
+  async ensureDefaultGameNavigations() {
+    const ensuredNavigations = new Map<string, NavigationEntity>();
+
+    for (const seed of DEFAULT_GAME_NAVIGATIONS) {
+      const parent = seed.parentKey
+        ? (ensuredNavigations.get(seed.parentKey) ?? null)
+        : null;
+      const existingNavigation = await this.navigationRepository.findOne({
+        where: { path: seed.path },
+      });
+
+      if (!existingNavigation) {
+        const navigation = this.navigationRepository.create({
+          name: seed.name,
+          path: seed.path,
+          description: seed.description,
+          icon: seed.icon,
+          type: seed.type,
+          status: seed.status,
+          sort: seed.sort,
+          parentId: parent?.id ?? null,
+        });
+        const savedNavigation =
+          await this.navigationRepository.save(navigation);
+
+        ensuredNavigations.set(seed.key, savedNavigation);
+        continue;
+      }
+
+      const shouldUpdate =
+        existingNavigation.name !== seed.name ||
+        existingNavigation.description !== seed.description ||
+        existingNavigation.icon !== seed.icon ||
+        existingNavigation.type !== seed.type ||
+        existingNavigation.status !== seed.status ||
+        Number(existingNavigation.sort ?? 0) !== seed.sort ||
+        (existingNavigation.parentId ?? null) !== (parent?.id ?? null);
+
+      if (shouldUpdate) {
+        Object.assign(existingNavigation, {
+          name: seed.name,
+          description: seed.description,
+          icon: seed.icon,
+          type: seed.type,
+          status: seed.status,
+          sort: seed.sort,
+          parentId: parent?.id ?? null,
+        });
+
+        const savedNavigation =
+          await this.navigationRepository.save(existingNavigation);
+
+        ensuredNavigations.set(seed.key, savedNavigation);
+        continue;
+      }
+
+      ensuredNavigations.set(seed.key, existingNavigation);
+    }
+  }
 
   /**
    * 创建导航前先做输入标准化、父级校验与路径唯一性校验。
