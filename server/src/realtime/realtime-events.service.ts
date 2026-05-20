@@ -27,6 +27,15 @@ export type GameDrawUpdatedPayload = {
   };
 };
 
+export type WalletBalanceUpdatedPayload = {
+  userId: number;
+  rechargeAmount: number;
+  bonusAmount: number;
+  totalBalance: number;
+  changeAmount: number;
+  reason: 'bet-created' | 'bet-settled' | 'admin-updated';
+};
+
 @Injectable()
 export class RealtimeEventsService {
   private readonly emitter = new EventEmitter();
@@ -40,6 +49,20 @@ export class RealtimeEventsService {
 
     return () => {
       this.emitter.off('game.draw.updated', listener);
+    };
+  }
+
+  emitWalletBalanceUpdated(payload: WalletBalanceUpdatedPayload) {
+    this.emitter.emit('wallet.balance.updated', payload);
+  }
+
+  onWalletBalanceUpdated(
+    listener: (payload: WalletBalanceUpdatedPayload) => void,
+  ) {
+    this.emitter.on('wallet.balance.updated', listener);
+
+    return () => {
+      this.emitter.off('wallet.balance.updated', listener);
     };
   }
 }

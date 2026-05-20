@@ -11,7 +11,9 @@ import { createPaginatedResult } from '../common/utils/pagination.util';
 import { Game } from '../game/entities/game.entity';
 import { GameOddsMode } from '../game/enums/game-odds-mode.enum';
 import { GameType } from '../game/enums/game-type.enum';
+import { RealtimeEventsService } from '../realtime/realtime-events.service';
 import { UserEntity } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 import { BetOrderEntity } from './entities/bet-order.entity';
 import { BetItemEntity } from './entities/bet-item.entity';
 import {
@@ -36,6 +38,8 @@ type NormalizedBetItem = {
 export class BetService {
   constructor(
     private readonly dataSource: DataSource,
+    private readonly usersService: UsersService,
+    private readonly realtimeEventsService: RealtimeEventsService,
     @InjectRepository(BetOrderEntity)
     private readonly betOrderRepository: Repository<BetOrderEntity>,
     @InjectRepository(Game)
@@ -93,81 +97,93 @@ export class BetService {
       .slice(0, 5)
       .join('、');
 
-    const savedOrder = await this.dataSource.transaction(async (manager) => {
-      const transactionalUserRepository = manager.getRepository(UserEntity);
-      const transactionalOrderRepository =
-        manager.getRepository(BetOrderEntity);
-      const transactionalItemRepository = manager.getRepository(BetItemEntity);
+    const transactionResult = await this.dataSource.transaction(
+      async (manager) => {
+        const transactionalUserRepository = manager.getRepository(UserEntity);
+        const transactionalOrderRepository =
+          manager.getRepository(BetOrderEntity);
+        const transactionalItemRepository =
+          manager.getRepository(BetItemEntity);
 
-      const lockedUser = await transactionalUserRepository.findOne({
-        where: { id: userId },
-      });
+        const lockedUser = await transactionalUserRepository.findOne({
+          where: { id: userId },
+        });
 
-      if (!lockedUser) {
-        throw new NotFoundException('用户不存在');
-      }
+        if (!lockedUser) {
+          throw new NotFoundException('用户不存在');
+        }
 
-      const lockedBalance = this.roundCurrency(
-        Number(lockedUser.rechargeAmount ?? 0) +
-          Number(lockedUser.bonusAmount ?? 0),
-      );
+        const lockedBalance = this.roundCurrency(
+          Number(lockedUser.rechargeAmount ?? 0) +
+            Number(lockedUser.bonusAmount ?? 0),
+        );
 
-      if (totalAmount > lockedBalance) {
-        throw new BadRequestException('账户余额不足，无法完成下注');
-      }
+        if (totalAmount > lockedBalance) {
+          throw new BadRequestException('账户余额不足，无法完成下注');
+        }
 
-      this.deductUserBalance(lockedUser, totalAmount);
-      await transactionalUserRepository.save(lockedUser);
+        this.deductUserBalance(lockedUser, totalAmount);
+        await transactionalUserRepository.save(lockedUser);
 
-      const order = transactionalOrderRepository.create({
-        user: lockedUser,
-        game,
-        issueNo: input.issueNo?.trim() || null,
-        gameLabelSnapshot: game.label,
-        betStrategyKey: game.gameModelId,
-        status: 'placed',
-        totalAmount,
-        itemCount: normalizedItems.length,
-        estimatedPayout,
-        estimatedProfit,
-        oddsModeSnapshot: game.oddsMode,
-        fixedOddsSnapshot: game.fixedOdds,
-        oddsSnapshotText: this.getOddsSummary(game),
-        selectionSummary,
-        isWinning: null,
-        payoutAmount: 0,
-        settlementOpenCode: null,
-        settledAt: null,
-        extraPayload: {
-          gameDescription: game.description,
-        },
-      });
-
-      const saved = await transactionalOrderRepository.save(order);
-
-      const itemEntities = normalizedItems.map((item) =>
-        transactionalItemRepository.create({
-          order: saved,
-          itemIndex: item.itemIndex,
-          betType: item.betType,
-          displayText: item.displayText,
-          amount: item.amount,
-          estimatedPayout: item.estimatedPayout,
-          estimatedProfit: item.estimatedProfit,
-          selectionPayload: item.selection,
-          extraPayload: item.extraPayload,
+        const order = transactionalOrderRepository.create({
+          user: lockedUser,
+          game,
+          issueNo: input.issueNo?.trim() || null,
+          gameLabelSnapshot: game.label,
+          betStrategyKey: game.gameModelId,
+          status: 'placed',
+          totalAmount,
+          itemCount: normalizedItems.length,
+          estimatedPayout,
+          estimatedProfit,
+          oddsModeSnapshot: game.oddsMode,
+          fixedOddsSnapshot: game.fixedOdds,
+          oddsSnapshotText: this.getOddsSummary(game),
+          selectionSummary,
           isWinning: null,
           payoutAmount: 0,
+          settlementOpenCode: null,
           settledAt: null,
-        }),
-      );
+          extraPayload: {
+            gameDescription: game.description,
+          },
+        });
 
-      await transactionalItemRepository.save(itemEntities);
+        const saved = await transactionalOrderRepository.save(order);
 
-      return saved;
-    });
+        const itemEntities = normalizedItems.map((item) =>
+          transactionalItemRepository.create({
+            order: saved,
+            itemIndex: item.itemIndex,
+            betType: item.betType,
+            displayText: item.displayText,
+            amount: item.amount,
+            estimatedPayout: item.estimatedPayout,
+            estimatedProfit: item.estimatedProfit,
+            selectionPayload: item.selection,
+            extraPayload: item.extraPayload,
+            isWinning: null,
+            payoutAmount: 0,
+            settledAt: null,
+          }),
+        );
 
-    const order = await this.findOrderById(savedOrder.id);
+        await transactionalItemRepository.save(itemEntities);
+
+        return {
+          savedOrder: saved,
+          updatedUser: lockedUser,
+        };
+      },
+    );
+
+    this.usersService.emitWalletBalanceUpdated(
+      transactionResult.updatedUser,
+      -totalAmount,
+      'bet-created',
+    );
+
+    const order = await this.findOrderById(transactionResult.savedOrder.id);
 
     if (!order) {
       throw new NotFoundException('注单不存在');

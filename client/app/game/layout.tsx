@@ -5,6 +5,7 @@ import { GameUserProvider } from "./vip/game-user-context";
 import { GameLayoutShell } from "./components/game-layout-shell";
 import { GameLayoutSidebarProvider } from "./components/game-layout-sidebar";
 import { useGameSession } from "./hooks/use-game-session";
+import { FloatingNotificationBubbles } from "../shared/components/ui/floating-notification-bubbles";
 
 /**
  * `/game` 顶层布局。
@@ -13,8 +14,14 @@ import { useGameSession } from "./hooks/use-game-session";
  * 展示结构交给共享壳组件处理。
  */
 export default function GameLayout({ children }: { children: ReactNode }) {
-  const { isReady, navigations, user, walletSummary, logout } =
-    useGameSession();
+  const {
+    isReady,
+    navigations,
+    user,
+    walletSummary,
+    logout,
+    notificationItems,
+  } = useGameSession();
 
   if (!isReady || !user) {
     return (
@@ -34,6 +41,7 @@ export default function GameLayout({ children }: { children: ReactNode }) {
 
   return (
     <GameUserProvider user={user}>
+      <FloatingNotificationBubbles items={notificationItems} />
       <GameLayoutSidebarProvider>
         <GameLayoutShell
           navigations={navigations}

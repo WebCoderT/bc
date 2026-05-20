@@ -11,6 +11,11 @@ import {
   writeStoredSession,
 } from "../../lib/auth";
 import { fetchMemberNavigations } from "../../lib/client-api";
+import { createClientRealtimeSocket } from "../../lib/client-realtime";
+import {
+  FloatingNotificationBubbles,
+  useFloatingNotificationBubbles,
+} from "../../shared/components/ui/floating-notification-bubbles";
 import {
   clearGameNavigations,
   setGameNavigations,
@@ -26,8 +31,11 @@ import {
 export function useGameSession() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const { navigations } = useGameNavigationStore();
+  const { items: notificationItems, pushBubble } =
+    useFloatingNotificationBubbles();
 
   useEffect(() => {
     /**
@@ -51,6 +59,7 @@ export function useGameSession() {
           ).catch(() => null);
 
           writeStoredSession(refreshedSession);
+          setAccessToken(refreshedSession.accessToken);
           setUser(refreshedSession.user);
           setGameNavigations(navigationResult ? navigationResult.items : []);
           setIsReady(true);
@@ -64,6 +73,65 @@ export function useGameSession() {
 
     return () => window.clearTimeout(timer);
   }, [router]);
+
+  useEffect(() => {
+    if (!accessToken || !user) {
+      return;
+    }
+
+    const socket = createClientRealtimeSocket(accessToken);
+
+    socket.on(
+      "wallet:balance-updated",
+      (payload: {
+        userId: number;
+        rechargeAmount: number;
+        bonusAmount: number;
+        totalBalance: number;
+        changeAmount: number;
+        reason: "bet-created" | "bet-settled" | "admin-updated";
+      }) => {
+        if (payload.userId !== user.id) {
+          return;
+        }
+
+        const storedSession = readStoredSession();
+
+        if (!storedSession) {
+          return;
+        }
+
+        const nextUser = {
+          ...storedSession.user,
+          rechargeAmount: payload.rechargeAmount,
+          bonusAmount: payload.bonusAmount,
+          totalBalance: payload.totalBalance,
+        };
+
+        writeStoredSession({
+          ...storedSession,
+          user: nextUser,
+        });
+        setUser(nextUser);
+
+        const changeLabel =
+          payload.changeAmount > 0
+            ? `+${formatAuthCurrency(payload.changeAmount)}`
+            : formatAuthCurrency(payload.changeAmount);
+
+        pushBubble({
+          title: "钱包余额更新",
+          message: `余额已同步，变动 ${changeLabel}，当前余额 ${formatAuthCurrency(payload.totalBalance)}`,
+          tone: payload.changeAmount >= 0 ? "success" : "warning",
+          durationMs: 3600,
+        });
+      },
+    );
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [accessToken, pushBubble, user]);
 
   /**
    * 钱包摘要属于派生数据，使用 useMemo 可以表达“由 user 推导而来”。
@@ -84,6 +152,7 @@ export function useGameSession() {
    * 退出逻辑集中在 hook 内，避免多个组件自行操作本地存储。
    */
   const logout = () => {
+    setAccessToken(null);
     clearStoredSession();
     clearGameNavigations();
     router.replace("/");
@@ -95,5 +164,6 @@ export function useGameSession() {
     user,
     walletSummary,
     logout,
+    notificationItems,
   };
 }

@@ -60,6 +60,12 @@ export class GameRealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
         .to(this.getGameRoomName(payload.gameId))
         .emit('game:draw-updated', payload);
     });
+
+    this.realtimeEventsService.onWalletBalanceUpdated((payload) => {
+      this.server
+        .to(this.getUserRoomName(payload.userId))
+        .emit('wallet:balance-updated', payload);
+    });
   }
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -79,6 +85,8 @@ export class GameRealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
         username: user.username,
         role: user.role,
       };
+
+      client.join(this.getUserRoomName(user.id));
 
       this.userPresenceService.registerConnection({
         socketId: client.id,
@@ -202,6 +210,10 @@ export class GameRealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   private getGameRoomName(gameId: number) {
     return `game:${gameId}`;
+  }
+
+  private getUserRoomName(userId: number) {
+    return `user:${userId}`;
   }
 
   private extractToken(client: Socket) {

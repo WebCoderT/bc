@@ -7,6 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import { DataSource, Like, Repository } from 'typeorm';
 import { Role } from '../common/enums/role.enum';
 import { createPaginatedResult } from '../common/utils/pagination.util';
+import { RealtimeEventsService } from '../realtime/realtime-events.service';
 import { DEFAULT_USER_AVATAR } from './default-avatar';
 import { UserEntity } from './entities/user.entity';
 import { UserPresenceService } from './user-presence.service';
@@ -57,6 +58,7 @@ export class UsersService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly userPresenceService: UserPresenceService,
+    private readonly realtimeEventsService: RealtimeEventsService,
   ) {
     this.usersRepository = this.dataSource.getRepository<UserEntity>('users');
   }
@@ -175,6 +177,9 @@ export class UsersService {
       }
     }
 
+    const previousTotalBalance =
+      Number(user.rechargeAmount ?? 0) + Number(user.bonusAmount ?? 0);
+
     user.username = input.username;
     user.avatar = input.avatar?.trim() || DEFAULT_USER_AVATAR;
     user.role = input.role;
@@ -183,7 +188,34 @@ export class UsersService {
     user.createdAt = new Date(input.createdAt);
 
     const savedUser = await this.usersRepository.save(user);
+    this.emitWalletBalanceUpdated(
+      savedUser,
+      Number(
+        (
+          Number(savedUser.rechargeAmount ?? 0) +
+          Number(savedUser.bonusAmount ?? 0) -
+          previousTotalBalance
+        ).toFixed(2),
+      ),
+      'admin-updated',
+    );
     return this.toSafeUser(savedUser);
+  }
+
+  emitWalletBalanceUpdated(
+    user: UserEntity,
+    changeAmount: number,
+    reason: 'bet-created' | 'bet-settled' | 'admin-updated',
+  ) {
+    this.realtimeEventsService.emitWalletBalanceUpdated({
+      userId: user.id,
+      rechargeAmount: Number(user.rechargeAmount ?? 0),
+      bonusAmount: Number(user.bonusAmount ?? 0),
+      totalBalance:
+        Number(user.rechargeAmount ?? 0) + Number(user.bonusAmount ?? 0),
+      changeAmount: Number(changeAmount.toFixed(2)),
+      reason,
+    });
   }
 
   /**
