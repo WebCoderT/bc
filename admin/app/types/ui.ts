@@ -2,9 +2,9 @@ import type { AdminSafeUser } from "@/app/lib/admin-api";
 
 export type RouteItem = {
   label: string;
-  description: string;
   path: string;
   icon: string;
+  description: string;
 };
 
 export type Tone = "violet" | "emerald" | "sky" | "amber" | "rose";

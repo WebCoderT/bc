@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { CardShell } from "@/app/components/admin/ui/card-shell";
+import { ModalShell } from "@/app/components/admin/ui/modal-shell";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
+import { TableShell } from "@/app/components/admin/ui/table-shell";
 import {
   executeAdminRequest,
   fetchAdminBets,
@@ -100,6 +102,7 @@ function getSettlementClassName(
 export default function AdminBetsPage() {
   const { session, logout } = useAdminSession();
   const [bets, setBets] = useState<AdminBetOrder[]>([]);
+  const [selectedBet, setSelectedBet] = useState<AdminBetOrder | null>(null);
   const [keyword, setKeyword] = useState("");
   const [draftKeyword, setDraftKeyword] = useState("");
   const [status, setStatus] = useState<AdminBetStatus | "all">("all");
@@ -232,147 +235,108 @@ export default function AdminBetsPage() {
             </div>
           ) : null}
 
-          {bets.map((bet) => (
-            <section
-              key={bet.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-xl font-semibold text-slate-900">
-                      注单 #{bet.id}
-                    </h3>
-                    <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClassName(
-                        bet.status,
-                      )}`}
-                    >
-                      {getStatusText(bet.status)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-500">
-                    用户：{bet.user?.username ?? "未知用户"}
-                    {` · 游戏：${bet.gameLabel}`}
-                    {bet.issueNo ? ` · 期号：${bet.issueNo}` : ""}
-                    {` · ${formatDateTime(bet.placedAt)}`}
-                    {bet.settledAt
-                      ? ` · 结算：${formatDateTime(bet.settledAt)}`
-                      : ""}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {bet.selectionSummary || "暂无摘要"}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getSettlementClassName(
-                        bet.isWinning,
-                        bet.status,
-                      )}`}
-                    >
-                      {getSettlementText(bet.isWinning, bet.status)}
-                    </span>
-                    {bet.settlementOpenCode ? (
-                      <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-                        开奖号：{bet.settlementOpenCode}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryMetric
-                    title="总金额"
-                    value={formatCurrency(bet.totalAmount)}
-                  />
-                  <SummaryMetric
-                    title="预计派彩"
-                    value={
-                      bet.estimatedPayout === null
-                        ? "待规则结算"
-                        : formatCurrency(bet.estimatedPayout)
-                    }
-                  />
-                  <SummaryMetric
-                    title="预计盈利"
-                    value={
-                      bet.estimatedProfit === null
-                        ? "待规则结算"
-                        : formatCurrency(bet.estimatedProfit)
-                    }
-                  />
-                  <SummaryMetric
-                    title="实际派彩"
-                    value={formatCurrency(bet.payoutAmount)}
-                  />
-                  <SummaryMetric title="赔率快照" value={bet.oddsSummary} />
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 xl:grid-cols-2">
-                {bet.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          第 {item.itemIndex} 注 · {item.displayText}
+          {!isLoading && !loadError && bets.length > 0 ? (
+            <TableShell>
+              <table className="min-w-full divide-y divide-slate-200 bg-white text-sm">
+                <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.18em] text-slate-400">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">注单</th>
+                    <th className="px-4 py-3 font-medium">游戏信息</th>
+                    <th className="px-4 py-3 font-medium">选号摘要</th>
+                    <th className="px-4 py-3 font-medium">金额</th>
+                    <th className="px-4 py-3 font-medium">状态</th>
+                    <th className="px-4 py-3 font-medium text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {bets.map((bet) => (
+                    <tr key={bet.id} className="align-top">
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-900">
+                            注单 #{bet.id}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            用户：{bet.user?.username ?? "未知用户"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            下单：{formatDateTime(bet.placedAt)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-medium text-slate-900">
+                            {bet.gameLabel}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {bet.issueNo ? `期号：${bet.issueNo}` : "暂无期号"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {bet.items.length} 注 · 赔率：{bet.oddsSummary}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="max-w-md px-4 py-4">
+                        <p className="line-clamp-2 leading-6 text-slate-600">
+                          {bet.selectionSummary || "暂无摘要"}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          玩法：{item.betType}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-900">
+                            {formatCurrency(bet.totalAmount)}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            预计派彩：
+                            {bet.estimatedPayout === null
+                              ? "待规则结算"
+                              : formatCurrency(bet.estimatedPayout)}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            实际派彩：{formatCurrency(bet.payoutAmount)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col items-start gap-2">
                           <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getSettlementClassName(
-                              item.isWinning,
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClassName(
                               bet.status,
                             )}`}
                           >
-                            {getSettlementText(item.isWinning, bet.status)}
+                            {getStatusText(bet.status)}
                           </span>
-                          {item.settledAt ? (
-                            <span className="text-[11px] text-slate-500">
-                              结算：{formatDateTime(item.settledAt)}
+                          <span
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getSettlementClassName(
+                              bet.isWinning,
+                              bet.status,
+                            )}`}
+                          >
+                            {getSettlementText(bet.isWinning, bet.status)}
+                          </span>
+                          {bet.settlementOpenCode ? (
+                            <span className="text-xs text-slate-500">
+                              开奖号：{bet.settlementOpenCode}
                             </span>
                           ) : null}
                         </div>
-                      </div>
-                      <span className="text-sm font-semibold text-slate-900">
-                        {formatCurrency(item.amount)}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
-                        预计派彩：
-                        <span className="ml-1 font-medium text-slate-900">
-                          {item.estimatedPayout === null
-                            ? "待规则结算"
-                            : formatCurrency(item.estimatedPayout)}
-                        </span>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
-                        预计盈利：
-                        <span className="ml-1 font-medium text-slate-900">
-                          {item.estimatedProfit === null
-                            ? "待规则结算"
-                            : formatCurrency(item.estimatedProfit)}
-                        </span>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 sm:col-span-2">
-                        实际派彩：
-                        <span className="ml-1 font-medium text-slate-900">
-                          {formatCurrency(item.payoutAmount)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBet(bet)}
+                          className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                        >
+                          查看详情
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableShell>
+          ) : null}
         </div>
 
         {totalPages > 1 ? (
@@ -383,6 +347,184 @@ export default function AdminBetsPage() {
           />
         ) : null}
       </CardShell>
+
+      {selectedBet ? (
+        <BetDetailModal
+          bet={selectedBet}
+          onClose={() => setSelectedBet(null)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function BetDetailModal({
+  bet,
+  onClose,
+}: {
+  bet: AdminBetOrder;
+  onClose: () => void;
+}) {
+  return (
+    <ModalShell
+      title={`下注详情 #${bet.id}`}
+      description="查看订单摘要、结算状态与逐注明细。"
+      onClose={onClose}
+    >
+      <div className="space-y-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryMetric
+            title="总金额"
+            value={formatCurrency(bet.totalAmount)}
+          />
+          <SummaryMetric
+            title="预计派彩"
+            value={
+              bet.estimatedPayout === null
+                ? "待规则结算"
+                : formatCurrency(bet.estimatedPayout)
+            }
+          />
+          <SummaryMetric
+            title="预计盈利"
+            value={
+              bet.estimatedProfit === null
+                ? "待规则结算"
+                : formatCurrency(bet.estimatedProfit)
+            }
+          />
+          <SummaryMetric
+            title="实际派彩"
+            value={formatCurrency(bet.payoutAmount)}
+          />
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClassName(
+                bet.status,
+              )}`}
+            >
+              {getStatusText(bet.status)}
+            </span>
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getSettlementClassName(
+                bet.isWinning,
+                bet.status,
+              )}`}
+            >
+              {getSettlementText(bet.isWinning, bet.status)}
+            </span>
+            {bet.settlementOpenCode ? (
+              <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                开奖号：{bet.settlementOpenCode}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <DetailField
+              label="用户"
+              value={bet.user?.username ?? "未知用户"}
+            />
+            <DetailField label="游戏" value={bet.gameLabel} />
+            <DetailField label="期号" value={bet.issueNo || "暂无期号"} />
+            <DetailField label="赔率快照" value={bet.oddsSummary} />
+            <DetailField
+              label="下单时间"
+              value={formatDateTime(bet.placedAt)}
+            />
+            <DetailField
+              label="结算时间"
+              value={bet.settledAt ? formatDateTime(bet.settledAt) : "待结算"}
+            />
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+              选号摘要
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {bet.selectionSummary || "暂无摘要"}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {bet.items.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-2xl border border-slate-200 bg-white p-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    第 {item.itemIndex} 注 · {item.displayText}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    玩法：{item.betType}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getSettlementClassName(
+                        item.isWinning,
+                        bet.status,
+                      )}`}
+                    >
+                      {getSettlementText(item.isWinning, bet.status)}
+                    </span>
+                    {item.settledAt ? (
+                      <span className="text-[11px] text-slate-500">
+                        结算：{formatDateTime(item.settledAt)}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <span className="text-sm font-semibold text-slate-900">
+                  {formatCurrency(item.amount)}
+                </span>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  预计派彩：
+                  <span className="ml-1 font-medium text-slate-900">
+                    {item.estimatedPayout === null
+                      ? "待规则结算"
+                      : formatCurrency(item.estimatedPayout)}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  预计盈利：
+                  <span className="ml-1 font-medium text-slate-900">
+                    {item.estimatedProfit === null
+                      ? "待规则结算"
+                      : formatCurrency(item.estimatedProfit)}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 sm:col-span-2">
+                  实际派彩：
+                  <span className="ml-1 font-medium text-slate-900">
+                    {formatCurrency(item.payoutAmount)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function DetailField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+        {label}
+      </p>
+      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
     </div>
   );
 }
