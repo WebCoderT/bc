@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { GameLayoutLeftSidebarSlot } from "@/app/game/components/game-layout-sidebar";
 import { readStoredSession } from "@/app/lib/auth";
@@ -91,6 +91,9 @@ export default function DragonTigerGameRoom({
   );
   const [drawError, setDrawError] = useState("");
   const [betHistoryError, setBetHistoryError] = useState("");
+  const [loadedBetHistoryGameId, setLoadedBetHistoryGameId] = useState<
+    number | null
+  >(null);
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
   const { items: notificationItems, pushBubble } =
@@ -114,6 +117,32 @@ export default function DragonTigerGameRoom({
     [currentIssue?.nextDrawAt, serverTimeOffsetMs, tickNowMs],
   );
   const oddsSummary = formatDragonTigerOddsSummary(gameDetail);
+  const isBetHistoryLoading =
+    canLoadDrawData && loadedBetHistoryGameId !== gameId && !betHistoryError;
+
+  const refreshBetHistory = useCallback(async () => {
+    if (!canLoadDrawData || !session?.accessToken) {
+      return;
+    }
+
+    try {
+      const response = await fetchMemberBets(session.accessToken, {
+        page: 1,
+        pageSize: 20,
+        gameId,
+      });
+
+      setBetHistory(response.items);
+      setBetHistoryError("");
+      setLoadedBetHistoryGameId(gameId);
+    } catch (error: unknown) {
+      setBetHistory([]);
+      setBetHistoryError(
+        error instanceof Error ? error.message : "读取投注历史失败",
+      );
+      setLoadedBetHistoryGameId(gameId);
+    }
+  }, [canLoadDrawData, gameId, session?.accessToken]);
 
   useEffect(() => {
     if (!canLoadDrawData) {
@@ -200,6 +229,7 @@ export default function DragonTigerGameRoom({
           status: payload.currentIssue.status,
           lastDrawAt: payload.currentIssue.lastDrawAt,
         });
+        void refreshBetHistory();
       },
     );
 
@@ -238,6 +268,7 @@ export default function DragonTigerGameRoom({
             ...current.filter((item) => item.id !== nextRecord.id),
           ].slice(0, 20);
         });
+        void refreshBetHistory();
       },
     );
 
@@ -253,38 +284,21 @@ export default function DragonTigerGameRoom({
       socket.emit("game:leave");
       socket.disconnect();
     };
-  }, [canLoadDrawData, gameId, session?.accessToken]);
+  }, [canLoadDrawData, gameId, refreshBetHistory, session?.accessToken]);
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
       return;
     }
 
-    let cancelled = false;
-
-    void fetchMemberBets(session.accessToken, {
-      page: 1,
-      pageSize: 20,
-      gameId,
-    })
-      .then((response) => {
-        if (!cancelled) {
-          setBetHistory(response.items);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setBetHistory([]);
-          setBetHistoryError(
-            error instanceof Error ? error.message : "读取投注历史失败",
-          );
-        }
-      });
+    const timer = window.setTimeout(() => {
+      void refreshBetHistory();
+    }, 0);
 
     return () => {
-      cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [canLoadDrawData, gameId, session?.accessToken]);
+  }, [canLoadDrawData, refreshBetHistory, session?.accessToken]);
 
   const handleAddBet = (side: DragonTigerSideKey) => {
     setSelectedSide(side);
@@ -330,6 +344,7 @@ export default function DragonTigerGameRoom({
         setBetItems([]);
         setSelectedSide(null);
         setBetHistory((current) => [result, ...current].slice(0, 20));
+        setLoadedBetHistoryGameId(gameId);
         pushBubble({
           title: "下注成功",
           message: `注单 #${result.id} 已提交，金额 ${result.totalAmount} 元`,
@@ -359,6 +374,7 @@ export default function DragonTigerGameRoom({
             betOrders={betHistory}
             drawError={drawError}
             betHistoryError={betHistoryError}
+            isBetHistoryLoading={isBetHistoryLoading}
           />
         }
       />
@@ -645,11 +661,13 @@ function DragonTigerHistory({
   betOrders,
   drawError,
   betHistoryError,
+  isBetHistoryLoading,
 }: {
   records: DragonTigerDrawRecord[];
   betOrders: ClientBetOrder[];
   drawError: string;
   betHistoryError: string;
+  isBetHistoryLoading: boolean;
 }) {
   const { locale, t } = useI18n();
   const [activeTab, setActiveTab] = useState<"draws" | "bets">("draws");
@@ -734,6 +752,10 @@ function DragonTigerHistory({
                 </div>
               ))
             )
+          ) : isBetHistoryLoading ? (
+            <div className="rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] px-3 py-3 text-sm text-[var(--muted)]">
+              {t("bet.history.loadingBets")}
+            </div>
           ) : betHistoryError ? (
             <div className="rounded-[1.2rem] border border-rose-300/40 bg-rose-500/10 px-3 py-3 text-sm text-rose-200">
               {betHistoryError}
@@ -769,19 +791,41 @@ function DragonTigerHistory({
                   <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--foreground)]">
                     {order.selectionSummary || t("bet.history.noSummary")}
                   </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-[var(--muted)]">
+                    <div className="rounded-[0.95rem] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+                      {t("bet.history.amount")}
+                      <span className="ml-1 font-medium text-[var(--foreground)]">
+                        {formatAuthCurrency(order.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="rounded-[0.95rem] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+                      {t("bet.history.payout")}
+                      <span className="ml-1 font-medium text-[var(--foreground)]">
+                        {formatAuthCurrency(order.payoutAmount)}
+                      </span>
+                    </div>
+                  </div>
                   <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]">
                     <span>
                       {t("bet.history.placedAt")}{" "}
                       {new Date(order.placedAt).toLocaleString(locale)}
                     </span>
-                    <span
-                      className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${getBetSettlementClassName(
-                        order.isWinning,
-                        order.status,
-                      )}`}
-                    >
-                      {getBetSettlementText(t, order.isWinning, order.status)}
-                    </span>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {order.isWinning === true && order.payoutAmount > 0 ? (
+                        <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-200">
+                          {t("bet.history.payout")}{" "}
+                          {formatAuthCurrency(order.payoutAmount)}
+                        </span>
+                      ) : null}
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${getBetSettlementClassName(
+                          order.isWinning,
+                          order.status,
+                        )}`}
+                      >
+                        {getBetSettlementText(t, order.isWinning, order.status)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

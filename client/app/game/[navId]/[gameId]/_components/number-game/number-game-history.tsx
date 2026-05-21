@@ -286,14 +286,22 @@ function renderBetHistory({
         </div>
 
         <div>
-          <span
-            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetSettlementClassName(
-              order.isWinning,
-              order.status,
-            )}`}
-          >
-            {getBetSettlementText(t, order.isWinning, order.status)}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {order.isWinning === true && order.payoutAmount > 0 ? (
+              <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200">
+                {t("bet.history.payout")}{" "}
+                {formatAuthCurrency(order.payoutAmount)}
+              </span>
+            ) : null}
+            <span
+              className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetSettlementClassName(
+                order.isWinning,
+                order.status,
+              )}`}
+            >
+              {getBetSettlementText(t, order.isWinning, order.status)}
+            </span>
+          </div>
         </div>
 
         <p className="text-[11px] text-[var(--muted)]">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchMemberBets,
   fetchMemberGames,
@@ -62,6 +62,43 @@ export default function GameBetsPage() {
     [t],
   );
 
+  const loadBets = useCallback(
+    async (showLoading = true) => {
+      if (!session?.accessToken) {
+        return;
+      }
+
+      if (showLoading) {
+        setIsLoading(true);
+      }
+
+      setLoadError("");
+
+      try {
+        const response = await fetchMemberBets(session.accessToken, {
+          page,
+          pageSize: 10,
+          gameId: gameId === "all" ? undefined : gameId,
+          status,
+          keyword,
+        });
+
+        setBets(response.items);
+        setTotalPages(response.totalPages);
+      } catch (error: unknown) {
+        setBets([]);
+        setLoadError(
+          error instanceof Error ? error.message : "读取下注历史失败",
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [gameId, keyword, page, session?.accessToken, status],
+  );
+
   useEffect(() => {
     if (!session?.accessToken) {
       setIsLoading(false);
@@ -97,48 +134,28 @@ export default function GameBetsPage() {
       return;
     }
 
-    let cancelled = false;
-
-    setIsLoading(true);
-    setLoadError("");
-
-    void fetchMemberBets(session.accessToken, {
-      page,
-      pageSize: 10,
-      gameId: gameId === "all" ? undefined : gameId,
-      status,
-      keyword,
-    })
-      .then((response) => {
-        if (cancelled) {
-          return;
-        }
-
-        setBets(response.items);
-        setTotalPages(response.totalPages);
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-
-        setBets([]);
-        setLoadError(
-          error instanceof Error ? error.message : "读取下注历史失败",
-        );
-      })
-      .finally(() => {
-        if (cancelled) {
-          return;
-        }
-
-        setIsLoading(false);
-      });
+    const timer = window.setTimeout(() => {
+      void loadBets();
+    }, 0);
 
     return () => {
-      cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [gameId, keyword, page, session?.accessToken, status]);
+  }, [loadBets, session?.accessToken]);
+
+  useEffect(() => {
+    if (!session?.accessToken) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void loadBets(false);
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadBets, session?.accessToken]);
 
   return (
     <main className="space-y-5">
@@ -251,6 +268,12 @@ export default function GameBetsPage() {
                     {bet.selectionSummary || "暂无摘要"}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
+                    {bet.isWinning === true && bet.payoutAmount > 0 ? (
+                      <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                        {t("bet.history.payout")}{" "}
+                        {formatAuthCurrency(bet.payoutAmount)}
+                      </span>
+                    ) : null}
                     <span
                       className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getBetSettlementClassName(
                         bet.isWinning,
@@ -311,6 +334,12 @@ export default function GameBetsPage() {
                           玩法：{item.betType}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
+                          {item.isWinning === true && item.payoutAmount > 0 ? (
+                            <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200">
+                              {t("bet.history.payout")}{" "}
+                              {formatAuthCurrency(item.payoutAmount)}
+                            </span>
+                          ) : null}
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetSettlementClassName(
                               item.isWinning,

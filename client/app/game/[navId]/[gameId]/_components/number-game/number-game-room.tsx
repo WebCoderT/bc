@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   GameDrawRecordResponseDtoDrawStatusEnum,
@@ -103,6 +103,30 @@ export default function NumberGameRoom({
   const [loadedBetHistoryGameId, setLoadedBetHistoryGameId] = useState<
     number | null
   >(null);
+
+  const refreshBetHistory = useCallback(async () => {
+    if (!canLoadDrawData || !session?.accessToken) {
+      return;
+    }
+
+    try {
+      const response = await fetchMemberBets(session.accessToken, {
+        page: 1,
+        pageSize: 20,
+        gameId,
+      });
+
+      setBetHistory(response.items);
+      setBetHistoryError("");
+      setLoadedBetHistoryGameId(gameId);
+    } catch (error: unknown) {
+      setBetHistory([]);
+      setBetHistoryError(
+        error instanceof Error ? error.message : "读取投注历史失败",
+      );
+      setLoadedBetHistoryGameId(gameId);
+    }
+  }, [canLoadDrawData, gameId, session?.accessToken]);
 
   const currentModelKey = useMemo(
     () => resolveModelKeyByGameModelId(gameDetail?.gameModelId),
@@ -243,6 +267,7 @@ export default function NumberGameRoom({
           status: payload.currentIssue.status,
           lastDrawAt: formatDateTime(payload.currentIssue.lastDrawAt),
         });
+        void refreshBetHistory();
       },
     );
 
@@ -281,6 +306,7 @@ export default function NumberGameRoom({
             ...current.filter((item) => item.id !== nextRecord.id),
           ].slice(0, 20);
         });
+        void refreshBetHistory();
       },
     );
 
@@ -298,44 +324,21 @@ export default function NumberGameRoom({
       socket.emit("game:leave");
       socket.disconnect();
     };
-  }, [canLoadDrawData, gameId, session?.accessToken]);
+  }, [canLoadDrawData, gameId, refreshBetHistory, session?.accessToken]);
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {
       return;
     }
 
-    let isCancelled = false;
-
-    void fetchMemberBets(session.accessToken, {
-      page: 1,
-      pageSize: 20,
-      gameId,
-    })
-      .then((response) => {
-        if (isCancelled) {
-          return;
-        }
-
-        setBetHistory(response.items);
-        setLoadedBetHistoryGameId(gameId);
-      })
-      .catch((error: unknown) => {
-        if (isCancelled) {
-          return;
-        }
-
-        setBetHistory([]);
-        setBetHistoryError(
-          error instanceof Error ? error.message : "读取投注历史失败",
-        );
-        setLoadedBetHistoryGameId(gameId);
-      });
+    const timer = window.setTimeout(() => {
+      void refreshBetHistory();
+    }, 0);
 
     return () => {
-      isCancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [canLoadDrawData, gameId, session?.accessToken]);
+  }, [canLoadDrawData, refreshBetHistory, session?.accessToken]);
 
   const handleModeChange = (mode: NumberGameSelectionMode) => {
     setSelectionMode(mode);
@@ -410,6 +413,7 @@ export default function NumberGameRoom({
         setBetItems([]);
         setDigits(createEmptyDigits(modelConfig.ballCount));
         setBetHistory((current) => [result, ...current].slice(0, 20));
+        setLoadedBetHistoryGameId(gameId);
         pushBubble({
           title: "下注成功",
           message: `注单 #${result.id} 已提交，金额 ${result.totalAmount} 元`,
