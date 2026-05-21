@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { GameDrawStrategy } from './interfaces/game-draw-strategy.interface';
+import { LhdDrawStrategy } from './strategies/lhd-draw.strategy';
 import { P3DrawStrategy } from './strategies/p3-draw.strategy';
 import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 
@@ -8,10 +9,11 @@ export class GameDrawStrategyRegistry {
   private readonly strategies: GameDrawStrategy[];
 
   constructor(
+    private readonly lhdDrawStrategy: LhdDrawStrategy,
     private readonly p3DrawStrategy: P3DrawStrategy,
     private readonly p5DrawStrategy: P5DrawStrategy,
   ) {
-    this.strategies = [p3DrawStrategy, p5DrawStrategy];
+    this.strategies = [lhdDrawStrategy, p3DrawStrategy, p5DrawStrategy];
   }
 
   getStrategy(gameModelId: string) {

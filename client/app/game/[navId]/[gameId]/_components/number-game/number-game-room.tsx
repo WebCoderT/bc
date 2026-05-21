@@ -71,7 +71,11 @@ function mapRealtimeRecord(payload: RealtimeDrawRecordPayload) {
   });
 }
 
-export default function NumberGameRoom() {
+export default function NumberGameRoom({
+  initialGameDetail = null,
+}: {
+  initialGameDetail?: ClientGame | null;
+}) {
   const params = useParams<{ gameId: string }>();
   const session = useMemo(() => readStoredSession(), []);
   const [records, setRecords] = useState<NumberGameDrawRecord[]>([]);
@@ -83,7 +87,9 @@ export default function NumberGameRoom() {
     useState<NumberGameCurrentIssue | null>(null);
   const [drawError, setDrawError] = useState("");
   const [betHistoryError, setBetHistoryError] = useState("");
-  const [gameDetail, setGameDetail] = useState<ClientGame | null>(null);
+  const [gameDetail, setGameDetail] = useState<ClientGame | null>(
+    initialGameDetail,
+  );
   const [gameDetailError, setGameDetailError] = useState("");
   const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState(0);
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
@@ -145,7 +151,11 @@ export default function NumberGameRoom() {
   }, [canLoadDrawData]);
 
   useEffect(() => {
-    if (!canLoadDrawData || !session?.accessToken) {
+    if (
+      !canLoadDrawData ||
+      !session?.accessToken ||
+      initialGameDetail?.id === gameId
+    ) {
       return;
     }
 
@@ -181,7 +191,13 @@ export default function NumberGameRoom() {
     return () => {
       isCancelled = true;
     };
-  }, [canLoadDrawData, gameId, pushBubble, session?.accessToken]);
+  }, [
+    canLoadDrawData,
+    gameId,
+    initialGameDetail?.id,
+    pushBubble,
+    session?.accessToken,
+  ]);
 
   useEffect(() => {
     if (!canLoadDrawData || !session?.accessToken) {

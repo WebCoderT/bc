@@ -170,6 +170,26 @@ export class BetSettlementService {
     item: BetItemEntity,
     drawDigits: number[],
   ) {
+    if (order.betStrategyKey === 'lhd') {
+      const selectedSide =
+        typeof item.selectionPayload?.side === 'string'
+          ? item.selectionPayload.side
+          : '';
+
+      if (drawDigits.length < 2) {
+        return false;
+      }
+
+      const winner =
+        drawDigits[0] === drawDigits[1]
+          ? 'tie'
+          : drawDigits[0] > drawDigits[1]
+            ? 'dragon'
+            : 'tiger';
+
+      return selectedSide === winner;
+    }
+
     if (order.betStrategyKey !== 'p5') {
       return false;
     }

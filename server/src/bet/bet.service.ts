@@ -382,6 +382,41 @@ export class BetService {
       };
     }
 
+    if (game.gameModelId === 'lhd') {
+      const side =
+        typeof item.selection?.side === 'string'
+          ? item.selection.side.trim().toLowerCase()
+          : '';
+
+      if (!['dragon', 'tiger', 'tie'].includes(side)) {
+        throw new BadRequestException('龙虎斗下注仅支持龙、虎、和三种方向');
+      }
+
+      const normalizedDisplayText =
+        side === 'dragon' ? '龙' : side === 'tiger' ? '虎' : '和';
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game, side);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: item.betType || 'lhd-pick',
+        displayText: item.displayText?.trim() || normalizedDisplayText,
+        amount,
+        selection: {
+          side,
+        },
+        extraPayload: {
+          ...(item.extraPayload ?? {}),
+          sideLabel: normalizedDisplayText,
+        },
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
     const estimatedPayout = this.calculateEstimatedPayout(amount, game);
     const estimatedProfit =
       estimatedPayout === null
@@ -423,8 +458,18 @@ export class BetService {
     );
   }
 
-  private calculateEstimatedPayout(amount: number, game: Game) {
+  private calculateEstimatedPayout(
+    amount: number,
+    game: Game,
+    customSide?: string,
+  ) {
     if (game.oddsMode !== GameOddsMode.FIXED || game.fixedOdds === null) {
+      if (game.gameModelId === 'lhd' && customSide) {
+        const odds = this.resolveDragonTigerOdds(game, customSide);
+
+        return this.roundCurrency(amount * odds);
+      }
+
       return null;
     }
 
@@ -432,6 +477,14 @@ export class BetService {
   }
 
   private getOddsSummary(game: Game) {
+    if (game.gameModelId === 'lhd') {
+      const dragonOdds = this.resolveDragonTigerOdds(game, 'dragon');
+      const tigerOdds = this.resolveDragonTigerOdds(game, 'tiger');
+      const tieOdds = this.resolveDragonTigerOdds(game, 'tie');
+
+      return `龙 ${dragonOdds.toFixed(2)} · 虎 ${tigerOdds.toFixed(2)} · 和 ${tieOdds.toFixed(2)}`;
+    }
+
     if (game.oddsMode === GameOddsMode.CUSTOM) {
       return '自定义赔付（预留）';
     }
@@ -455,6 +508,25 @@ export class BetService {
     return this.roundCurrency(
       normalizedValues.reduce((sum, value) => sum + value, 0),
     );
+  }
+
+  private resolveDragonTigerOdds(game: Game, side: string) {
+    const config = game.customPayoutConfig;
+
+    if (
+      config &&
+      typeof config === 'object' &&
+      !Array.isArray(config) &&
+      typeof config[side] === 'number'
+    ) {
+      return Number(config[side]);
+    }
+
+    if (side === 'tie') {
+      return 8.8;
+    }
+
+    return 1.98;
   }
 
   private toOrderResponse(
