@@ -4,6 +4,13 @@ import { useMemo, useState } from "react";
 import { NumberBall } from "@/app/shared/components/lottery/number-ball";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import { formatAuthCurrency, type ClientBetOrder } from "@/app/lib/client-api";
+import {
+  getBetSettlementClassName,
+  getBetSettlementText,
+  getBetStatusClassName,
+  getBetStatusText,
+} from "@/app/shared/lib/bet-display";
+import { useI18n } from "@/app/shared/lib/i18n/i18n-provider";
 import type { NumberGameDrawRecord } from "./number-game.types";
 
 type NumberGameHistoryProps = {
@@ -27,14 +34,23 @@ export function NumberGameHistory({
   isBetHistoryLoading = false,
   betHistoryError = "",
 }: NumberGameHistoryProps) {
+  const { locale, t } = useI18n();
   const isSidebar = variant === "sidebar";
   const [activeTab, setActiveTab] = useState<HistoryTabKey>("draws");
   const tabOptions = useMemo(
     () => [
-      { key: "draws" as const, label: "开奖历史", count: records.length },
-      { key: "bets" as const, label: "投注历史", count: betOrders.length },
+      {
+        key: "draws" as const,
+        label: t("bet.history.draws"),
+        count: records.length,
+      },
+      {
+        key: "bets" as const,
+        label: t("bet.history.bets"),
+        count: betOrders.length,
+      },
     ],
-    [betOrders.length, records.length],
+    [betOrders.length, records.length, t],
   );
 
   return (
@@ -42,7 +58,7 @@ export function NumberGameHistory({
       <div className="flex h-full flex-col gap-4">
         <div>
           <h3 className="text-xl font-semibold text-[var(--foreground)]">
-            历史记录
+            {t("bet.history.title")}
           </h3>
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] p-1.5">
             {tabOptions.map((tab) => {
@@ -82,12 +98,15 @@ export function NumberGameHistory({
                 isSidebar,
                 isLoading: isDrawLoading,
                 error: drawError,
+                t,
               })
             : renderBetHistory({
                 betOrders,
                 isSidebar,
                 isLoading: isBetHistoryLoading,
                 error: betHistoryError,
+                locale,
+                t,
               })}
         </div>
       </div>
@@ -100,16 +119,18 @@ function renderDrawHistory({
   isSidebar,
   isLoading,
   error,
+  t,
 }: {
   records: NumberGameDrawRecord[];
   isSidebar: boolean;
   isLoading: boolean;
   error: string;
+  t: (key: string) => string;
 }) {
   if (isLoading) {
     return (
       <div className="rounded-[1.3rem] border border-[var(--border)] bg-[var(--panel)] p-3 text-sm text-[var(--muted)]">
-        正在读取开奖历史...
+        {t("bet.history.loadingDraws")}
       </div>
     );
   }
@@ -125,7 +146,7 @@ function renderDrawHistory({
   if (records.length === 0) {
     return (
       <div className="rounded-[1.3rem] border border-[var(--border)] bg-[var(--panel)] p-3 text-sm text-[var(--muted)]">
-        暂无开奖记录
+        {t("bet.history.emptyDraws")}
       </div>
     );
   }
@@ -148,10 +169,11 @@ function renderDrawHistory({
       >
         <div>
           <p className="text-sm font-semibold text-[var(--foreground)]">
-            第 {record.issue} 期
+            {t("bet.history.issuePrefix")} {record.issue}{" "}
+            {t("bet.history.issueSuffix")}
           </p>
           <p className="mt-1 text-xs tracking-[0.2em] text-[var(--muted)]">
-            开奖时间 {record.drawnAt}
+            {t("bet.history.drawTime")} {record.drawnAt}
           </p>
         </div>
 
@@ -180,16 +202,20 @@ function renderBetHistory({
   isSidebar,
   isLoading,
   error,
+  locale,
+  t,
 }: {
   betOrders: ClientBetOrder[];
   isSidebar: boolean;
   isLoading: boolean;
   error: string;
+  locale: string;
+  t: (key: string) => string;
 }) {
   if (isLoading) {
     return (
       <div className="rounded-[1.3rem] border border-[var(--border)] bg-[var(--panel)] p-3 text-sm text-[var(--muted)]">
-        正在读取投注历史...
+        {t("bet.history.loadingBets")}
       </div>
     );
   }
@@ -205,7 +231,7 @@ function renderBetHistory({
   if (betOrders.length === 0) {
     return (
       <div className="rounded-[1.3rem] border border-[var(--border)] bg-[var(--panel)] p-3 text-sm text-[var(--muted)]">
-        暂无投注历史
+        {t("bet.history.emptyBets")}
       </div>
     );
   }
@@ -223,40 +249,56 @@ function renderBetHistory({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-[var(--foreground)]">
-              注单 #{order.id}
+              {t("bet.history.orderPrefix")} #{order.id}
             </p>
             <p className="mt-1 text-xs text-[var(--muted)]">
-              {order.issueNo ? `第 ${order.issueNo} 期` : "未关联期号"}
+              {order.issueNo
+                ? `${t("bet.history.issuePrefix")} ${order.issueNo} ${t("bet.history.issueSuffix")}`
+                : t("bet.history.unassignedIssue")}
             </p>
           </div>
-          <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
-            {order.status}
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetStatusClassName(order.status)}`}
+          >
+            {getBetStatusText(t, order.status)}
           </span>
         </div>
 
         <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3">
           <p className="text-sm leading-6 text-[var(--foreground)]">
-            {order.selectionSummary || "暂无投注摘要"}
+            {order.selectionSummary || t("bet.history.noSummary")}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs text-[var(--muted)]">
           <div className="rounded-[0.95rem] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
-            金额：
+            {t("bet.history.amount")}
             <span className="ml-1 font-medium text-[var(--foreground)]">
               {formatAuthCurrency(order.totalAmount)}
             </span>
           </div>
           <div className="rounded-[0.95rem] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
-            派彩：
+            {t("bet.history.payout")}
             <span className="ml-1 font-medium text-[var(--foreground)]">
               {formatAuthCurrency(order.payoutAmount)}
             </span>
           </div>
         </div>
 
+        <div>
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetSettlementClassName(
+              order.isWinning,
+              order.status,
+            )}`}
+          >
+            {getBetSettlementText(t, order.isWinning, order.status)}
+          </span>
+        </div>
+
         <p className="text-[11px] text-[var(--muted)]">
-          下注时间 {new Date(order.placedAt).toLocaleString("zh-CN")}
+          {t("bet.history.placedAt")}{" "}
+          {new Date(order.placedAt).toLocaleString(locale)}
         </p>
       </div>
     </div>

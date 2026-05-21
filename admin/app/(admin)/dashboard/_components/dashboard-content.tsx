@@ -250,27 +250,6 @@ export function DashboardContent({
               )}
             />
           </div>
-
-          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <p>
-              服务名称：
-              <span className="font-medium text-slate-900">
-                {snapshot.serviceStatus.name}
-              </span>
-            </p>
-            <p className="mt-2">
-              接口状态：
-              <span className="font-medium text-slate-900">
-                {snapshot.serviceStatus.status}
-              </span>
-            </p>
-            <p className="mt-2">
-              鉴权方式：
-              <span className="font-medium text-slate-900">
-                {snapshot.serviceStatus.auth}
-              </span>
-            </p>
-          </div>
         </CardShell>
       </div>
 

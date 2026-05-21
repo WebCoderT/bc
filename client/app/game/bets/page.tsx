@@ -11,21 +11,20 @@ import {
   type ClientGame,
 } from "@/app/lib/client-api";
 import { readStoredSession } from "@/app/lib/auth";
+import {
+  getBetSettlementClassName,
+  getBetSettlementText,
+  getBetStatusClassName,
+  getBetStatusText,
+} from "@/app/shared/lib/bet-display";
+import { useI18n } from "@/app/shared/lib/i18n/i18n-provider";
 import { ActionButton } from "@/app/shared/components/ui/action-button";
 import { SectionHeading } from "@/app/shared/components/ui/section-heading";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 
-const STATUS_OPTIONS: Array<{ value: ClientBetStatus | "all"; label: string }> =
-  [
-    { value: "all", label: "全部状态" },
-    { value: "placed", label: "已下注" },
-    { value: "settled", label: "已结算" },
-    { value: "cancelled", label: "已取消" },
-  ];
-
-function formatDateTime(value: string) {
+function formatDateTime(value: string, locale: string) {
   try {
-    return new Date(value).toLocaleString("zh-CN", {
+    return new Date(value).toLocaleString(locale, {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -38,63 +37,9 @@ function formatDateTime(value: string) {
   }
 }
 
-function getStatusText(status: ClientBetStatus) {
-  if (status === "settled") {
-    return "已结算";
-  }
-
-  if (status === "cancelled") {
-    return "已取消";
-  }
-
-  return "已下注";
-}
-
-function getStatusClassName(status: ClientBetStatus) {
-  if (status === "settled") {
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
-  }
-
-  if (status === "cancelled") {
-    return "border-rose-400/30 bg-rose-500/10 text-rose-200";
-  }
-
-  return "border-sky-400/30 bg-sky-500/10 text-sky-200";
-}
-
-function getSettlementText(isWinning: boolean | null, status: ClientBetStatus) {
-  if (status !== "settled") {
-    return "待开奖";
-  }
-
-  if (isWinning === true) {
-    return "已中奖";
-  }
-
-  if (isWinning === false) {
-    return "未中奖";
-  }
-
-  return "已结算";
-}
-
-function getSettlementClassName(
-  isWinning: boolean | null,
-  status: ClientBetStatus,
-) {
-  if (status !== "settled") {
-    return "border-amber-400/30 bg-amber-500/10 text-amber-200";
-  }
-
-  if (isWinning === true) {
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
-  }
-
-  return "border-rose-400/30 bg-rose-500/10 text-rose-200";
-}
-
 export default function GameBetsPage() {
   const session = useMemo(() => readStoredSession(), []);
+  const { locale, t } = useI18n();
   const [bets, setBets] = useState<ClientBetOrder[]>([]);
   const [games, setGames] = useState<ClientGame[]>([]);
   const [page, setPage] = useState(1);
@@ -105,6 +50,17 @@ export default function GameBetsPage() {
   const [draftKeyword, setDraftKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const statusOptions = useMemo<
+    Array<{ value: ClientBetStatus | "all"; label: string }>
+  >(
+    () => [
+      { value: "all", label: t("bet.status.all") },
+      { value: "placed", label: getBetStatusText(t, "placed") },
+      { value: "settled", label: getBetStatusText(t, "settled") },
+      { value: "cancelled", label: getBetStatusText(t, "cancelled") },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     if (!session?.accessToken) {
@@ -220,7 +176,7 @@ export default function GameBetsPage() {
               }}
               className="rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
             >
-              {STATUS_OPTIONS.map((option) => (
+              {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -276,19 +232,19 @@ export default function GameBetsPage() {
                       注单 #{bet.id}
                     </p>
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClassName(
+                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getBetStatusClassName(
                         bet.status,
                       )}`}
                     >
-                      {getStatusText(bet.status)}
+                      {getBetStatusText(t, bet.status)}
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-[var(--muted)]">
                     {bet.gameLabel}
                     {bet.issueNo ? ` · 第 ${bet.issueNo} 期` : ""}
-                    {` · ${formatDateTime(bet.placedAt)}`}
+                    {` · ${formatDateTime(bet.placedAt, locale)}`}
                     {bet.settledAt
-                      ? ` · 结算：${formatDateTime(bet.settledAt)}`
+                      ? ` · 结算：${formatDateTime(bet.settledAt, locale)}`
                       : ""}
                   </p>
                   <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
@@ -296,12 +252,12 @@ export default function GameBetsPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getSettlementClassName(
+                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getBetSettlementClassName(
                         bet.isWinning,
                         bet.status,
                       )}`}
                     >
-                      {getSettlementText(bet.isWinning, bet.status)}
+                      {getBetSettlementText(t, bet.isWinning, bet.status)}
                     </span>
                     {bet.settlementOpenCode ? (
                       <span className="inline-flex rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted)]">
@@ -356,16 +312,20 @@ export default function GameBetsPage() {
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getSettlementClassName(
+                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetSettlementClassName(
                               item.isWinning,
                               bet.status,
                             )}`}
                           >
-                            {getSettlementText(item.isWinning, bet.status)}
+                            {getBetSettlementText(
+                              t,
+                              item.isWinning,
+                              bet.status,
+                            )}
                           </span>
                           {item.settledAt ? (
                             <span className="text-[11px] text-[var(--muted)]">
-                              结算：{formatDateTime(item.settledAt)}
+                              结算：{formatDateTime(item.settledAt, locale)}
                             </span>
                           ) : null}
                         </div>

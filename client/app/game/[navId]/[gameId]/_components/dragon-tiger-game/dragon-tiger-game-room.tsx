@@ -20,6 +20,13 @@ import {
 } from "@/app/shared/components/ui/floating-notification-bubbles";
 import { SurfaceCard } from "@/app/shared/components/ui/surface-card";
 import {
+  getBetSettlementClassName,
+  getBetSettlementText,
+  getBetStatusClassName,
+  getBetStatusText,
+} from "@/app/shared/lib/bet-display";
+import { useI18n } from "@/app/shared/lib/i18n/i18n-provider";
+import {
   DRAGON_TIGER_AMOUNT_OPTIONS,
   DRAGON_TIGER_SIDES,
   calculateDragonTigerEstimatedPayout,
@@ -644,6 +651,7 @@ function DragonTigerHistory({
   drawError: string;
   betHistoryError: string;
 }) {
+  const { locale, t } = useI18n();
   const [activeTab, setActiveTab] = useState<"draws" | "bets">("draws");
 
   return (
@@ -651,7 +659,7 @@ function DragonTigerHistory({
       <div className="flex h-full flex-col gap-4">
         <div>
           <h3 className="text-xl font-semibold text-[var(--foreground)]">
-            历史记录
+            {t("bet.history.title")}
           </h3>
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] p-1.5">
             <button
@@ -663,7 +671,7 @@ function DragonTigerHistory({
                   : "rounded-[0.95rem] px-3 py-2 text-sm text-[var(--muted)]"
               }
             >
-              开奖历史
+              {t("bet.history.draws")}
             </button>
             <button
               type="button"
@@ -674,7 +682,7 @@ function DragonTigerHistory({
                   : "rounded-[0.95rem] px-3 py-2 text-sm text-[var(--muted)]"
               }
             >
-              投注历史
+              {t("bet.history.bets")}
             </button>
           </div>
         </div>
@@ -687,7 +695,7 @@ function DragonTigerHistory({
               </div>
             ) : records.length === 0 ? (
               <div className="rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] px-3 py-3 text-sm text-[var(--muted)]">
-                暂无开奖记录
+                {t("bet.history.emptyDraws")}
               </div>
             ) : (
               records.map((record) => (
@@ -698,10 +706,11 @@ function DragonTigerHistory({
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm font-semibold text-[var(--foreground)]">
-                        第 {record.issue} 期
+                        {t("bet.history.issuePrefix")} {record.issue}{" "}
+                        {t("bet.history.issueSuffix")}
                       </p>
                       <p className="mt-1 text-xs text-[var(--muted)]">
-                        开奖时间 {record.drawnAt}
+                        {t("bet.history.drawTime")} {record.drawnAt}
                       </p>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
@@ -731,7 +740,7 @@ function DragonTigerHistory({
             </div>
           ) : betOrders.length === 0 ? (
             <div className="rounded-[1.2rem] border border-[var(--border)] bg-[var(--panel)] px-3 py-3 text-sm text-[var(--muted)]">
-              暂无投注历史
+              {t("bet.history.emptyBets")}
             </div>
           ) : (
             betOrders.map((order) => (
@@ -743,20 +752,36 @@ function DragonTigerHistory({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-[var(--foreground)]">
-                        注单 #{order.id}
+                        {t("bet.history.orderPrefix")} #{order.id}
                       </p>
                       <p className="mt-1 text-xs text-[var(--muted)]">
                         {order.issueNo
-                          ? `第 ${order.issueNo} 期`
-                          : "未关联期号"}
+                          ? `${t("bet.history.issuePrefix")} ${order.issueNo} ${t("bet.history.issueSuffix")}`
+                          : t("bet.history.unassignedIssue")}
                       </p>
                     </div>
-                    <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
-                      {order.status}
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${getBetStatusClassName(order.status)}`}
+                    >
+                      {getBetStatusText(t, order.status)}
                     </span>
                   </div>
                   <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm text-[var(--foreground)]">
-                    {order.selectionSummary || "暂无投注摘要"}
+                    {order.selectionSummary || t("bet.history.noSummary")}
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-xs text-[var(--muted)]">
+                    <span>
+                      {t("bet.history.placedAt")}{" "}
+                      {new Date(order.placedAt).toLocaleString(locale)}
+                    </span>
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${getBetSettlementClassName(
+                        order.isWinning,
+                        order.status,
+                      )}`}
+                    >
+                      {getBetSettlementText(t, order.isWinning, order.status)}
+                    </span>
                   </div>
                 </div>
               </div>
