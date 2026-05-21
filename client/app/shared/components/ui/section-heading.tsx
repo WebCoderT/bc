@@ -3,7 +3,6 @@ import { cn } from "../../lib/cn";
 type SectionHeadingProps = {
   eyebrow: string;
   title: string;
-  description?: string;
   className?: string;
   inverted?: boolean;
 };
@@ -17,7 +16,6 @@ type SectionHeadingProps = {
 export function SectionHeading({
   eyebrow,
   title,
-  description,
   className,
   inverted = false,
 }: SectionHeadingProps) {
@@ -39,16 +37,6 @@ export function SectionHeading({
       >
         {title}
       </h2>
-      {description ? (
-        <p
-          className={cn(
-            "mt-2 text-sm leading-[var(--body-line-height)]",
-            inverted ? "text-white/80" : "text-[var(--muted)]",
-          )}
-        >
-          {description}
-        </p>
-      ) : null}
     </div>
   );
 }

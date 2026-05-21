@@ -59,12 +59,7 @@ export default function ProfileHome() {
   return (
     <main className="space-y-5">
       <section className="rounded-[2.2rem] border border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_30%,black))] p-7 text-white shadow-[0_24px_80px_var(--glow)] lg:p-8">
-        <SectionHeading
-          eyebrow="PROFILE HOME"
-          title="个人中心首页"
-          description="这里是登录成功后的首页主区域，采用独立后台布局，中间区域聚焦展示你的账户信息、绑定状态和余额操作入口。"
-          inverted
-        />
+        <SectionHeading eyebrow="PROFILE HOME" title="个人中心首页" inverted />
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">

@@ -187,21 +187,12 @@ export default function GameBetsPage() {
   return (
     <main className="space-y-5">
       <section className="rounded-[2.2rem] border border-[var(--border)] bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_30%,black))] p-7 text-white shadow-[0_24px_80px_var(--glow)] lg:p-8">
-        <SectionHeading
-          eyebrow="BET HISTORY"
-          title="下注历史与管理"
-          description="统一查看不同游戏的下注订单、下注明细、赔率快照与预计派彩，后续接入更多游戏时继续沿用同一套注单结构。"
-          inverted
-        />
+        <SectionHeading eyebrow="BET HISTORY" title="下注历史与管理" inverted />
       </section>
 
       <SurfaceCard padding="lg">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <SectionHeading
-            eyebrow="FILTERS"
-            title="筛选条件"
-            description="支持按游戏、状态和关键字筛选下注历史。"
-          />
+          <SectionHeading eyebrow="FILTERS" title="筛选条件" />
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <select

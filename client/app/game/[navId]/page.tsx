@@ -106,19 +106,11 @@ export default function GamePage() {
     };
   }, [childNavigations, childNavigationKey]);
 
-  const totalGameCount = useMemo(
-    () => groupedGames.reduce((total, group) => total + group.games.total, 0),
-    [groupedGames],
-  );
-
   return (
     <main className="space-y-5">
       <GamePageHero
-        childCount={childNavigations.length}
-        isLoading={isLoading}
         sectionTitle={currentSectionTitle}
         sectionLabel={currentSectionLabel}
-        totalGameCount={totalGameCount}
       />
 
       {loadError ? (
