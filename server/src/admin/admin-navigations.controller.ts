@@ -48,7 +48,6 @@ export class AdminNavigationsController {
   @ApiOperation({ summary: '管理员查询导航列表' })
   @ApiOkListResponse(NavigationResponseDto)
   getNavigations(@Query() query: ListNavigationsQueryDto) {
-    console.log('管理员查询导航列表，查询参数：', query);
     // 管理员查询接口默认返回所有导航，包括隐藏的，前台接口会过滤掉隐藏的导航
     return this.navigatorService.findAll(query);
   }
