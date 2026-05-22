@@ -58,4 +58,17 @@ export const DEFAULT_GAMES: DefaultGameSeed[] = [
     fixedOdds: 1.98,
     customPayoutConfig: null,
   },
+  {
+    label: '筛宝',
+    description:
+      '筛宝每期开出三颗筛子的点数，范围为 1 至 6，支持逐位精确选择三个点数。',
+    iconUrl: '',
+    categoryPath: '/game/number-lottery#sb',
+    gameModelId: 'sb',
+    drawInterval: 60,
+    status: GameType.ONLINE,
+    oddsMode: GameOddsMode.FIXED,
+    fixedOdds: 1.98,
+    customPayoutConfig: null,
+  },
 ];

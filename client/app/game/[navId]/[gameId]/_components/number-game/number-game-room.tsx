@@ -357,7 +357,9 @@ export default function NumberGameRoom({
 
   const handleRandomPick = () => {
     setSelectionMode("random");
-    setDigits(createRandomDigits(modelConfig.ballCount));
+    setDigits(
+      createRandomDigits(modelConfig.ballCount, modelConfig.digitOptions),
+    );
   };
 
   const handleClear = () => {
@@ -456,6 +458,7 @@ export default function NumberGameRoom({
         gameDisplayName={modelConfig.displayName}
         playRules={modelConfig.playRules}
         positions={modelConfig.positions}
+        digitOptions={modelConfig.digitOptions}
         gameDetail={gameDetail}
         isGameDetailLoading={isGameDetailLoading}
         gameDetailError={gameDetailError}

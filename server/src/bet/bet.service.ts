@@ -34,6 +34,33 @@ type NormalizedBetItem = {
   estimatedProfit: number | null;
 };
 
+const EXACT_MATCH_GAME_CONFIGS = {
+  p5: {
+    digits: 5,
+    min: 0,
+    max: 9,
+    betType: 'p5-single-number',
+    invalidLengthMessage: 'P5 下注必须提供 5 位数字',
+    invalidRangeMessage: 'P5 下注号码仅支持 0-9 的五位数字',
+  },
+  p3: {
+    digits: 3,
+    min: 0,
+    max: 9,
+    betType: 'p3-single-number',
+    invalidLengthMessage: 'P3 下注必须提供 3 位数字',
+    invalidRangeMessage: 'P3 下注号码仅支持 0-9 的三位数字',
+  },
+  sb: {
+    digits: 3,
+    min: 1,
+    max: 6,
+    betType: 'sb-single-dice',
+    invalidLengthMessage: '筛宝下注必须提供 3 个筛子点数',
+    invalidRangeMessage: '筛宝下注号码仅支持 1-6 的三颗筛子点数',
+  },
+} as const;
+
 @Injectable()
 export class BetService {
   constructor(
@@ -334,26 +361,33 @@ export class BetService {
     index: number,
   ): NormalizedBetItem {
     const amount = this.roundCurrency(Number(item.amount));
+    const exactMatchConfig = this.resolveExactMatchGameConfig(game.gameModelId);
 
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException(`第 ${index + 1} 条下注金额无效`);
     }
 
-    if (game.gameModelId === 'p5') {
+    if (exactMatchConfig) {
       const digitsValue = item.selection?.digits;
 
-      if (!Array.isArray(digitsValue) || digitsValue.length !== 5) {
-        throw new BadRequestException('P5 下注必须提供 5 位数字');
+      if (
+        !Array.isArray(digitsValue) ||
+        digitsValue.length !== exactMatchConfig.digits
+      ) {
+        throw new BadRequestException(exactMatchConfig.invalidLengthMessage);
       }
 
       const digits = digitsValue.map((digit) => Number(digit));
 
       if (
         digits.some(
-          (digit) => !Number.isInteger(digit) || digit < 0 || digit > 9,
+          (digit) =>
+            !Number.isInteger(digit) ||
+            digit < exactMatchConfig.min ||
+            digit > exactMatchConfig.max,
         )
       ) {
-        throw new BadRequestException('P5 下注号码仅支持 0-9 的五位数字');
+        throw new BadRequestException(exactMatchConfig.invalidRangeMessage);
       }
 
       const normalizedDisplayText = digits.join(' ');
@@ -365,7 +399,7 @@ export class BetService {
 
       return {
         itemIndex: index + 1,
-        betType: item.betType || 'p5-single-number',
+        betType: item.betType || exactMatchConfig.betType,
         displayText: normalizedDisplayText,
         amount,
         selection: {
@@ -527,6 +561,16 @@ export class BetService {
     }
 
     return 1.98;
+  }
+
+  private resolveExactMatchGameConfig(gameModelId: string) {
+    if (gameModelId in EXACT_MATCH_GAME_CONFIGS) {
+      return EXACT_MATCH_GAME_CONFIGS[
+        gameModelId as keyof typeof EXACT_MATCH_GAME_CONFIGS
+      ];
+    }
+
+    return null;
   }
 
   private toOrderResponse(

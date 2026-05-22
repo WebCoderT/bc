@@ -14,6 +14,13 @@ export const P3_DEFAULT_DRAW_CONFIG = {
   allowRepeat: true,
 } as const;
 
+export const SB_DEFAULT_DRAW_CONFIG = {
+  digits: 3,
+  min: 1,
+  max: 6,
+  allowRepeat: true,
+} as const;
+
 export const LHD_DEFAULT_DRAW_CONFIG = {
   digits: 2,
   min: 0,
@@ -25,6 +32,7 @@ export const DEFAULT_DRAW_CONFIGS: Record<string, Record<string, unknown>> = {
   lhd: { ...LHD_DEFAULT_DRAW_CONFIG },
   p3: { ...P3_DEFAULT_DRAW_CONFIG },
   p5: { ...P5_DEFAULT_DRAW_CONFIG },
+  sb: { ...SB_DEFAULT_DRAW_CONFIG },
 };
 
 export const DEFAULT_GAME_MODELS = [
@@ -82,6 +90,26 @@ export const DEFAULT_GAME_MODELS = [
           bai: 'number',
           shi: 'number',
           ge: 'number',
+        },
+      },
+    },
+    status: GameModelStatus.ACTIVE,
+  },
+  {
+    id: 'sb',
+    name: '筛宝',
+    description: '3 颗筛子各开出 1 个 1-6 点数，支持逐位精确投注与点数展示。',
+    version: '1.0.0',
+    drawConfigJson: { ...SB_DEFAULT_DRAW_CONFIG },
+    resultSchemaJson: {
+      openCode: 'string',
+      resultPayload: {
+        sum: 'number',
+        triple: 'boolean',
+        positions: {
+          first: 'number',
+          second: 'number',
+          third: 'number',
         },
       },
     },

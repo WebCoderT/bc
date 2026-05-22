@@ -15,6 +15,7 @@ import { GameDrawTableService } from './game-draw-table.service';
 import { LhdDrawStrategy } from './strategies/lhd-draw.strategy';
 import { P3DrawStrategy } from './strategies/p3-draw.strategy';
 import { P5DrawStrategy } from './strategies/p5-draw.strategy';
+import { SbDrawStrategy } from './strategies/sb-draw.strategy';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { P5DrawStrategy } from './strategies/p5-draw.strategy';
     LhdDrawStrategy,
     P3DrawStrategy,
     P5DrawStrategy,
+    SbDrawStrategy,
   ],
   exports: [GameDrawService, GameDrawTableService, GameDrawRuntimeService],
 })

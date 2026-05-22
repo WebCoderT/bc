@@ -1,15 +1,19 @@
 import type { NumberGamePosition } from "./number-game.types";
 
-export type NumberGameModelKey = "p5" | "p3";
+export type NumberGameModelKey = "p5" | "p3" | "sb";
 
 export type NumberGameModelConfig = {
   key: NumberGameModelKey;
   displayName: string;
   ballCount: number;
   betType: string;
+  digitOptions: number[];
   positions: NumberGamePosition[];
   playRules: string[];
 };
+
+const NUMBER_DIGIT_OPTIONS = Array.from({ length: 10 }, (_, index) => index);
+const DICE_DIGIT_OPTIONS = Array.from({ length: 6 }, (_, index) => index + 1);
 
 const P5_POSITIONS: NumberGamePosition[] = [
   { key: "wan", label: "万位" },
@@ -25,6 +29,12 @@ const P3_POSITIONS: NumberGamePosition[] = [
   { key: "ge", label: "个位" },
 ];
 
+const SB_POSITIONS: NumberGamePosition[] = [
+  { key: "first", label: "第一筛" },
+  { key: "second", label: "第二筛" },
+  { key: "third", label: "第三筛" },
+];
+
 export const NUMBER_GAME_MODEL_CONFIGS: Record<
   NumberGameModelKey,
   NumberGameModelConfig
@@ -34,6 +44,7 @@ export const NUMBER_GAME_MODEL_CONFIGS: Record<
     displayName: "排列5",
     ballCount: 5,
     betType: "p5-single-number",
+    digitOptions: NUMBER_DIGIT_OPTIONS,
     positions: P5_POSITIONS,
     playRules: [
       "排列5从 00000 至 99999 中开出 1 个五位号码，顺序固定为万、千、百、十、个位。",
@@ -46,11 +57,25 @@ export const NUMBER_GAME_MODEL_CONFIGS: Record<
     displayName: "排列3",
     ballCount: 3,
     betType: "p3-single-number",
+    digitOptions: NUMBER_DIGIT_OPTIONS,
     positions: P3_POSITIONS,
     playRules: [
       "排列3从 000 至 999 中开出 1 个三位号码，顺序固定为百、十、个位。",
       "支持机选与自选，完成选号后可保存到待下注列表，再统一确认提交。",
       "每组号码可独立选择下注金额，预计派彩按当前游戏赔率实时计算。",
+    ],
+  },
+  sb: {
+    key: "sb",
+    displayName: "筛宝",
+    ballCount: 3,
+    betType: "sb-single-dice",
+    digitOptions: DICE_DIGIT_OPTIONS,
+    positions: SB_POSITIONS,
+    playRules: [
+      "筛宝每期开出三颗筛子的点数，范围固定为 1 至 6，对应第一筛、第二筛、第三筛。",
+      "当前页面支持机选与自选两种模式，完成三颗筛子点数选择后可保存到待下注列表。",
+      "待下注列表中的每一组点数组合可独立选择金额，确认投注时按列表汇总提交。",
     ],
   },
 };
@@ -62,6 +87,10 @@ export function resolveModelKeyByGameModelId(
 
   if (normalized === "p3" || normalized.includes("p3")) {
     return "p3";
+  }
+
+  if (normalized === "sb" || normalized.includes("sb")) {
+    return "sb";
   }
 
   return "p5";

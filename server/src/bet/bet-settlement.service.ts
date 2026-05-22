@@ -19,6 +19,8 @@ type SettledBetItem = {
   payoutAmount: number;
 };
 
+const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3', 'sb']);
+
 @Injectable()
 export class BetSettlementService {
   constructor(
@@ -190,7 +192,7 @@ export class BetSettlementService {
       return selectedSide === winner;
     }
 
-    if (order.betStrategyKey !== 'p5') {
+    if (!EXACT_MATCH_STRATEGY_KEYS.has(order.betStrategyKey)) {
       return false;
     }
 

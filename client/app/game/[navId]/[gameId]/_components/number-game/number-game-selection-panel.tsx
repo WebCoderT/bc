@@ -9,6 +9,7 @@ type NumberGameSelectionMode = "random" | "manual";
 
 type NumberGameSelectionPanelProps = {
   positions: NumberGamePosition[];
+  digitOptions: number[];
   digits: NumberGameSelectedDigit[];
   selectionMode: NumberGameSelectionMode;
   onModeChange: (mode: NumberGameSelectionMode) => void;
@@ -17,10 +18,9 @@ type NumberGameSelectionPanelProps = {
   onSaveToBetArea: () => void;
 };
 
-const DIGIT_OPTIONS = Array.from({ length: 10 }, (_, index) => index);
-
 export function NumberGameSelectionPanel({
   positions,
+  digitOptions,
   digits,
   selectionMode,
   onModeChange,
@@ -128,8 +128,13 @@ export function NumberGameSelectionPanel({
                     </p>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-5 gap-2">
-                    {DIGIT_OPTIONS.map((digit) => {
+                  <div
+                    className="mt-3 grid gap-2"
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(5, digitOptions.length)}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {digitOptions.map((digit) => {
                       const isActive = digits[positionIndex] === digit;
 
                       return (

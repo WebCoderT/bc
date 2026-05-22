@@ -1,6 +1,7 @@
 import { BetService } from './bet.service';
 import { GameOddsMode } from '../game/enums/game-odds-mode.enum';
 import { GameType } from '../game/enums/game-type.enum';
+import { RealtimeEventsService } from '../realtime/realtime-events.service';
 import { BetOrderEntity } from './entities/bet-order.entity';
 import { BetItemEntity } from './entities/bet-item.entity';
 import { UserEntity } from '../users/entities/user.entity';
@@ -76,6 +77,8 @@ describe('BetService', () => {
 
     const service = new BetService(
       dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as never,
       betOrderRepository as never,
       gameRepository as never,
       userRepository as never,
@@ -143,6 +146,132 @@ describe('BetService', () => {
         isWinning: null,
         payoutAmount: 0,
         settledAt: null,
+      }),
+    );
+  });
+
+  it('should normalize sb dice selection with exact-match defaults', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 13 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 10,
+        label: '筛宝',
+        description: '筛宝游戏',
+        gameModelId: 'sb',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.FIXED,
+        fixedOdds: 1.98,
+        gameModel: { id: 'sb' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+    };
+    const realtimeEventsService = {
+      emitBetPlaced: jest.fn(),
+    } as unknown as RealtimeEventsService;
+    const usersService = {
+      emitWalletBalanceUpdated: jest.fn(),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      usersService as never,
+      realtimeEventsService as never,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 13,
+      gameId: 10,
+      gameLabelSnapshot: '筛宝',
+      betStrategyKey: 'sb',
+      issueNo: '2026052200001',
+      status: 'placed',
+      totalAmount: 10,
+      itemCount: 1,
+      estimatedPayout: 19.8,
+      estimatedProfit: 9.8,
+      oddsSnapshotText: '固定赔率 1.98',
+      selectionSummary: '1 2 6',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:00:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 10, {
+      issueNo: '2026052200001',
+      items: [
+        {
+          displayText: '1 2 6',
+          amount: 10,
+          selection: { digits: [1, 2, 6], source: 'manual' },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'sb-single-dice',
+        displayText: '1 2 6',
+        selectionPayload: expect.objectContaining({
+          digits: [1, 2, 6],
+          source: 'manual',
+        }),
       }),
     );
   });

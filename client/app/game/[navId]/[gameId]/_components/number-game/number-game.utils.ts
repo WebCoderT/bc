@@ -18,10 +18,12 @@ export function createEmptyDigits(
   return Array.from({ length: ballCount }, () => null);
 }
 
-export function createRandomDigits(ballCount: number) {
-  return Array.from({ length: ballCount }, () =>
-    Math.floor(Math.random() * 10),
-  );
+export function createRandomDigits(ballCount: number, digitOptions: number[]) {
+  return Array.from({ length: ballCount }, () => {
+    const randomIndex = Math.floor(Math.random() * digitOptions.length);
+
+    return digitOptions[randomIndex];
+  });
 }
 
 export function createBetItem(

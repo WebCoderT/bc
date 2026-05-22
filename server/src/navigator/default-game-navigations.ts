@@ -69,4 +69,15 @@ export const DEFAULT_GAME_NAVIGATIONS: DefaultGameNavigationSeed[] = [
     sort: 13,
     parentKey: 'number-lottery',
   },
+  {
+    key: 'sb-category',
+    name: '筛宝',
+    path: '/game/number-lottery#sb',
+    description: '筛宝游戏分组，适配三颗筛子 1-6 点数的逐位开奖玩法。',
+    icon: '筛',
+    type: NavigationType.Side,
+    status: NavigationStatus.Visible,
+    sort: 14,
+    parentKey: 'number-lottery',
+  },
 ];

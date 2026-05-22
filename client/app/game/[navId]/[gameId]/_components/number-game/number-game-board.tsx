@@ -27,6 +27,7 @@ type NumberGameBoardProps = {
   gameDisplayName: string;
   playRules: string[];
   positions: NumberGamePosition[];
+  digitOptions: number[];
   gameDetail: ClientGame | null;
   isGameDetailLoading: boolean;
   gameDetailError: string;
@@ -54,6 +55,7 @@ export function NumberGameBoard({
   gameDisplayName,
   playRules,
   positions,
+  digitOptions,
   gameDetail,
   isGameDetailLoading,
   gameDetailError,
@@ -203,6 +205,7 @@ export function NumberGameBoard({
 
             <NumberGameSelectionPanel
               positions={positions}
+              digitOptions={digitOptions}
               digits={digits}
               selectionMode={selectionMode}
               onModeChange={onModeChange}

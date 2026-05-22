@@ -38,8 +38,12 @@ describe('BetSettlementService', () => {
         Promise.resolve(handler(manager)),
       ),
     };
+    const usersService = {
+      emitWalletBalanceUpdated: jest.fn(),
+    };
     const service = new BetSettlementService(
       dataSource as unknown as DataSource,
+      usersService as never,
     );
 
     return {
@@ -49,6 +53,7 @@ describe('BetSettlementService', () => {
       orderRepository,
       itemRepository,
       userRepository,
+      usersService,
     };
   };
 
@@ -146,5 +151,62 @@ describe('BetSettlementService', () => {
       totalPayoutAmount: 0,
     });
     expect(dataSource.transaction).not.toHaveBeenCalled();
+  });
+
+  it('should settle sb exact-match orders', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 8,
+      rechargeAmount: 50,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 201,
+      itemIndex: 1,
+      betType: 'sb-single-dice',
+      displayText: '2 4 6',
+      amount: 10,
+      estimatedPayout: 19.8,
+      estimatedProfit: 9.8,
+      selectionPayload: { digits: [2, 4, 6] },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 99,
+      betStrategyKey: 'sb',
+      status: 'placed',
+      fixedOddsSnapshot: 1.98,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 2,
+      issueNo: '2026052200002',
+      openCode: '2,4,6',
+      openCodeJson: [2, 4, 6],
+    });
+
+    expect(result.totalPayoutAmount).toBe(19.8);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningUser.rechargeAmount).toBe(69.8);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
   });
 });
