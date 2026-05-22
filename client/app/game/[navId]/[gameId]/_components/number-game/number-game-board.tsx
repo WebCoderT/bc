@@ -173,7 +173,9 @@ export function NumberGameBoard({
             </div>
 
             {gameDetailError ? (
-              <p className="mt-4 text-sm text-rose-300">{gameDetailError}</p>
+              <p className="mt-4 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
+                {gameDetailError}
+              </p>
             ) : null}
           </div>
 

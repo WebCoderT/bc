@@ -389,6 +389,14 @@ export class BetService {
       return this.normalizeRouletteBetItem(game, item, index, amount);
     }
 
+    if (game.gameModelId === 'ssq') {
+      return this.normalizeSsqBetItem(game, item, index, amount);
+    }
+
+    if (game.gameModelId === 'dlt') {
+      return this.normalizeDltBetItem(game, item, index, amount);
+    }
+
     if (exactMatchConfig) {
       const digitsValue = item.selection?.digits;
 
@@ -890,6 +898,167 @@ export class BetService {
     );
   }
 
+  private normalizeSsqBetItem(
+    game: Game,
+    item: CreateMemberBetItemDto,
+    index: number,
+    amount: number,
+  ): NormalizedBetItem {
+    const rawBetType =
+      typeof item.betType === 'string' && item.betType.trim().length > 0
+        ? item.betType.trim().toLowerCase()
+        : 'ssq-single';
+
+    if (rawBetType !== 'ssq-single') {
+      throw new BadRequestException('双色球下注类型仅支持 ssq-single');
+    }
+
+    const redBallsRaw = item.selection?.redBalls;
+    const blueBallRaw = item.selection?.blueBall;
+
+    if (!Array.isArray(redBallsRaw) || redBallsRaw.length !== 6) {
+      throw new BadRequestException('双色球下注必须提供 6 个红球');
+    }
+
+    const redBalls = redBallsRaw
+      .map((value) => Number(value))
+      .sort((left, right) => left - right);
+
+    if (
+      redBalls.some(
+        (value) => !Number.isInteger(value) || value < 1 || value > 33,
+      )
+    ) {
+      throw new BadRequestException('双色球红球仅支持 1-33');
+    }
+
+    if (new Set(redBalls).size !== 6) {
+      throw new BadRequestException('双色球红球不能重复');
+    }
+
+    const blueBall = Number(blueBallRaw);
+
+    if (!Number.isInteger(blueBall) || blueBall < 1 || blueBall > 16) {
+      throw new BadRequestException('双色球蓝球仅支持 1-16');
+    }
+
+    const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+    const estimatedProfit =
+      estimatedPayout === null
+        ? null
+        : this.roundCurrency(estimatedPayout - amount);
+
+    const normalizedDisplayText =
+      item.displayText?.trim() ||
+      `红 ${redBalls.join(' ')} | 蓝 ${String(blueBall).padStart(2, '0')}`;
+
+    return {
+      itemIndex: index + 1,
+      betType: 'ssq-single',
+      displayText: normalizedDisplayText,
+      amount,
+      selection: {
+        redBalls,
+        blueBall,
+        source:
+          typeof item.selection?.source === 'string'
+            ? item.selection.source
+            : 'manual',
+      },
+      extraPayload: item.extraPayload ?? null,
+      estimatedPayout,
+      estimatedProfit,
+    };
+  }
+
+  private normalizeDltBetItem(
+    game: Game,
+    item: CreateMemberBetItemDto,
+    index: number,
+    amount: number,
+  ): NormalizedBetItem {
+    const rawBetType =
+      typeof item.betType === 'string' && item.betType.trim().length > 0
+        ? item.betType.trim().toLowerCase()
+        : 'dlt-single';
+
+    if (rawBetType !== 'dlt-single') {
+      throw new BadRequestException('超级大乐透下注类型仅支持 dlt-single');
+    }
+
+    const frontBallsRaw = item.selection?.frontBalls;
+    const backBallsRaw = item.selection?.backBalls;
+
+    if (!Array.isArray(frontBallsRaw) || frontBallsRaw.length !== 5) {
+      throw new BadRequestException('超级大乐透下注必须提供前区 5 个号码');
+    }
+
+    if (!Array.isArray(backBallsRaw) || backBallsRaw.length !== 2) {
+      throw new BadRequestException('超级大乐透下注必须提供后区 2 个号码');
+    }
+
+    const frontBalls = frontBallsRaw
+      .map((value) => Number(value))
+      .sort((left, right) => left - right);
+    const backBalls = backBallsRaw
+      .map((value) => Number(value))
+      .sort((left, right) => left - right);
+
+    if (
+      frontBalls.some(
+        (value) => !Number.isInteger(value) || value < 1 || value > 35,
+      )
+    ) {
+      throw new BadRequestException('超级大乐透前区号码仅支持 1-35');
+    }
+
+    if (new Set(frontBalls).size !== 5) {
+      throw new BadRequestException('超级大乐透前区号码不能重复');
+    }
+
+    if (
+      backBalls.some(
+        (value) => !Number.isInteger(value) || value < 1 || value > 12,
+      )
+    ) {
+      throw new BadRequestException('超级大乐透后区号码仅支持 1-12');
+    }
+
+    if (new Set(backBalls).size !== 2) {
+      throw new BadRequestException('超级大乐透后区号码不能重复');
+    }
+
+    const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+    const estimatedProfit =
+      estimatedPayout === null
+        ? null
+        : this.roundCurrency(estimatedPayout - amount);
+
+    const normalizedDisplayText =
+      item.displayText?.trim() ||
+      `前 ${frontBalls.join(' ')} | 后 ${backBalls
+        .map((value) => String(value).padStart(2, '0'))
+        .join(' ')}`;
+
+    return {
+      itemIndex: index + 1,
+      betType: 'dlt-single',
+      displayText: normalizedDisplayText,
+      amount,
+      selection: {
+        frontBalls,
+        backBalls,
+        source:
+          typeof item.selection?.source === 'string'
+            ? item.selection.source
+            : 'manual',
+      },
+      extraPayload: item.extraPayload ?? null,
+      estimatedPayout,
+      estimatedProfit,
+    };
+  }
+
   private deductUserBalance(user: UserEntity, amount: number) {
     let remaining = this.roundCurrency(amount);
     const currentBonus = this.roundCurrency(Number(user.bonusAmount ?? 0));
@@ -945,6 +1114,22 @@ export class BetService {
       const tieOdds = this.resolveDragonTigerOdds(game, 'tie');
 
       return `龙 ${dragonOdds.toFixed(2)} · 虎 ${tigerOdds.toFixed(2)} · 和 ${tieOdds.toFixed(2)}`;
+    }
+
+    if (game.gameModelId === 'ssq') {
+      if (game.fixedOdds === null) {
+        return '固定赔率未设置';
+      }
+
+      return `单式 ${Number(game.fixedOdds).toFixed(2)}`;
+    }
+
+    if (game.gameModelId === 'dlt') {
+      if (game.fixedOdds === null) {
+        return '固定赔率未设置';
+      }
+
+      return `单式 ${Number(game.fixedOdds).toFixed(2)}`;
     }
 
     if (game.oddsMode === GameOddsMode.CUSTOM) {

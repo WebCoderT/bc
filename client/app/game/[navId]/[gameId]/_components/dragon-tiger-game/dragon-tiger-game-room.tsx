@@ -394,7 +394,9 @@ export default function DragonTigerGameRoom({
                   "比较龙位与虎位开出数字大小：龙大为龙，虎大为虎，相同为和。"}
               </p>
               {gameDetailError ? (
-                <p className="mt-3 text-sm text-rose-200">{gameDetailError}</p>
+                <p className="mt-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
+                  {gameDetailError}
+                </p>
               ) : null}
             </div>
             <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--card)] px-4 py-4 text-sm text-[var(--muted)]">
@@ -429,7 +431,7 @@ export default function DragonTigerGameRoom({
                   </div>
                 </div>
                 {drawError ? (
-                  <div className="rounded-[1.1rem] border border-rose-300/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  <div className="rounded-[1.1rem] border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
                     {drawError}
                   </div>
                 ) : null}
@@ -708,7 +710,7 @@ function DragonTigerHistory({
         <div className="compact-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {activeTab === "draws" ? (
             drawError ? (
-              <div className="rounded-[1.2rem] border border-rose-300/40 bg-rose-500/10 px-3 py-3 text-sm text-rose-200">
+              <div className="rounded-[1.2rem] border border-rose-500/40 bg-rose-500/10 px-3 py-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
                 {drawError}
               </div>
             ) : records.length === 0 ? (
@@ -757,7 +759,7 @@ function DragonTigerHistory({
               {t("bet.history.loadingBets")}
             </div>
           ) : betHistoryError ? (
-            <div className="rounded-[1.2rem] border border-rose-300/40 bg-rose-500/10 px-3 py-3 text-sm text-rose-200">
+            <div className="rounded-[1.2rem] border border-rose-500/40 bg-rose-500/10 px-3 py-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
               {betHistoryError}
             </div>
           ) : betOrders.length === 0 ? (
@@ -812,7 +814,7 @@ function DragonTigerHistory({
                     </span>
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {order.isWinning === true && order.payoutAmount > 0 ? (
-                        <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-200">
+                        <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 font-medium text-[color-mix(in_srgb,#065f46_72%,var(--foreground))]">
                           {t("bet.history.payout")}{" "}
                           {formatAuthCurrency(order.payoutAmount)}
                         </span>

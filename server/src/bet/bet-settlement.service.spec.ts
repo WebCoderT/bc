@@ -400,4 +400,126 @@ describe('BetSettlementService', () => {
     expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
     expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
   });
+
+  it('should settle ssq single orders', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 48,
+      rechargeAmount: 80,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 601,
+      itemIndex: 1,
+      betType: 'ssq-single',
+      displayText: '红 1 3 7 11 19 28 | 蓝 08',
+      amount: 10,
+      estimatedPayout: 5000,
+      estimatedProfit: 4990,
+      selectionPayload: {
+        redBalls: [1, 3, 7, 11, 19, 28],
+        blueBall: 8,
+      },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 409,
+      betStrategyKey: 'ssq',
+      status: 'placed',
+      fixedOddsSnapshot: 500,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 4,
+      issueNo: '2026052200006',
+      openCode: '1,3,7,11,19,28,8',
+      openCodeJson: [1, 3, 7, 11, 19, 28, 8],
+    });
+
+    expect(result.totalPayoutAmount).toBe(5000);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningItem.payoutAmount).toBe(5000);
+    expect(winningUser.rechargeAmount).toBe(5080);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+  });
+
+  it('should settle dlt single orders', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 58,
+      rechargeAmount: 90,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 701,
+      itemIndex: 1,
+      betType: 'dlt-single',
+      displayText: '前 3 8 17 22 31 | 后 04 11',
+      amount: 10,
+      estimatedPayout: 6000,
+      estimatedProfit: 5990,
+      selectionPayload: {
+        frontBalls: [3, 8, 17, 22, 31],
+        backBalls: [4, 11],
+      },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 509,
+      betStrategyKey: 'dlt',
+      status: 'placed',
+      fixedOddsSnapshot: 600,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 5,
+      issueNo: '2026052200007',
+      openCode: '3,8,17,22,31,4,11',
+      openCodeJson: [3, 8, 17, 22, 31, 4, 11],
+    });
+
+    expect(result.totalPayoutAmount).toBe(6000);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningItem.payoutAmount).toBe(6000);
+    expect(winningUser.rechargeAmount).toBe(6090);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+  });
 });

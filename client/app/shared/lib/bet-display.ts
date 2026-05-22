@@ -27,14 +27,14 @@ export function getBetSettlementText(
 
 export function getBetStatusClassName(status: ClientBetStatus) {
   if (status === "settled") {
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
+    return "border-emerald-500/35 bg-emerald-500/10 text-[color-mix(in_srgb,#065f46_72%,var(--foreground))]";
   }
 
   if (status === "cancelled") {
-    return "border-rose-400/30 bg-rose-500/10 text-rose-200";
+    return "border-rose-500/35 bg-rose-500/10 text-[color-mix(in_srgb,#9f1239_72%,var(--foreground))]";
   }
 
-  return "border-sky-400/30 bg-sky-500/10 text-sky-200";
+  return "border-sky-500/35 bg-sky-500/10 text-[color-mix(in_srgb,#075985_72%,var(--foreground))]";
 }
 
 export function getBetSettlementClassName(
@@ -42,12 +42,12 @@ export function getBetSettlementClassName(
   status: ClientBetStatus,
 ) {
   if (status !== "settled") {
-    return "border-amber-400/30 bg-amber-500/10 text-amber-200";
+    return "border-amber-500/35 bg-amber-500/10 text-[color-mix(in_srgb,#92400e_72%,var(--foreground))]";
   }
 
   if (isWinning === true) {
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
+    return "border-emerald-500/35 bg-emerald-500/10 text-[color-mix(in_srgb,#065f46_72%,var(--foreground))]";
   }
 
-  return "border-rose-400/30 bg-rose-500/10 text-rose-200";
+  return "border-rose-500/35 bg-rose-500/10 text-[color-mix(in_srgb,#9f1239_72%,var(--foreground))]";
 }

@@ -17,6 +17,8 @@ import { P3DrawStrategy } from './strategies/p3-draw.strategy';
 import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 import { RouletteDrawStrategy } from './strategies/roulette-draw.strategy';
 import { SbDrawStrategy } from './strategies/sb-draw.strategy';
+import { SsqDrawStrategy } from './strategies/ssq-draw.strategy';
+import { DltDrawStrategy } from './strategies/dlt-draw.strategy';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { SbDrawStrategy } from './strategies/sb-draw.strategy';
     P5DrawStrategy,
     RouletteDrawStrategy,
     SbDrawStrategy,
+    SsqDrawStrategy,
+    DltDrawStrategy,
   ],
   exports: [GameDrawService, GameDrawTableService, GameDrawRuntimeService],
 })

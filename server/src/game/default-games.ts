@@ -91,4 +91,30 @@ export const DEFAULT_GAMES: DefaultGameSeed[] = [
       column: 3,
     },
   },
+  {
+    label: '双色球',
+    description:
+      '双色球每期开出 6 个红球与 1 个蓝球，支持标准单式（6 红 + 1 蓝）投注。',
+    iconUrl: '',
+    categoryPath: '/game/number-lottery#ssq',
+    gameModelId: 'ssq',
+    drawInterval: 60,
+    status: GameType.ONLINE,
+    oddsMode: GameOddsMode.FIXED,
+    fixedOdds: 500,
+    customPayoutConfig: null,
+  },
+  {
+    label: '超级大乐透',
+    description:
+      '超级大乐透每期开出前区 5 个号码与后区 2 个号码，支持标准单式（前 5 + 后 2）投注。',
+    iconUrl: '',
+    categoryPath: '/game/number-lottery#dlt',
+    gameModelId: 'dlt',
+    drawInterval: 60,
+    status: GameType.ONLINE,
+    oddsMode: GameOddsMode.FIXED,
+    fixedOdds: 600,
+    customPayoutConfig: null,
+  },
 ];

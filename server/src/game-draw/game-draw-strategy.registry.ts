@@ -5,6 +5,8 @@ import { P3DrawStrategy } from './strategies/p3-draw.strategy';
 import { P5DrawStrategy } from './strategies/p5-draw.strategy';
 import { RouletteDrawStrategy } from './strategies/roulette-draw.strategy';
 import { SbDrawStrategy } from './strategies/sb-draw.strategy';
+import { SsqDrawStrategy } from './strategies/ssq-draw.strategy';
+import { DltDrawStrategy } from './strategies/dlt-draw.strategy';
 
 @Injectable()
 export class GameDrawStrategyRegistry {
@@ -16,6 +18,8 @@ export class GameDrawStrategyRegistry {
     private readonly p5DrawStrategy: P5DrawStrategy,
     private readonly rouletteDrawStrategy: RouletteDrawStrategy,
     private readonly sbDrawStrategy: SbDrawStrategy,
+    private readonly ssqDrawStrategy: SsqDrawStrategy,
+    private readonly dltDrawStrategy: DltDrawStrategy,
   ) {
     this.strategies = [
       lhdDrawStrategy,
@@ -23,6 +27,8 @@ export class GameDrawStrategyRegistry {
       p5DrawStrategy,
       rouletteDrawStrategy,
       sbDrawStrategy,
+      ssqDrawStrategy,
+      dltDrawStrategy,
     ];
   }
 

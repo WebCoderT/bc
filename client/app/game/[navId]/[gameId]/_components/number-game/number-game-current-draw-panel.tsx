@@ -43,7 +43,9 @@ export function NumberGameCurrentDrawPanel({
               : ""}
           </p>
           {drawError ? (
-            <p className="mt-2 text-sm text-rose-300">{drawError}</p>
+            <p className="mt-2 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
+              {drawError}
+            </p>
           ) : null}
         </div>
 

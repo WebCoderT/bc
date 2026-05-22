@@ -8,6 +8,8 @@ import NumberGameRoom from "./number-game/number-game-room";
 import DragonTigerGameRoom from "./dragon-tiger-game/dragon-tiger-game-room";
 import SbGameRoom from "./sb-game/sb-game-room";
 import RouletteGameRoom from "./roulette-game/roulette-game-room";
+import SsqGameRoom from "./ssq-game/ssq-game-room";
+import DltGameRoom from "./dlt-game/dlt-game-room";
 
 function resolveRoomType(gameModelId: string | null | undefined) {
   const normalized = gameModelId?.trim().toLowerCase() ?? "";
@@ -26,6 +28,22 @@ function resolveRoomType(gameModelId: string | null | undefined) {
 
   if (normalized === "roulette" || normalized.includes("wheel")) {
     return "roulette";
+  }
+
+  if (
+    normalized === "ssq" ||
+    normalized.includes("double") ||
+    normalized.includes("color")
+  ) {
+    return "ssq";
+  }
+
+  if (
+    normalized === "dlt" ||
+    normalized.includes("lotto") ||
+    normalized.includes("super")
+  ) {
+    return "dlt";
   }
 
   return "number";
@@ -83,7 +101,7 @@ export default function GameRoomSwitcher() {
   if (!canLoadGame) {
     return (
       <main className="space-y-6">
-        <div className="rounded-[1.8rem] border border-rose-300/40 bg-rose-500/10 px-5 py-8 text-sm text-rose-200">
+        <div className="rounded-[1.8rem] border border-rose-500/40 bg-rose-500/10 px-5 py-8 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
           无法读取当前游戏信息
         </div>
       </main>
@@ -103,7 +121,7 @@ export default function GameRoomSwitcher() {
   if (error) {
     return (
       <main className="space-y-6">
-        <div className="rounded-[1.8rem] border border-rose-300/40 bg-rose-500/10 px-5 py-8 text-sm text-rose-200">
+        <div className="rounded-[1.8rem] border border-rose-500/40 bg-rose-500/10 px-5 py-8 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
           {error}
         </div>
       </main>
@@ -132,6 +150,14 @@ export default function GameRoomSwitcher() {
 
   if (roomType === "roulette") {
     return <RouletteGameRoom initialGameDetail={gameDetail} />;
+  }
+
+  if (roomType === "ssq") {
+    return <SsqGameRoom initialGameDetail={gameDetail} />;
+  }
+
+  if (roomType === "dlt") {
+    return <DltGameRoom initialGameDetail={gameDetail} />;
   }
 
   return <NumberGameRoom initialGameDetail={gameDetail} />;

@@ -374,6 +374,147 @@ export class BetSettlementService {
       }
     }
 
+    if (order.betStrategyKey === 'ssq') {
+      const redDrawBalls = drawDigits
+        .slice(0, 6)
+        .sort((left, right) => left - right);
+      const blueDrawBall = drawDigits[6];
+
+      if (redDrawBalls.length !== 6) {
+        return false;
+      }
+
+      if (
+        redDrawBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 33,
+        ) ||
+        new Set(redDrawBalls).size !== 6
+      ) {
+        return false;
+      }
+
+      if (
+        !Number.isInteger(blueDrawBall) ||
+        blueDrawBall < 1 ||
+        blueDrawBall > 16
+      ) {
+        return false;
+      }
+
+      const selectedRedBallsRaw = item.selectionPayload?.redBalls;
+      const selectedBlueBall = Number(item.selectionPayload?.blueBall);
+
+      if (
+        !Array.isArray(selectedRedBallsRaw) ||
+        selectedRedBallsRaw.length !== 6
+      ) {
+        return false;
+      }
+
+      const selectedRedBalls = selectedRedBallsRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+
+      if (
+        selectedRedBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 33,
+        ) ||
+        new Set(selectedRedBalls).size !== 6
+      ) {
+        return false;
+      }
+
+      if (
+        !Number.isInteger(selectedBlueBall) ||
+        selectedBlueBall < 1 ||
+        selectedBlueBall > 16
+      ) {
+        return false;
+      }
+
+      return (
+        selectedBlueBall === blueDrawBall &&
+        selectedRedBalls.every((value, index) => value === redDrawBalls[index])
+      );
+    }
+
+    if (order.betStrategyKey === 'dlt') {
+      const frontDrawBalls = drawDigits
+        .slice(0, 5)
+        .sort((left, right) => left - right);
+      const backDrawBalls = drawDigits
+        .slice(5, 7)
+        .sort((left, right) => left - right);
+
+      if (frontDrawBalls.length !== 5 || backDrawBalls.length !== 2) {
+        return false;
+      }
+
+      if (
+        frontDrawBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 35,
+        ) ||
+        new Set(frontDrawBalls).size !== 5
+      ) {
+        return false;
+      }
+
+      if (
+        backDrawBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 12,
+        ) ||
+        new Set(backDrawBalls).size !== 2
+      ) {
+        return false;
+      }
+
+      const selectedFrontBallsRaw = item.selectionPayload?.frontBalls;
+      const selectedBackBallsRaw = item.selectionPayload?.backBalls;
+
+      if (
+        !Array.isArray(selectedFrontBallsRaw) ||
+        selectedFrontBallsRaw.length !== 5 ||
+        !Array.isArray(selectedBackBallsRaw) ||
+        selectedBackBallsRaw.length !== 2
+      ) {
+        return false;
+      }
+
+      const selectedFrontBalls = selectedFrontBallsRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+      const selectedBackBalls = selectedBackBallsRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+
+      if (
+        selectedFrontBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 35,
+        ) ||
+        new Set(selectedFrontBalls).size !== 5
+      ) {
+        return false;
+      }
+
+      if (
+        selectedBackBalls.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 12,
+        ) ||
+        new Set(selectedBackBalls).size !== 2
+      ) {
+        return false;
+      }
+
+      return (
+        selectedFrontBalls.every(
+          (value, index) => value === frontDrawBalls[index],
+        ) &&
+        selectedBackBalls.every(
+          (value, index) => value === backDrawBalls[index],
+        )
+      );
+    }
+
     if (!EXACT_MATCH_STRATEGY_KEYS.has(order.betStrategyKey)) {
       return false;
     }

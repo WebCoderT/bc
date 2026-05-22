@@ -471,7 +471,9 @@ export default function SbGameRoom({
                   "每期开出三颗筛子点数，可投注逐位、和值、大小、单双与任意豹子。"}
               </p>
               {gameDetailError ? (
-                <p className="mt-3 text-sm text-rose-200">{gameDetailError}</p>
+                <p className="mt-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
+                  {gameDetailError}
+                </p>
               ) : null}
             </div>
             <div className="rounded-[1.4rem] border border-[var(--border)] bg-[var(--card)] px-4 py-4 text-sm text-[var(--muted)]">
@@ -510,7 +512,7 @@ export default function SbGameRoom({
                 </div>
 
                 {drawError ? (
-                  <div className="rounded-[1.1rem] border border-rose-300/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  <div className="rounded-[1.1rem] border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
                     {drawError}
                   </div>
                 ) : null}

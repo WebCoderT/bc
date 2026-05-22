@@ -219,7 +219,7 @@ export default function GameBetsPage() {
         </div>
 
         {loadError ? (
-          <div className="mt-5 rounded-[1.4rem] border border-rose-300/50 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <div className="mt-5 rounded-[1.4rem] border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-[color-mix(in_srgb,#b91c1c_70%,var(--foreground))]">
             {loadError}
           </div>
         ) : null}
@@ -269,7 +269,7 @@ export default function GameBetsPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {bet.isWinning === true && bet.payoutAmount > 0 ? (
-                      <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                      <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-[color-mix(in_srgb,#065f46_72%,var(--foreground))]">
                         {t("bet.history.payout")}{" "}
                         {formatAuthCurrency(bet.payoutAmount)}
                       </span>
@@ -335,7 +335,7 @@ export default function GameBetsPage() {
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {item.isWinning === true && item.payoutAmount > 0 ? (
-                            <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200">
+                            <span className="inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-[color-mix(in_srgb,#065f46_72%,var(--foreground))]">
                               {t("bet.history.payout")}{" "}
                               {formatAuthCurrency(item.payoutAmount)}
                             </span>
