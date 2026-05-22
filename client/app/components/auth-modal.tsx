@@ -73,19 +73,9 @@ export function AuthModal({
   return (
     <ModalShell
       title={mode === "login" ? "登录竞技中枢" : "注册并解锁赛场"}
-      description={
-        mode === "login"
-          ? "使用服务端 JWT 登录后进入 `/game` 已登录模块。"
-          : "当前服务端注册接口仅接收用户名与密码，注册成功后自动登录。"
-      }
       onClose={onClose}
       maxWidthClassName="max-w-md"
-      headerContent={
-        <AppBrand
-          secondaryText="统一品牌数据已接入认证入口"
-          variant="inverted"
-        />
-      }
+      headerContent={<AppBrand variant="inverted" />}
       bodyClassName="p-[var(--surface-padding-lg)]"
     >
       <div className="mb-5 grid grid-cols-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--panel)] p-1 text-sm">
@@ -184,7 +174,7 @@ export function AuthModal({
                 ? "登录中..."
                 : "注册中..."
               : mode === "login"
-                ? "进入 /game"
+                ? "进入"
                 : "注册并进入"}
           </ActionButton>
         </div>

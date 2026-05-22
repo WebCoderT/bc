@@ -88,13 +88,6 @@ export default function HomePage() {
                 <ActionButton size="lg" onClick={() => openAuth("register")}>
                   立即加入赛场
                 </ActionButton>
-                <ActionButton
-                  variant="outline"
-                  size="lg"
-                  onClick={() => openAuth("login")}
-                >
-                  已有账号，进入 `/game`
-                </ActionButton>
               </div>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
