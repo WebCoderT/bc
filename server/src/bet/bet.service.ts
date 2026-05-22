@@ -71,6 +71,9 @@ const EXACT_MATCH_GAME_CONFIGS = {
 
 const SB_SIZE_OPTIONS = new Set(['big', 'small']);
 const SB_PARITY_OPTIONS = new Set(['odd', 'even']);
+const ROULETTE_COLOR_OPTIONS = new Set(['red', 'black']);
+const ROULETTE_PARITY_OPTIONS = new Set(['odd', 'even']);
+const ROULETTE_RANGE_OPTIONS = new Set(['low', 'high']);
 
 @Injectable()
 export class BetService {
@@ -382,6 +385,10 @@ export class BetService {
       return this.normalizeSbBetItem(game, item, index, amount);
     }
 
+    if (game.gameModelId === 'roulette') {
+      return this.normalizeRouletteBetItem(game, item, index, amount);
+    }
+
     if (exactMatchConfig) {
       const digitsValue = item.selection?.digits;
 
@@ -652,6 +659,237 @@ export class BetService {
     );
   }
 
+  private normalizeRouletteBetItem(
+    game: Game,
+    item: CreateMemberBetItemDto,
+    index: number,
+    amount: number,
+  ): NormalizedBetItem {
+    const rawBetType =
+      typeof item.betType === 'string' && item.betType.trim().length > 0
+        ? item.betType.trim().toLowerCase()
+        : 'roulette-single-number';
+
+    if (rawBetType === 'roulette-single-number') {
+      const digitsValue = item.selection?.digits;
+
+      if (!Array.isArray(digitsValue) || digitsValue.length !== 1) {
+        throw new BadRequestException('轮盘下注必须提供 1 个号码');
+      }
+
+      const number = Number(digitsValue[0]);
+
+      if (!Number.isInteger(number) || number < 0 || number > 36) {
+        throw new BadRequestException('轮盘下注号码仅支持 0-36');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-single-number',
+        displayText: item.displayText?.trim() || String(number),
+        amount,
+        selection: {
+          digits: [number],
+          source:
+            typeof item.selection?.source === 'string'
+              ? item.selection.source
+              : 'manual',
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'roulette-color') {
+      const color =
+        typeof item.selection?.color === 'string'
+          ? item.selection.color.trim().toLowerCase()
+          : '';
+
+      if (!ROULETTE_COLOR_OPTIONS.has(color)) {
+        throw new BadRequestException('轮盘红黑下注仅支持 red 或 black');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-color',
+        displayText:
+          item.displayText?.trim() || (color === 'red' ? '红' : '黑'),
+        amount,
+        selection: {
+          color,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'roulette-parity') {
+      const parity =
+        typeof item.selection?.parity === 'string'
+          ? item.selection.parity.trim().toLowerCase()
+          : '';
+
+      if (!ROULETTE_PARITY_OPTIONS.has(parity)) {
+        throw new BadRequestException('轮盘单双下注仅支持 odd 或 even');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-parity',
+        displayText:
+          item.displayText?.trim() || (parity === 'odd' ? '单' : '双'),
+        amount,
+        selection: {
+          parity,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'roulette-range') {
+      const range =
+        typeof item.selection?.range === 'string'
+          ? item.selection.range.trim().toLowerCase()
+          : '';
+
+      if (!ROULETTE_RANGE_OPTIONS.has(range)) {
+        throw new BadRequestException('轮盘大小下注仅支持 low 或 high');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-range',
+        displayText:
+          item.displayText?.trim() ||
+          (range === 'low' ? '小 (1-18)' : '大 (19-36)'),
+        amount,
+        selection: {
+          range,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'roulette-dozen') {
+      const dozen = Number(item.selection?.dozen);
+
+      if (!Number.isInteger(dozen) || dozen < 1 || dozen > 3) {
+        throw new BadRequestException('轮盘打组下注仅支持 1-3 组');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-dozen',
+        displayText: item.displayText?.trim() || `第 ${dozen} 组`,
+        amount,
+        selection: {
+          dozen,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'roulette-column') {
+      const column = Number(item.selection?.column);
+
+      if (!Number.isInteger(column) || column < 1 || column > 3) {
+        throw new BadRequestException('轮盘列组下注仅支持 1-3 列');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(
+        amount,
+        game,
+        undefined,
+        rawBetType,
+      );
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'roulette-column',
+        displayText: item.displayText?.trim() || `第 ${column} 列`,
+        amount,
+        selection: {
+          column,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    throw new BadRequestException(
+      '轮盘下注类型仅支持 roulette-single-number、roulette-color、roulette-parity、roulette-range、roulette-dozen、roulette-column',
+    );
+  }
+
   private deductUserBalance(user: UserEntity, amount: number) {
     let remaining = this.roundCurrency(amount);
     const currentBonus = this.roundCurrency(Number(user.bonusAmount ?? 0));
@@ -679,10 +917,17 @@ export class BetService {
     amount: number,
     game: Game,
     customSide?: string,
+    customBetType?: string,
   ) {
     if (game.oddsMode !== GameOddsMode.FIXED || game.fixedOdds === null) {
       if (game.gameModelId === 'lhd' && customSide) {
         const odds = this.resolveDragonTigerOdds(game, customSide);
+
+        return this.roundCurrency(amount * odds);
+      }
+
+      if (game.gameModelId === 'roulette' && customBetType) {
+        const odds = this.resolveRouletteOdds(game, customBetType);
 
         return this.roundCurrency(amount * odds);
       }
@@ -703,6 +948,17 @@ export class BetService {
     }
 
     if (game.oddsMode === GameOddsMode.CUSTOM) {
+      if (game.gameModelId === 'roulette') {
+        const single = this.resolveRouletteOdds(game, 'roulette-single-number');
+        const color = this.resolveRouletteOdds(game, 'roulette-color');
+        const parity = this.resolveRouletteOdds(game, 'roulette-parity');
+        const range = this.resolveRouletteOdds(game, 'roulette-range');
+        const dozen = this.resolveRouletteOdds(game, 'roulette-dozen');
+        const column = this.resolveRouletteOdds(game, 'roulette-column');
+
+        return `单号 ${single.toFixed(2)} · 红黑 ${color.toFixed(2)} · 单双 ${parity.toFixed(2)} · 大小 ${range.toFixed(2)} · 组 ${dozen.toFixed(2)} · 列 ${column.toFixed(2)}`;
+      }
+
       return '自定义赔付（预留）';
     }
 
@@ -744,6 +1000,37 @@ export class BetService {
     }
 
     return 1.98;
+  }
+
+  private resolveRouletteOdds(game: Game, betType: string) {
+    const payoutKeyByBetType: Record<string, string> = {
+      'roulette-single-number': 'single',
+      'roulette-color': 'color',
+      'roulette-parity': 'parity',
+      'roulette-range': 'range',
+      'roulette-dozen': 'dozen',
+      'roulette-column': 'column',
+    };
+    const fallbackOddsByKey: Record<string, number> = {
+      single: 36,
+      color: 2,
+      parity: 2,
+      range: 2,
+      dozen: 3,
+      column: 3,
+    };
+    const payoutKey = payoutKeyByBetType[betType] ?? 'single';
+
+    if (
+      game.customPayoutConfig &&
+      typeof game.customPayoutConfig === 'object' &&
+      !Array.isArray(game.customPayoutConfig) &&
+      typeof game.customPayoutConfig[payoutKey] === 'number'
+    ) {
+      return Number(game.customPayoutConfig[payoutKey]);
+    }
+
+    return fallbackOddsByKey[payoutKey] ?? 2;
   }
 
   private resolveExactMatchGameConfig(gameModelId: string) {

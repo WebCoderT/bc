@@ -73,14 +73,22 @@ export const DEFAULT_GAMES: DefaultGameSeed[] = [
   },
   {
     label: '轮盘',
-    description: '轮盘每期开出 0 至 36 的 1 个号码，支持单号直选投注。',
+    description:
+      '轮盘每期开出 0 至 36 的 1 个号码，支持单号、红黑、单双、大小、打组与列组投注。',
     iconUrl: '',
     categoryPath: '/game/number-lottery#roulette',
     gameModelId: 'roulette',
     drawInterval: 60,
     status: GameType.ONLINE,
-    oddsMode: GameOddsMode.FIXED,
-    fixedOdds: 35,
-    customPayoutConfig: null,
+    oddsMode: GameOddsMode.CUSTOM,
+    fixedOdds: null,
+    customPayoutConfig: {
+      single: 36,
+      color: 2,
+      parity: 2,
+      range: 2,
+      dozen: 3,
+      column: 3,
+    },
   },
 ];

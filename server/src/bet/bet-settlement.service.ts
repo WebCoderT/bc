@@ -20,6 +20,9 @@ type SettledBetItem = {
 };
 
 const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3', 'roulette']);
+const ROULETTE_RED_NUMBERS = new Set([
+  1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
+]);
 
 @Injectable()
 export class BetSettlementService {
@@ -263,6 +266,112 @@ export class BetSettlementService {
       return selectedDigits.every(
         (digit, index) => Number(digit) === drawDigits[index],
       );
+    }
+
+    if (order.betStrategyKey === 'roulette') {
+      const drawNumber = drawDigits[0];
+
+      if (!Number.isInteger(drawNumber) || drawNumber < 0 || drawNumber > 36) {
+        return false;
+      }
+
+      if (item.betType === 'roulette-color') {
+        const selectedColor =
+          typeof item.selectionPayload?.color === 'string'
+            ? item.selectionPayload.color.toLowerCase()
+            : '';
+
+        if (drawNumber === 0) {
+          return false;
+        }
+
+        if (selectedColor === 'red') {
+          return ROULETTE_RED_NUMBERS.has(drawNumber);
+        }
+
+        if (selectedColor === 'black') {
+          return !ROULETTE_RED_NUMBERS.has(drawNumber);
+        }
+
+        return false;
+      }
+
+      if (item.betType === 'roulette-parity') {
+        const selectedParity =
+          typeof item.selectionPayload?.parity === 'string'
+            ? item.selectionPayload.parity.toLowerCase()
+            : '';
+
+        if (drawNumber === 0) {
+          return false;
+        }
+
+        if (selectedParity === 'odd') {
+          return drawNumber % 2 === 1;
+        }
+
+        if (selectedParity === 'even') {
+          return drawNumber % 2 === 0;
+        }
+
+        return false;
+      }
+
+      if (item.betType === 'roulette-range') {
+        const selectedRange =
+          typeof item.selectionPayload?.range === 'string'
+            ? item.selectionPayload.range.toLowerCase()
+            : '';
+
+        if (selectedRange === 'low') {
+          return drawNumber >= 1 && drawNumber <= 18;
+        }
+
+        if (selectedRange === 'high') {
+          return drawNumber >= 19 && drawNumber <= 36;
+        }
+
+        return false;
+      }
+
+      if (item.betType === 'roulette-dozen') {
+        const selectedDozen = Number(item.selectionPayload?.dozen);
+
+        if (
+          !Number.isInteger(selectedDozen) ||
+          selectedDozen < 1 ||
+          selectedDozen > 3
+        ) {
+          return false;
+        }
+
+        if (drawNumber === 0) {
+          return false;
+        }
+
+        const min = (selectedDozen - 1) * 12 + 1;
+        const max = selectedDozen * 12;
+
+        return drawNumber >= min && drawNumber <= max;
+      }
+
+      if (item.betType === 'roulette-column') {
+        const selectedColumn = Number(item.selectionPayload?.column);
+
+        if (
+          !Number.isInteger(selectedColumn) ||
+          selectedColumn < 1 ||
+          selectedColumn > 3
+        ) {
+          return false;
+        }
+
+        if (drawNumber === 0) {
+          return false;
+        }
+
+        return ((drawNumber - 1) % 3) + 1 === selectedColumn;
+      }
     }
 
     if (!EXACT_MATCH_STRATEGY_KEYS.has(order.betStrategyKey)) {

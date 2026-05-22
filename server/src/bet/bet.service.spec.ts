@@ -448,8 +448,16 @@ describe('BetService', () => {
         description: '轮盘游戏',
         gameModelId: 'roulette',
         status: GameType.ONLINE,
-        oddsMode: GameOddsMode.FIXED,
-        fixedOdds: 35,
+        oddsMode: GameOddsMode.CUSTOM,
+        fixedOdds: null,
+        customPayoutConfig: {
+          single: 36,
+          color: 2,
+          parity: 2,
+          range: 2,
+          dozen: 3,
+          column: 3,
+        },
         gameModel: { id: 'roulette' },
       }),
     };
@@ -479,9 +487,10 @@ describe('BetService', () => {
       status: 'placed',
       totalAmount: 10,
       itemCount: 1,
-      estimatedPayout: 350,
-      estimatedProfit: 340,
-      oddsSnapshotText: '固定赔率 35.00',
+      estimatedPayout: 360,
+      estimatedProfit: 350,
+      oddsSnapshotText:
+        '单号 36.00 · 红黑 2.00 · 单双 2.00 · 大小 2.00 · 组 3.00 · 列 3.00',
       selectionSummary: '17',
       isWinning: null,
       payoutAmount: 0,
@@ -509,6 +518,135 @@ describe('BetService', () => {
         selectionPayload: expect.objectContaining({
           digits: [17],
         }),
+      }),
+    );
+  });
+
+  it('should normalize roulette color selection', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 16 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 11,
+        label: '轮盘',
+        description: '轮盘游戏',
+        gameModelId: 'roulette',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.CUSTOM,
+        fixedOdds: null,
+        customPayoutConfig: {
+          single: 36,
+          color: 2,
+          parity: 2,
+          range: 2,
+          dozen: 3,
+          column: 3,
+        },
+        gameModel: { id: 'roulette' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as unknown as RealtimeEventsService,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 16,
+      gameId: 11,
+      gameLabelSnapshot: '轮盘',
+      betStrategyKey: 'roulette',
+      issueNo: '2026052200004',
+      status: 'placed',
+      totalAmount: 10,
+      itemCount: 1,
+      estimatedPayout: 20,
+      estimatedProfit: 10,
+      oddsSnapshotText:
+        '单号 36.00 · 红黑 2.00 · 单双 2.00 · 大小 2.00 · 组 3.00 · 列 3.00',
+      selectionSummary: '红',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:03:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 11, {
+      issueNo: '2026052200004',
+      items: [
+        {
+          displayText: '红',
+          betType: 'roulette-color',
+          amount: 10,
+          selection: { color: 'red' },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'roulette-color',
+        displayText: '红',
+        selectionPayload: {
+          color: 'red',
+        },
       }),
     );
   });

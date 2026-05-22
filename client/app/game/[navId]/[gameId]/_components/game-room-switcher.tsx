@@ -7,6 +7,7 @@ import { fetchMemberGame, type ClientGame } from "@/app/lib/client-api";
 import NumberGameRoom from "./number-game/number-game-room";
 import DragonTigerGameRoom from "./dragon-tiger-game/dragon-tiger-game-room";
 import SbGameRoom from "./sb-game/sb-game-room";
+import RouletteGameRoom from "./roulette-game/roulette-game-room";
 
 function resolveRoomType(gameModelId: string | null | undefined) {
   const normalized = gameModelId?.trim().toLowerCase() ?? "";
@@ -21,6 +22,10 @@ function resolveRoomType(gameModelId: string | null | undefined) {
 
   if (normalized === "sb" || normalized.includes("sicbo")) {
     return "sb";
+  }
+
+  if (normalized === "roulette" || normalized.includes("wheel")) {
+    return "roulette";
   }
 
   return "number";
@@ -115,12 +120,18 @@ export default function GameRoomSwitcher() {
     );
   }
 
-  if (resolveRoomType(gameDetail.gameModelId) === "dragon-tiger") {
+  const roomType = resolveRoomType(gameDetail.gameModelId);
+
+  if (roomType === "dragon-tiger") {
     return <DragonTigerGameRoom initialGameDetail={gameDetail} />;
   }
 
-  if (resolveRoomType(gameDetail.gameModelId) === "sb") {
+  if (roomType === "sb") {
     return <SbGameRoom initialGameDetail={gameDetail} />;
+  }
+
+  if (roomType === "roulette") {
+    return <RouletteGameRoom initialGameDetail={gameDetail} />;
   }
 
   return <NumberGameRoom initialGameDetail={gameDetail} />;
