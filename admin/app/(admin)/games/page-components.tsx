@@ -1,12 +1,19 @@
+import { useMemo } from "react";
+import { ConfigDetailTrigger } from "@/app/components/admin/config-detail-trigger";
 import { TableShell } from "@/app/components/admin/ui/table-shell";
-import type { AdminGame } from "@/app/lib/admin-api";
+import type { AdminGame, AdminGameModel } from "@/app/lib/admin-api";
 import { formatDate } from "@/app/utils/admin-format";
 import {
+  getGameDrawModelDetail,
   GAME_TABLE_COLUMN_COUNT,
+  getGameDrawModelText,
+  getGameOddsDetail,
   getGameOddsText,
   getGamePreviewText,
   getGameStatusClassName,
   getGameStatusText,
+  getGameWinningModelDetail,
+  getGameWinningModelText,
 } from "@/app/utils/admin-game";
 
 type GamesToolbarProps = {
@@ -65,6 +72,7 @@ type GamesTableProps = {
   isLoading: boolean;
   categoryNameMap: ReadonlyMap<number, string>;
   gameModelNameMap: ReadonlyMap<string, string>;
+  gameModelOptions: AdminGameModel[];
   onEdit: (game: AdminGame) => void;
   onViewDraws: (game: AdminGame) => void;
   onDrawOnce: (game: AdminGame) => void;
@@ -76,11 +84,17 @@ export function GamesTable({
   isLoading,
   categoryNameMap,
   gameModelNameMap,
+  gameModelOptions,
   onEdit,
   onViewDraws,
   onDrawOnce,
   onDelete,
 }: GamesTableProps) {
+  const gameModelMap = useMemo(
+    () => new Map(gameModelOptions.map((item) => [item.id, item] as const)),
+    [gameModelOptions],
+  );
+
   return (
     <TableShell>
       <table className="min-w-full text-left text-sm">
@@ -90,7 +104,9 @@ export function GamesTable({
             <th className="px-4 py-3 font-medium">分类</th>
             <th className="px-4 py-3 font-medium">游戏模型</th>
             <th className="px-4 py-3 font-medium">开奖间隔</th>
-            <th className="px-4 py-3 font-medium">赔率配置</th>
+            <th className="px-4 py-3 font-medium">开奖模型</th>
+            <th className="px-4 py-3 font-medium">中奖模型</th>
+            <th className="px-4 py-3 font-medium">赔付比例</th>
             <th className="px-4 py-3 font-medium">状态</th>
             <th className="px-4 py-3 font-medium">简介</th>
             <th className="px-4 py-3 font-medium">图标</th>
@@ -127,6 +143,7 @@ export function GamesTable({
             <GameTableRow
               key={game.id}
               game={game}
+              gameModel={gameModelMap.get(game.gameModelId)}
               categoryNameMap={categoryNameMap}
               gameModelNameMap={gameModelNameMap}
               onEdit={onEdit}
@@ -143,6 +160,7 @@ export function GamesTable({
 
 type GameTableRowProps = {
   game: AdminGame;
+  gameModel: AdminGameModel | undefined;
   categoryNameMap: ReadonlyMap<number, string>;
   gameModelNameMap: ReadonlyMap<string, string>;
   onEdit: (game: AdminGame) => void;
@@ -153,6 +171,7 @@ type GameTableRowProps = {
 
 function GameTableRow({
   game,
+  gameModel,
   categoryNameMap,
   gameModelNameMap,
   onEdit,
@@ -160,6 +179,13 @@ function GameTableRow({
   onDrawOnce,
   onDelete,
 }: GameTableRowProps) {
+  const drawModelText = getGameDrawModelText(gameModel);
+  const drawModelDetail = getGameDrawModelDetail(gameModel);
+  const winningModelText = getGameWinningModelText(gameModel);
+  const winningModelDetail = getGameWinningModelDetail(gameModel);
+  const oddsText = getGameOddsText(game);
+  const oddsDetail = getGameOddsDetail(game);
+
   return (
     <tr className="border-t border-slate-100 text-slate-700">
       <td className="px-4 py-4">
@@ -179,7 +205,32 @@ function GameTableRow({
 
       <td className="px-4 py-4 text-slate-600">{game.drawInterval} 秒</td>
 
-      <td className="px-4 py-4 text-slate-600">{getGameOddsText(game)}</td>
+      <td className="px-4 py-4 text-slate-600">
+        <ConfigDetailTrigger
+          summary={drawModelText}
+          detail={drawModelDetail}
+          title={`开奖模型 · ${game.label}`}
+          description={`游戏模型 ${game.gameModelId} 的开奖结构详情。`}
+        />
+      </td>
+
+      <td className="px-4 py-4 text-slate-600">
+        <ConfigDetailTrigger
+          summary={winningModelText}
+          detail={winningModelDetail}
+          title={`中奖模型 · ${game.label}`}
+          description={`游戏模型 ${game.gameModelId} 的中奖判定结构详情。`}
+        />
+      </td>
+
+      <td className="px-4 py-4 text-slate-600">
+        <ConfigDetailTrigger
+          summary={oddsText}
+          detail={oddsDetail}
+          title={`赔付比例 · ${game.label}`}
+          description="查看当前游戏的赔付模式与完整配置。"
+        />
+      </td>
 
       <td className="px-4 py-4">
         <span
@@ -210,7 +261,7 @@ function GameTableRow({
       <td className="px-4 py-4">{formatDate(game.updatedAt)}</td>
 
       <td className="px-4 py-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <button
             type="button"
             onClick={() => onEdit(game)}

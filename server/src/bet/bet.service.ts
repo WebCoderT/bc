@@ -982,19 +982,220 @@ export class BetService {
         ? item.betType.trim().toLowerCase()
         : 'dlt-single';
 
-    if (rawBetType !== 'dlt-single') {
-      throw new BadRequestException('超级大乐透下注类型仅支持 dlt-single');
+    if (
+      rawBetType !== 'dlt-single' &&
+      rawBetType !== 'dlt-single-additional' &&
+      rawBetType !== 'dlt-multiple' &&
+      rawBetType !== 'dlt-multiple-additional' &&
+      rawBetType !== 'dlt-dantuo' &&
+      rawBetType !== 'dlt-dantuo-additional'
+    ) {
+      throw new BadRequestException(
+        '超级大乐透下注类型仅支持 dlt-single、dlt-single-additional、dlt-multiple、dlt-multiple-additional、dlt-dantuo、dlt-dantuo-additional',
+      );
+    }
+
+    const isMultiple =
+      rawBetType === 'dlt-multiple' || rawBetType === 'dlt-multiple-additional';
+    const isDantuo =
+      rawBetType === 'dlt-dantuo' || rawBetType === 'dlt-dantuo-additional';
+    const isAdditional =
+      rawBetType === 'dlt-single-additional' ||
+      rawBetType === 'dlt-multiple-additional' ||
+      rawBetType === 'dlt-dantuo-additional';
+
+    if (isDantuo) {
+      const frontDanRaw = item.selection?.frontDan;
+      const frontTuoRaw = item.selection?.frontTuo;
+      const backDanRaw = item.selection?.backDan;
+      const backTuoRaw = item.selection?.backTuo;
+
+      if (
+        !Array.isArray(frontDanRaw) ||
+        !Array.isArray(frontTuoRaw) ||
+        !Array.isArray(backDanRaw) ||
+        !Array.isArray(backTuoRaw)
+      ) {
+        throw new BadRequestException(
+          '超级大乐透胆拖必须提供 frontDan/frontTuo/backDan/backTuo',
+        );
+      }
+
+      const frontDan = frontDanRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+      const frontTuo = frontTuoRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+      const backDan = backDanRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+      const backTuo = backTuoRaw
+        .map((value) => Number(value))
+        .sort((left, right) => left - right);
+
+      if (frontDan.length < 1 || frontDan.length > 4) {
+        throw new BadRequestException('超级大乐透胆拖前区胆码数量仅支持 1-4');
+      }
+
+      if (frontTuo.length < 1) {
+        throw new BadRequestException('超级大乐透胆拖前区至少提供 1 个拖码');
+      }
+
+      if (backDan.length > 1) {
+        throw new BadRequestException('超级大乐透胆拖后区胆码数量仅支持 0-1');
+      }
+
+      if (backTuo.length < 1) {
+        throw new BadRequestException('超级大乐透胆拖后区至少提供 1 个拖码');
+      }
+
+      if (
+        frontDan.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 35,
+        ) ||
+        frontTuo.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 35,
+        )
+      ) {
+        throw new BadRequestException('超级大乐透前区号码仅支持 1-35');
+      }
+
+      if (
+        backDan.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 12,
+        ) ||
+        backTuo.some(
+          (value) => !Number.isInteger(value) || value < 1 || value > 12,
+        )
+      ) {
+        throw new BadRequestException('超级大乐透后区号码仅支持 1-12');
+      }
+
+      if (new Set(frontDan).size !== frontDan.length) {
+        throw new BadRequestException('超级大乐透前区胆码不能重复');
+      }
+
+      if (new Set(frontTuo).size !== frontTuo.length) {
+        throw new BadRequestException('超级大乐透前区拖码不能重复');
+      }
+
+      if (frontDan.some((value) => frontTuo.includes(value))) {
+        throw new BadRequestException('超级大乐透前区胆码与拖码不能重复');
+      }
+
+      if (new Set(backDan).size !== backDan.length) {
+        throw new BadRequestException('超级大乐透后区胆码不能重复');
+      }
+
+      if (new Set(backTuo).size !== backTuo.length) {
+        throw new BadRequestException('超级大乐透后区拖码不能重复');
+      }
+
+      if (backDan.some((value) => backTuo.includes(value))) {
+        throw new BadRequestException('超级大乐透后区胆码与拖码不能重复');
+      }
+
+      const needFrontFromTuo = 5 - frontDan.length;
+      const needBackFromTuo = 2 - backDan.length;
+
+      if (frontTuo.length < needFrontFromTuo) {
+        throw new BadRequestException(
+          '超级大乐透前区拖码数量不足以组成 5 个号码',
+        );
+      }
+
+      if (backTuo.length < needBackFromTuo) {
+        throw new BadRequestException(
+          '超级大乐透后区拖码数量不足以组成 2 个号码',
+        );
+      }
+
+      const frontBalls = [...frontDan, ...frontTuo].sort(
+        (left, right) => left - right,
+      );
+      const backBalls = [...backDan, ...backTuo].sort(
+        (left, right) => left - right,
+      );
+      const combinationCount =
+        this.combination(frontTuo.length, needFrontFromTuo) *
+        this.combination(backTuo.length, needBackFromTuo);
+      const totalAmount = this.roundCurrency(amount * combinationCount);
+
+      const estimatedPayoutBase = this.calculateEstimatedPayout(amount, game);
+      const estimatedPayout =
+        estimatedPayoutBase === null
+          ? null
+          : isAdditional
+            ? this.roundCurrency(estimatedPayoutBase * 1.6)
+            : estimatedPayoutBase;
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - totalAmount);
+
+      const normalizedDisplayText =
+        item.displayText?.trim() ||
+        `前胆 ${frontDan.join(' ')} | 前拖 ${frontTuo.join(' ')} | 后胆 ${
+          backDan.map((value) => String(value).padStart(2, '0')).join(' ') ||
+          '无'
+        } | 后拖 ${backTuo
+          .map((value) => String(value).padStart(2, '0'))
+          .join(' ')}`;
+
+      return {
+        itemIndex: index + 1,
+        betType: rawBetType,
+        displayText: normalizedDisplayText,
+        amount: totalAmount,
+        selection: {
+          frontDan,
+          frontTuo,
+          backDan,
+          backTuo,
+          frontBalls,
+          backBalls,
+          additional: isAdditional,
+          multiple: true,
+          dantuo: true,
+          unitAmount: amount,
+          combinationCount,
+          source:
+            typeof item.selection?.source === 'string'
+              ? item.selection.source
+              : 'manual',
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
     }
 
     const frontBallsRaw = item.selection?.frontBalls;
     const backBallsRaw = item.selection?.backBalls;
 
-    if (!Array.isArray(frontBallsRaw) || frontBallsRaw.length !== 5) {
-      throw new BadRequestException('超级大乐透下注必须提供前区 5 个号码');
+    if (!Array.isArray(frontBallsRaw)) {
+      throw new BadRequestException('超级大乐透下注必须提供前区号码');
     }
 
-    if (!Array.isArray(backBallsRaw) || backBallsRaw.length !== 2) {
-      throw new BadRequestException('超级大乐透下注必须提供后区 2 个号码');
+    if (!Array.isArray(backBallsRaw)) {
+      throw new BadRequestException('超级大乐透下注必须提供后区号码');
+    }
+
+    if (!isMultiple && frontBallsRaw.length !== 5) {
+      throw new BadRequestException('超级大乐透单式必须提供前区 5 个号码');
+    }
+
+    if (!isMultiple && backBallsRaw.length !== 2) {
+      throw new BadRequestException('超级大乐透单式必须提供后区 2 个号码');
+    }
+
+    if (isMultiple && frontBallsRaw.length < 5) {
+      throw new BadRequestException('超级大乐透复式前区至少提供 5 个号码');
+    }
+
+    if (isMultiple && backBallsRaw.length < 2) {
+      throw new BadRequestException('超级大乐透复式后区至少提供 2 个号码');
     }
 
     const frontBalls = frontBallsRaw
@@ -1012,7 +1213,7 @@ export class BetService {
       throw new BadRequestException('超级大乐透前区号码仅支持 1-35');
     }
 
-    if (new Set(frontBalls).size !== 5) {
+    if (new Set(frontBalls).size !== frontBalls.length) {
       throw new BadRequestException('超级大乐透前区号码不能重复');
     }
 
@@ -1024,15 +1225,27 @@ export class BetService {
       throw new BadRequestException('超级大乐透后区号码仅支持 1-12');
     }
 
-    if (new Set(backBalls).size !== 2) {
+    if (new Set(backBalls).size !== backBalls.length) {
       throw new BadRequestException('超级大乐透后区号码不能重复');
     }
 
-    const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+    const combinationCount = isMultiple
+      ? this.combination(frontBalls.length, 5) *
+        this.combination(backBalls.length, 2)
+      : 1;
+    const totalAmount = this.roundCurrency(amount * combinationCount);
+
+    const estimatedPayoutBase = this.calculateEstimatedPayout(amount, game);
+    const estimatedPayout =
+      estimatedPayoutBase === null
+        ? null
+        : isAdditional
+          ? this.roundCurrency(estimatedPayoutBase * 1.6)
+          : estimatedPayoutBase;
     const estimatedProfit =
       estimatedPayout === null
         ? null
-        : this.roundCurrency(estimatedPayout - amount);
+        : this.roundCurrency(estimatedPayout - totalAmount);
 
     const normalizedDisplayText =
       item.displayText?.trim() ||
@@ -1042,12 +1255,16 @@ export class BetService {
 
     return {
       itemIndex: index + 1,
-      betType: 'dlt-single',
+      betType: rawBetType,
       displayText: normalizedDisplayText,
-      amount,
+      amount: totalAmount,
       selection: {
         frontBalls,
         backBalls,
+        additional: isAdditional,
+        multiple: isMultiple,
+        unitAmount: amount,
+        combinationCount,
         source:
           typeof item.selection?.source === 'string'
             ? item.selection.source
@@ -1129,7 +1346,10 @@ export class BetService {
         return '固定赔率未设置';
       }
 
-      return `单式 ${Number(game.fixedOdds).toFixed(2)}`;
+      const singleOdds = Number(game.fixedOdds);
+      const additionalOdds = this.roundCurrency(singleOdds * 1.6);
+
+      return `单式 ${singleOdds.toFixed(2)} · 追加 ${additionalOdds.toFixed(2)}`;
     }
 
     if (game.oddsMode === GameOddsMode.CUSTOM) {
@@ -1285,6 +1505,29 @@ export class BetService {
 
   private roundCurrency(value: number) {
     return Number(value.toFixed(2));
+  }
+
+  private combination(n: number, k: number) {
+    if (!Number.isInteger(n) || !Number.isInteger(k) || n < 0 || k < 0) {
+      return 0;
+    }
+
+    if (k > n) {
+      return 0;
+    }
+
+    if (k === 0 || k === n) {
+      return 1;
+    }
+
+    const safeK = Math.min(k, n - k);
+    let result = 1;
+
+    for (let index = 1; index <= safeK; index += 1) {
+      result = (result * (n - safeK + index)) / index;
+    }
+
+    return Math.round(result);
   }
 
   private toIsoString(value: Date | string) {

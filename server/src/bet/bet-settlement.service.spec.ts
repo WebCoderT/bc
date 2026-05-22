@@ -522,4 +522,127 @@ describe('BetSettlementService', () => {
     expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
     expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
   });
+
+  it('should settle dlt multiple orders when draw is included in selection', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 59,
+      rechargeAmount: 120,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 702,
+      itemIndex: 1,
+      betType: 'dlt-multiple',
+      displayText: '前 3 8 17 22 31 35 | 后 04 09 11',
+      amount: 60,
+      estimatedPayout: 6000,
+      estimatedProfit: 5940,
+      selectionPayload: {
+        frontBalls: [3, 8, 17, 22, 31, 35],
+        backBalls: [4, 9, 11],
+      },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 510,
+      betStrategyKey: 'dlt',
+      status: 'placed',
+      fixedOddsSnapshot: 600,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 5,
+      issueNo: '2026052200010',
+      openCode: '3,8,17,22,31,4,11',
+      openCodeJson: [3, 8, 17, 22, 31, 4, 11],
+    });
+
+    expect(result.totalPayoutAmount).toBe(6000);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningItem.payoutAmount).toBe(6000);
+    expect(winningUser.rechargeAmount).toBe(6120);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+  });
+
+  it('should lose dlt dantuo orders when dan numbers are not fully hit', async () => {
+    const { service, orderRepository } = createService();
+
+    const losingUser = Object.assign(new UserEntity(), {
+      id: 60,
+      rechargeAmount: 180,
+      bonusAmount: 0,
+    });
+    const losingItem = Object.assign(new BetItemEntity(), {
+      id: 703,
+      itemIndex: 1,
+      betType: 'dlt-dantuo',
+      displayText: '前胆 3 8 | 前拖 17 22 31 35 | 后胆 04 | 后拖 09 11',
+      amount: 60,
+      estimatedPayout: 6000,
+      estimatedProfit: 5940,
+      selectionPayload: {
+        frontDan: [3, 8],
+        frontTuo: [17, 22, 31, 35],
+        backDan: [4],
+        backTuo: [9, 11],
+        frontBalls: [3, 8, 17, 22, 31, 35],
+        backBalls: [4, 9, 11],
+      },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 511,
+      betStrategyKey: 'dlt',
+      status: 'placed',
+      fixedOddsSnapshot: 600,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: losingUser,
+      items: [losingItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 5,
+      issueNo: '2026052200012',
+      openCode: '3,17,22,31,35,4,9',
+      openCodeJson: [3, 17, 22, 31, 35, 4, 9],
+    });
+
+    expect(result.totalPayoutAmount).toBe(0);
+    expect(order.isWinning).toBe(false);
+    expect(losingItem.isWinning).toBe(false);
+    expect(losingItem.payoutAmount).toBe(0);
+    expect(losingUser.rechargeAmount).toBe(180);
+  });
 });

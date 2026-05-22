@@ -42,10 +42,22 @@ type DltBetAmount = 2 | 10 | 20 | 50;
 type DltBetDraft = {
   id: string;
   displayText: string;
+  betType:
+    | "dlt-single"
+    | "dlt-single-additional"
+    | "dlt-multiple"
+    | "dlt-multiple-additional"
+    | "dlt-dantuo"
+    | "dlt-dantuo-additional";
   amount: DltBetAmount;
+  combinationCount: number;
   selection: {
-    frontBalls: number[];
-    backBalls: number[];
+    frontBalls?: number[];
+    backBalls?: number[];
+    frontDan?: number[];
+    frontTuo?: number[];
+    backDan?: number[];
+    backTuo?: number[];
     source: "manual";
   };
 };
@@ -117,6 +129,25 @@ function formatDltTicket(frontBalls: number[], backBalls: number[]) {
     .join(" ")}`;
 }
 
+function combination(n: number, k: number) {
+  if (k > n || n < 0 || k < 0) {
+    return 0;
+  }
+
+  if (k === 0 || k === n) {
+    return 1;
+  }
+
+  const safeK = Math.min(k, n - k);
+  let result = 1;
+
+  for (let index = 1; index <= safeK; index += 1) {
+    result = (result * (n - safeK + index)) / index;
+  }
+
+  return Math.round(result);
+}
+
 export default function DltGameRoom({
   initialGameDetail = null,
 }: {
@@ -148,6 +179,18 @@ export default function DltGameRoom({
   const [tickNowMs, setTickNowMs] = useState(() => Date.now());
   const [selectedFrontBalls, setSelectedFrontBalls] = useState<number[]>([]);
   const [selectedBackBalls, setSelectedBackBalls] = useState<number[]>([]);
+  const [selectedFrontDan, setSelectedFrontDan] = useState<number[]>([]);
+  const [selectedFrontTuo, setSelectedFrontTuo] = useState<number[]>([]);
+  const [selectedBackDan, setSelectedBackDan] = useState<number[]>([]);
+  const [selectedBackTuo, setSelectedBackTuo] = useState<number[]>([]);
+  const [betMode, setBetMode] = useState<
+    | "single"
+    | "single-additional"
+    | "multiple"
+    | "multiple-additional"
+    | "dantuo"
+    | "dantuo-additional"
+  >("single");
   const { items: notificationItems, pushBubble } =
     useFloatingNotificationBubbles();
 
@@ -164,7 +207,11 @@ export default function DltGameRoom({
     [currentIssue?.nextDrawAt, tickNowMs, serverTimeOffsetMs],
   );
   const totalAmount = useMemo(
-    () => betDrafts.reduce((sum, item) => sum + item.amount, 0),
+    () =>
+      betDrafts.reduce(
+        (sum, item) => sum + item.amount * item.combinationCount,
+        0,
+      ),
     [betDrafts],
   );
   const isBetHistoryLoading =
@@ -355,12 +402,67 @@ export default function DltGameRoom({
         return current.filter((item) => item !== value);
       }
 
-      if (current.length >= 5) {
+      const maxFront =
+        betMode === "multiple" || betMode === "multiple-additional" ? 35 : 5;
+
+      if (current.length >= maxFront) {
         return current;
       }
 
       return [...current, value].sort((left, right) => left - right);
     });
+  };
+
+  const handleToggleFrontDan = (value: number) => {
+    setSelectedFrontDan((current) => {
+      if (current.includes(value)) {
+        return current.filter((item) => item !== value);
+      }
+
+      if (current.length >= 4) {
+        return current;
+      }
+
+      return [...current, value].sort((left, right) => left - right);
+    });
+    setSelectedFrontTuo((current) => current.filter((item) => item !== value));
+  };
+
+  const handleToggleFrontTuo = (value: number) => {
+    setSelectedFrontTuo((current) => {
+      if (current.includes(value)) {
+        return current.filter((item) => item !== value);
+      }
+
+      return [...current, value].sort((left, right) => left - right);
+    });
+    setSelectedFrontDan((current) => current.filter((item) => item !== value));
+  };
+
+  const handleToggleBackDan = (value: number) => {
+    setSelectedBackDan((current) => {
+      if (current.includes(value)) {
+        return current.filter((item) => item !== value);
+      }
+
+      if (current.length >= 1) {
+        return current;
+      }
+
+      return [...current, value].sort((left, right) => left - right);
+    });
+    setSelectedBackTuo((current) => current.filter((item) => item !== value));
+  };
+
+  const handleToggleBackTuo = (value: number) => {
+    setSelectedBackTuo((current) => {
+      if (current.includes(value)) {
+        return current.filter((item) => item !== value);
+      }
+
+      return [...current, value].sort((left, right) => left - right);
+    });
+    setSelectedBackDan((current) => current.filter((item) => item !== value));
   };
 
   const handleToggleBackBall = (value: number) => {
@@ -369,7 +471,10 @@ export default function DltGameRoom({
         return current.filter((item) => item !== value);
       }
 
-      if (current.length >= 2) {
+      const maxBack =
+        betMode === "multiple" || betMode === "multiple-additional" ? 12 : 2;
+
+      if (current.length >= maxBack) {
         return current;
       }
 
@@ -378,7 +483,94 @@ export default function DltGameRoom({
   };
 
   const handleAddDraft = () => {
-    if (selectedFrontBalls.length !== 5 || selectedBackBalls.length !== 2) {
+    const isMultiple =
+      betMode === "multiple" || betMode === "multiple-additional";
+    const isDantuo = betMode === "dantuo" || betMode === "dantuo-additional";
+
+    if (isDantuo) {
+      const needFrontFromTuo = 5 - selectedFrontDan.length;
+      const needBackFromTuo = 2 - selectedBackDan.length;
+
+      if (selectedFrontDan.length < 1 || selectedFrontDan.length > 4) {
+        pushBubble({
+          title: "胆拖未完成",
+          message: "前区胆码需选择 1-4 个",
+          tone: "warning",
+          durationMs: 3000,
+        });
+        return;
+      }
+
+      if (selectedFrontTuo.length < needFrontFromTuo) {
+        pushBubble({
+          title: "胆拖未完成",
+          message: `前区拖码至少再选 ${needFrontFromTuo} 个`,
+          tone: "warning",
+          durationMs: 3000,
+        });
+        return;
+      }
+
+      if (selectedBackDan.length > 1) {
+        pushBubble({
+          title: "胆拖未完成",
+          message: "后区胆码最多 1 个",
+          tone: "warning",
+          durationMs: 3000,
+        });
+        return;
+      }
+
+      if (selectedBackTuo.length < needBackFromTuo) {
+        pushBubble({
+          title: "胆拖未完成",
+          message: `后区拖码至少再选 ${needBackFromTuo} 个`,
+          tone: "warning",
+          durationMs: 3000,
+        });
+        return;
+      }
+
+      const combinationCount =
+        combination(selectedFrontTuo.length, needFrontFromTuo) *
+        combination(selectedBackTuo.length, needBackFromTuo);
+      const betType =
+        betMode === "dantuo" ? "dlt-dantuo" : "dlt-dantuo-additional";
+
+      setBetDrafts((current) => [
+        {
+          id: createDraftId(),
+          displayText:
+            `前胆 ${selectedFrontDan.join(" ")} | 前拖 ${selectedFrontTuo.join(" ")} | 后胆 ${
+              selectedBackDan
+                .map((value) => String(value).padStart(2, "0"))
+                .join(" ") || "无"
+            } | 后拖 ${selectedBackTuo
+              .map((value) => String(value).padStart(2, "0"))
+              .join(" ")}` +
+            (betMode === "dantuo-additional" ? "（追加）" : "") +
+            `（胆拖 ${combinationCount} 注）`,
+          betType,
+          amount: 10,
+          combinationCount,
+          selection: {
+            frontDan: selectedFrontDan,
+            frontTuo: selectedFrontTuo,
+            backDan: selectedBackDan,
+            backTuo: selectedBackTuo,
+            source: "manual",
+          },
+        },
+        ...current,
+      ]);
+
+      return;
+    }
+
+    if (
+      !isMultiple &&
+      (selectedFrontBalls.length !== 5 || selectedBackBalls.length !== 2)
+    ) {
       pushBubble({
         title: "选号未完成",
         message: "请先选择前区 5 个号码和后区 2 个号码",
@@ -388,11 +580,45 @@ export default function DltGameRoom({
       return;
     }
 
+    if (
+      isMultiple &&
+      (selectedFrontBalls.length < 5 || selectedBackBalls.length < 2)
+    ) {
+      pushBubble({
+        title: "选号未完成",
+        message: "复式至少选择前区 5 个号码和后区 2 个号码",
+        tone: "warning",
+        durationMs: 3000,
+      });
+      return;
+    }
+
+    const combinationCount = isMultiple
+      ? combination(selectedFrontBalls.length, 5) *
+        combination(selectedBackBalls.length, 2)
+      : 1;
+
+    const betType =
+      betMode === "single"
+        ? "dlt-single"
+        : betMode === "single-additional"
+          ? "dlt-single-additional"
+          : betMode === "multiple"
+            ? "dlt-multiple"
+            : "dlt-multiple-additional";
+
     setBetDrafts((current) => [
       {
         id: createDraftId(),
-        displayText: formatDltTicket(selectedFrontBalls, selectedBackBalls),
+        displayText:
+          formatDltTicket(selectedFrontBalls, selectedBackBalls) +
+          (betMode === "single-additional" || betMode === "multiple-additional"
+            ? "（追加）"
+            : "") +
+          (isMultiple ? `（复式 ${combinationCount} 注）` : ""),
+        betType,
         amount: 10,
+        combinationCount,
         selection: {
           frontBalls: selectedFrontBalls,
           backBalls: selectedBackBalls,
@@ -404,6 +630,35 @@ export default function DltGameRoom({
   };
 
   const handleRandomPick = () => {
+    if (betMode === "dantuo" || betMode === "dantuo-additional") {
+      const frontShuffled = [...FRONT_BALL_OPTIONS].sort(
+        () => Math.random() - 0.5,
+      );
+      const backShuffled = [...BACK_BALL_OPTIONS].sort(
+        () => Math.random() - 0.5,
+      );
+
+      const frontDan = frontShuffled
+        .slice(0, 2)
+        .sort((left, right) => left - right);
+      const frontTuo = frontShuffled
+        .slice(2, 6)
+        .sort((left, right) => left - right);
+      const backDan = backShuffled
+        .slice(0, 1)
+        .sort((left, right) => left - right);
+      const backTuo = backShuffled
+        .slice(1, 3)
+        .sort((left, right) => left - right);
+
+      setSelectedFrontDan(frontDan);
+      setSelectedFrontTuo(frontTuo);
+      setSelectedBackDan(backDan);
+      setSelectedBackTuo(backTuo);
+
+      return;
+    }
+
     const frontShuffled = [...FRONT_BALL_OPTIONS].sort(
       () => Math.random() - 0.5,
     );
@@ -420,6 +675,10 @@ export default function DltGameRoom({
   const handleClearSelection = () => {
     setSelectedFrontBalls([]);
     setSelectedBackBalls([]);
+    setSelectedFrontDan([]);
+    setSelectedFrontTuo([]);
+    setSelectedBackDan([]);
+    setSelectedBackTuo([]);
   };
 
   const handleDraftAmountChange = (draftId: string, amount: DltBetAmount) => {
@@ -441,7 +700,7 @@ export default function DltGameRoom({
       issueNo: currentIssue?.issue ?? undefined,
       items: betDrafts.map((item) => ({
         displayText: item.displayText,
-        betType: "dlt-single",
+        betType: item.betType,
         amount: item.amount,
         selection: item.selection,
         extraPayload: {
@@ -530,64 +789,253 @@ export default function DltGameRoom({
           </div>
 
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2">
+              <button
+                type="button"
+                onClick={() => setBetMode("single")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "single"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                普通
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetMode("single-additional")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "single-additional"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                普通追加
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetMode("multiple")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "multiple"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                复式
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetMode("multiple-additional")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "multiple-additional"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                复式追加
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetMode("dantuo")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "dantuo"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                胆拖
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetMode("dantuo-additional")}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  betMode === "dantuo-additional"
+                    ? "bg-[var(--surface)] text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                胆拖追加
+              </button>
+            </div>
+
+            {betMode === "dantuo" || betMode === "dantuo-additional" ? (
+              <>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
+                    前区胆码（1-4）
+                  </p>
+                  <div className="grid grid-cols-10 gap-1.5">
+                    {FRONT_BALL_OPTIONS.map((value) => {
+                      const selected = selectedFrontDan.includes(value);
+
+                      return (
+                        <button
+                          key={`front-dan-${value}`}
+                          type="button"
+                          onClick={() => handleToggleFrontDan(value)}
+                          className={`h-8 rounded-full border text-xs font-semibold transition ${
+                            selected
+                              ? "border-rose-500/55 bg-rose-500/26 text-[color-mix(in_srgb,#881337_65%,var(--foreground))]"
+                              : "border-rose-400/35 bg-rose-500/10 text-[color-mix(in_srgb,#9f1239_72%,var(--foreground))] hover:bg-rose-500/18"
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
+                    前区拖码（至少补足 5 个）
+                  </p>
+                  <div className="grid grid-cols-10 gap-1.5">
+                    {FRONT_BALL_OPTIONS.map((value) => {
+                      const selected = selectedFrontTuo.includes(value);
+
+                      return (
+                        <button
+                          key={`front-tuo-${value}`}
+                          type="button"
+                          onClick={() => handleToggleFrontTuo(value)}
+                          className={`h-8 rounded-full border text-xs font-semibold transition ${
+                            selected
+                              ? "border-orange-500/55 bg-orange-500/26 text-[color-mix(in_srgb,#9a3412_72%,var(--foreground))]"
+                              : "border-orange-400/35 bg-orange-500/10 text-[color-mix(in_srgb,#9a3412_72%,var(--foreground))] hover:bg-orange-500/18"
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
+                    后区胆码（0-1）
+                  </p>
+                  <div className="grid grid-cols-6 gap-1.5 md:grid-cols-12">
+                    {BACK_BALL_OPTIONS.map((value) => {
+                      const selected = selectedBackDan.includes(value);
+
+                      return (
+                        <button
+                          key={`back-dan-${value}`}
+                          type="button"
+                          onClick={() => handleToggleBackDan(value)}
+                          className={`h-8 rounded-full border text-xs font-semibold transition ${
+                            selected
+                              ? "border-sky-500/55 bg-sky-500/26 text-[color-mix(in_srgb,#0c4a6e_70%,var(--foreground))]"
+                              : "border-sky-400/35 bg-sky-500/10 text-[color-mix(in_srgb,#075985_72%,var(--foreground))] hover:bg-sky-500/18"
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
+                    后区拖码（至少补足 2 个）
+                  </p>
+                  <div className="grid grid-cols-6 gap-1.5 md:grid-cols-12">
+                    {BACK_BALL_OPTIONS.map((value) => {
+                      const selected = selectedBackTuo.includes(value);
+
+                      return (
+                        <button
+                          key={`back-tuo-${value}`}
+                          type="button"
+                          onClick={() => handleToggleBackTuo(value)}
+                          className={`h-8 rounded-full border text-xs font-semibold transition ${
+                            selected
+                              ? "border-cyan-500/55 bg-cyan-500/26 text-[color-mix(in_srgb,#155e75_72%,var(--foreground))]"
+                              : "border-cyan-400/35 bg-cyan-500/10 text-[color-mix(in_srgb,#155e75_72%,var(--foreground))] hover:bg-cyan-500/18"
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : null}
+
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-[var(--foreground)]">
-                前区（选 5 个）
+                前区（
+                {betMode === "multiple" || betMode === "multiple-additional"
+                  ? "至少选 5 个"
+                  : "选 5 个"}
+                ）
               </h3>
               <span className="text-xs text-[var(--muted)]">
                 已选 {selectedFrontBalls.length}/5
               </span>
             </div>
             <div className="grid grid-cols-10 gap-1.5">
-              {FRONT_BALL_OPTIONS.map((value) => {
-                const selected = selectedFrontBalls.includes(value);
+              {betMode === "dantuo" || betMode === "dantuo-additional"
+                ? null
+                : FRONT_BALL_OPTIONS.map((value) => {
+                    const selected = selectedFrontBalls.includes(value);
 
-                return (
-                  <button
-                    key={`front-${value}`}
-                    type="button"
-                    onClick={() => handleToggleFrontBall(value)}
-                    className={`h-8 rounded-full border text-xs font-semibold transition ${
-                      selected
-                        ? "border-rose-500/55 bg-rose-500/26 text-[color-mix(in_srgb,#881337_65%,var(--foreground))]"
-                        : "border-rose-400/35 bg-rose-500/10 text-[color-mix(in_srgb,#9f1239_72%,var(--foreground))] hover:bg-rose-500/18"
-                    }`}
-                  >
-                    {value}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={`front-${value}`}
+                        type="button"
+                        onClick={() => handleToggleFrontBall(value)}
+                        className={`h-8 rounded-full border text-xs font-semibold transition ${
+                          selected
+                            ? "border-rose-500/55 bg-rose-500/26 text-[color-mix(in_srgb,#881337_65%,var(--foreground))]"
+                            : "border-rose-400/35 bg-rose-500/10 text-[color-mix(in_srgb,#9f1239_72%,var(--foreground))] hover:bg-rose-500/18"
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
             </div>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-[var(--foreground)]">
-                后区（选 2 个）
+                后区（
+                {betMode === "multiple" || betMode === "multiple-additional"
+                  ? "至少选 2 个"
+                  : "选 2 个"}
+                ）
               </h3>
               <span className="text-xs text-[var(--muted)]">
                 已选 {selectedBackBalls.length}/2
               </span>
             </div>
             <div className="grid grid-cols-6 gap-1.5 md:grid-cols-12">
-              {BACK_BALL_OPTIONS.map((value) => {
-                const selected = selectedBackBalls.includes(value);
+              {betMode === "dantuo" || betMode === "dantuo-additional"
+                ? null
+                : BACK_BALL_OPTIONS.map((value) => {
+                    const selected = selectedBackBalls.includes(value);
 
-                return (
-                  <button
-                    key={`back-${value}`}
-                    type="button"
-                    onClick={() => handleToggleBackBall(value)}
-                    className={`h-8 rounded-full border text-xs font-semibold transition ${
-                      selected
-                        ? "border-sky-500/55 bg-sky-500/26 text-[color-mix(in_srgb,#0c4a6e_70%,var(--foreground))]"
-                        : "border-sky-400/35 bg-sky-500/10 text-[color-mix(in_srgb,#075985_72%,var(--foreground))] hover:bg-sky-500/18"
-                    }`}
-                  >
-                    {value}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={`back-${value}`}
+                        type="button"
+                        onClick={() => handleToggleBackBall(value)}
+                        className={`h-8 rounded-full border text-xs font-semibold transition ${
+                          selected
+                            ? "border-sky-500/55 bg-sky-500/26 text-[color-mix(in_srgb,#0c4a6e_70%,var(--foreground))]"
+                            : "border-sky-400/35 bg-sky-500/10 text-[color-mix(in_srgb,#075985_72%,var(--foreground))] hover:bg-sky-500/18"
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
             </div>
           </div>
 
@@ -640,6 +1088,14 @@ export default function DltGameRoom({
                   <p className="text-sm text-[var(--foreground)]">
                     {draft.displayText}
                   </p>
+                  {draft.combinationCount > 1 ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      组合注数：{draft.combinationCount} 注 · 小计：
+                      {formatAuthCurrency(
+                        draft.amount * draft.combinationCount,
+                      )}
+                    </p>
+                  ) : null}
                   <div className="flex items-center gap-2">
                     <select
                       value={draft.amount}

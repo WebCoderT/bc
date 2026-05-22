@@ -890,9 +890,409 @@ describe('BetService', () => {
     expect(transactionalItemRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         betType: 'dlt-single',
+        selectionPayload: expect.objectContaining({
+          frontBalls: [3, 8, 17, 22, 31],
+          backBalls: [4, 11],
+          additional: false,
+          source: 'manual',
+        }),
+      }),
+    );
+  });
+
+  it('should normalize dlt additional selection with boosted payout', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 200,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 19 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 13,
+        label: '超级大乐透',
+        description: '超级大乐透游戏',
+        gameModelId: 'dlt',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.FIXED,
+        fixedOdds: 600,
+        gameModel: { id: 'dlt' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 200,
+        bonusAmount: 0,
+      }),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as unknown as RealtimeEventsService,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 19,
+      gameId: 13,
+      gameLabelSnapshot: '超级大乐透',
+      betStrategyKey: 'dlt',
+      issueNo: '2026052200008',
+      status: 'placed',
+      totalAmount: 10,
+      itemCount: 1,
+      estimatedPayout: 9600,
+      estimatedProfit: 9590,
+      oddsSnapshotText: '单式 600.00 · 追加 960.00',
+      selectionSummary: '前 3 8 17 22 31 | 后 04 11',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:08:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 13, {
+      issueNo: '2026052200008',
+      items: [
+        {
+          displayText: '前 3 8 17 22 31 | 后 04 11（追加）',
+          betType: 'dlt-single-additional',
+          amount: 10,
+          selection: {
+            frontBalls: [3, 8, 17, 22, 31],
+            backBalls: [4, 11],
+          },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'dlt-single-additional',
+        estimatedPayout: 9600,
+        estimatedProfit: 9590,
         selectionPayload: {
           frontBalls: [3, 8, 17, 22, 31],
           backBalls: [4, 11],
+          additional: true,
+          multiple: false,
+          unitAmount: 10,
+          combinationCount: 1,
+          source: 'manual',
+        },
+      }),
+    );
+  });
+
+  it('should normalize dlt multiple selection with combination amount', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 500,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 20 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 13,
+        label: '超级大乐透',
+        description: '超级大乐透游戏',
+        gameModelId: 'dlt',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.FIXED,
+        fixedOdds: 600,
+        gameModel: { id: 'dlt' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 500,
+        bonusAmount: 0,
+      }),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as unknown as RealtimeEventsService,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 20,
+      gameId: 13,
+      gameLabelSnapshot: '超级大乐透',
+      betStrategyKey: 'dlt',
+      issueNo: '2026052200009',
+      status: 'placed',
+      totalAmount: 180,
+      itemCount: 1,
+      estimatedPayout: 6000,
+      estimatedProfit: 5820,
+      oddsSnapshotText: '单式 600.00 · 追加 960.00',
+      selectionSummary: '前 3 8 17 22 31 35 | 后 04 09 11',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:10:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 13, {
+      issueNo: '2026052200009',
+      items: [
+        {
+          displayText: '前 3 8 17 22 31 35 | 后 04 09 11',
+          betType: 'dlt-multiple',
+          amount: 10,
+          selection: {
+            frontBalls: [3, 8, 17, 22, 31, 35],
+            backBalls: [4, 9, 11],
+          },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'dlt-multiple',
+        amount: 180,
+        estimatedPayout: 6000,
+        estimatedProfit: 5820,
+        selectionPayload: {
+          frontBalls: [3, 8, 17, 22, 31, 35],
+          backBalls: [4, 9, 11],
+          additional: false,
+          multiple: true,
+          unitAmount: 10,
+          combinationCount: 18,
+          source: 'manual',
+        },
+      }),
+    );
+  });
+
+  it('should normalize dlt dantuo selection with combination amount', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 500,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 21 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 13,
+        label: '超级大乐透',
+        description: '超级大乐透游戏',
+        gameModelId: 'dlt',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.FIXED,
+        fixedOdds: 600,
+        gameModel: { id: 'dlt' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 500,
+        bonusAmount: 0,
+      }),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as unknown as RealtimeEventsService,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 21,
+      gameId: 13,
+      gameLabelSnapshot: '超级大乐透',
+      betStrategyKey: 'dlt',
+      issueNo: '2026052200011',
+      status: 'placed',
+      totalAmount: 80,
+      itemCount: 1,
+      estimatedPayout: 6000,
+      estimatedProfit: 5920,
+      oddsSnapshotText: '单式 600.00 · 追加 960.00',
+      selectionSummary: '前胆 3 8 | 前拖 17 22 31 35 | 后胆 04 | 后拖 09 11',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:12:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 13, {
+      issueNo: '2026052200011',
+      items: [
+        {
+          displayText: '前胆 3 8 | 前拖 17 22 31 35 | 后胆 04 | 后拖 09 11',
+          betType: 'dlt-dantuo',
+          amount: 10,
+          selection: {
+            frontDan: [3, 8],
+            frontTuo: [17, 22, 31, 35],
+            backDan: [4],
+            backTuo: [9, 11],
+          },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'dlt-dantuo',
+        amount: 80,
+        estimatedPayout: 6000,
+        estimatedProfit: 5920,
+        selectionPayload: {
+          frontDan: [3, 8],
+          frontTuo: [17, 22, 31, 35],
+          backDan: [4],
+          backTuo: [9, 11],
+          frontBalls: [3, 8, 17, 22, 31, 35],
+          backBalls: [4, 9, 11],
+          additional: false,
+          multiple: true,
+          dantuo: true,
+          unitAmount: 10,
+          combinationCount: 8,
           source: 'manual',
         },
       }),

@@ -53,6 +53,7 @@ export function GamesPageContent({
           isLoading={isLoading}
           categoryNameMap={categoryNameMap}
           gameModelNameMap={gameModelNameMap}
+          gameModelOptions={gameModelOptions}
           onEdit={openEditModal}
           onViewDraws={openDrawHistoryModal}
           onDrawOnce={handleDrawOnce}

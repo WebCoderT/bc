@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ConfigDetailTrigger } from "@/app/components/admin/config-detail-trigger";
 import { GameModelEditModal } from "@/app/components/admin/game-model-edit-modal";
 import { useAdminSession } from "@/app/components/admin/admin-session-context";
 import { ADMIN_DEFAULT_PAGE_SIZE } from "@/app/config/pagination";
@@ -8,6 +9,12 @@ import { CardShell } from "@/app/components/admin/ui/card-shell";
 import { MetricPanel } from "@/app/components/admin/ui/metric-panel";
 import { PaginationControls } from "@/app/components/admin/ui/pagination-controls";
 import { StatusPill } from "@/app/components/admin/ui/status-pill";
+import {
+  getGameDrawModelDetail,
+  getGameDrawModelText,
+  getGameWinningModelDetail,
+  getGameWinningModelText,
+} from "@/app/utils/admin-game";
 import {
   createAdminGameModel,
   deleteAdminGameModel,
@@ -263,10 +270,12 @@ export default function GameModelsRoute() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-3xl border border-slate-200">
-            <div className="grid grid-cols-[120px_minmax(0,2fr)_140px_120px_180px_180px] gap-4 bg-slate-50 px-5 py-4 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="grid grid-cols-[120px_minmax(0,2fr)_140px_minmax(0,1fr)_minmax(0,1fr)_120px_180px_180px] gap-4 bg-slate-50 px-5 py-4 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
               <span>编号</span>
               <span>模型信息</span>
               <span>版本</span>
+              <span>开奖模型</span>
+              <span>中奖模型</span>
               <span>状态</span>
               <span>更新时间</span>
               <span>操作</span>
@@ -275,7 +284,7 @@ export default function GameModelsRoute() {
             {gameModels.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[120px_minmax(0,2fr)_140px_120px_180px_180px] gap-4 border-t border-slate-200 px-5 py-5 text-sm text-slate-600"
+                className="grid grid-cols-[120px_minmax(0,2fr)_140px_minmax(0,1fr)_minmax(0,1fr)_120px_180px_180px] gap-4 border-t border-slate-200 px-5 py-5 text-sm text-slate-600"
               >
                 <div className="flex items-center font-medium text-slate-700">
                   {item.id}
@@ -292,6 +301,24 @@ export default function GameModelsRoute() {
 
                 <div className="flex items-center text-slate-700">
                   {item.version}
+                </div>
+
+                <div className="flex items-center text-slate-600">
+                  <ConfigDetailTrigger
+                    summary={getGameDrawModelText(item)}
+                    detail={getGameDrawModelDetail(item)}
+                    title={`开奖模型 · ${item.name}`}
+                    description={`模型 ${item.id} 的开奖配置详情。`}
+                  />
+                </div>
+
+                <div className="flex items-center text-slate-600">
+                  <ConfigDetailTrigger
+                    summary={getGameWinningModelText(item)}
+                    detail={getGameWinningModelDetail(item)}
+                    title={`中奖模型 · ${item.name}`}
+                    description={`模型 ${item.id} 的中奖判定配置详情。`}
+                  />
                 </div>
 
                 <div className="flex items-center">

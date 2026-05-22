@@ -473,9 +473,9 @@ export class BetSettlementService {
 
       if (
         !Array.isArray(selectedFrontBallsRaw) ||
-        selectedFrontBallsRaw.length !== 5 ||
+        selectedFrontBallsRaw.length < 5 ||
         !Array.isArray(selectedBackBallsRaw) ||
-        selectedBackBallsRaw.length !== 2
+        selectedBackBallsRaw.length < 2
       ) {
         return false;
       }
@@ -491,7 +491,7 @@ export class BetSettlementService {
         selectedFrontBalls.some(
           (value) => !Number.isInteger(value) || value < 1 || value > 35,
         ) ||
-        new Set(selectedFrontBalls).size !== 5
+        new Set(selectedFrontBalls).size !== selectedFrontBalls.length
       ) {
         return false;
       }
@@ -500,18 +500,68 @@ export class BetSettlementService {
         selectedBackBalls.some(
           (value) => !Number.isInteger(value) || value < 1 || value > 12,
         ) ||
-        new Set(selectedBackBalls).size !== 2
+        new Set(selectedBackBalls).size !== selectedBackBalls.length
       ) {
         return false;
       }
 
+      if (
+        item.betType === 'dlt-dantuo' ||
+        item.betType === 'dlt-dantuo-additional'
+      ) {
+        const selectedFrontDanRaw = item.selectionPayload?.frontDan;
+        const selectedBackDanRaw = item.selectionPayload?.backDan;
+
+        if (
+          !Array.isArray(selectedFrontDanRaw) ||
+          !Array.isArray(selectedBackDanRaw)
+        ) {
+          return false;
+        }
+
+        const selectedFrontDan = selectedFrontDanRaw
+          .map((value) => Number(value))
+          .sort((left, right) => left - right);
+        const selectedBackDan = selectedBackDanRaw
+          .map((value) => Number(value))
+          .sort((left, right) => left - right);
+
+        if (
+          selectedFrontDan.length < 1 ||
+          selectedFrontDan.length > 4 ||
+          selectedFrontDan.some(
+            (value) => !Number.isInteger(value) || value < 1 || value > 35,
+          ) ||
+          new Set(selectedFrontDan).size !== selectedFrontDan.length
+        ) {
+          return false;
+        }
+
+        if (
+          selectedBackDan.length > 1 ||
+          selectedBackDan.some(
+            (value) => !Number.isInteger(value) || value < 1 || value > 12,
+          ) ||
+          new Set(selectedBackDan).size !== selectedBackDan.length
+        ) {
+          return false;
+        }
+
+        const frontDanWinning = selectedFrontDan.every((value) =>
+          frontDrawBalls.includes(value),
+        );
+        const backDanWinning = selectedBackDan.every((value) =>
+          backDrawBalls.includes(value),
+        );
+
+        if (!frontDanWinning || !backDanWinning) {
+          return false;
+        }
+      }
+
       return (
-        selectedFrontBalls.every(
-          (value, index) => value === frontDrawBalls[index],
-        ) &&
-        selectedBackBalls.every(
-          (value, index) => value === backDrawBalls[index],
-        )
+        frontDrawBalls.every((value) => selectedFrontBalls.includes(value)) &&
+        backDrawBalls.every((value) => selectedBackBalls.includes(value))
       );
     }
 
