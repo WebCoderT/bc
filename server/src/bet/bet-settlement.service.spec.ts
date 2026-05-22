@@ -209,4 +209,79 @@ describe('BetSettlementService', () => {
     expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
     expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
   });
+
+  it('should settle sb big-small orders and skip triples', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 18,
+      rechargeAmount: 80,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 301,
+      itemIndex: 1,
+      betType: 'sb-big-small',
+      displayText: '大',
+      amount: 10,
+      estimatedPayout: 19.8,
+      estimatedProfit: 9.8,
+      selectionPayload: { size: 'big' },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 109,
+      betStrategyKey: 'sb',
+      status: 'placed',
+      fixedOddsSnapshot: 1.98,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 2,
+      issueNo: '2026052200003',
+      openCode: '4,5,6',
+      openCodeJson: [4, 5, 6],
+    });
+
+    expect(result.totalPayoutAmount).toBe(19.8);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningUser.rechargeAmount).toBe(99.8);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+
+    order.status = 'placed';
+    order.isWinning = null;
+    order.payoutAmount = 0;
+    winningItem.isWinning = null;
+    winningItem.payoutAmount = 0;
+    winningUser.rechargeAmount = 80;
+
+    await service.settleOrdersForDraw({
+      gameId: 2,
+      issueNo: '2026052200003',
+      openCode: '6,6,6',
+      openCodeJson: [6, 6, 6],
+    });
+
+    expect(order.isWinning).toBe(false);
+    expect(winningItem.isWinning).toBe(false);
+    expect(winningItem.payoutAmount).toBe(0);
+  });
 });

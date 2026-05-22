@@ -19,7 +19,7 @@ type SettledBetItem = {
   payoutAmount: number;
 };
 
-const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3', 'sb']);
+const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3']);
 
 @Injectable()
 export class BetSettlementService {
@@ -190,6 +190,79 @@ export class BetSettlementService {
             : 'tiger';
 
       return selectedSide === winner;
+    }
+
+    if (order.betStrategyKey === 'sb') {
+      const sum = drawDigits.reduce((total, value) => total + value, 0);
+      const isTriple =
+        drawDigits.length === 3 &&
+        drawDigits.every((value) => value === drawDigits[0]);
+
+      if (item.betType === 'sb-sum') {
+        const selectedSum = Number(item.selectionPayload?.sum);
+
+        return Number.isInteger(selectedSum) && selectedSum === sum;
+      }
+
+      if (item.betType === 'sb-big-small') {
+        const selectedSize =
+          typeof item.selectionPayload?.size === 'string'
+            ? item.selectionPayload.size.toLowerCase()
+            : '';
+
+        if (isTriple) {
+          return false;
+        }
+
+        if (selectedSize === 'big') {
+          return sum >= 11 && sum <= 17;
+        }
+
+        if (selectedSize === 'small') {
+          return sum >= 4 && sum <= 10;
+        }
+
+        return false;
+      }
+
+      if (item.betType === 'sb-odd-even') {
+        const selectedParity =
+          typeof item.selectionPayload?.parity === 'string'
+            ? item.selectionPayload.parity.toLowerCase()
+            : '';
+
+        if (isTriple) {
+          return false;
+        }
+
+        if (selectedParity === 'odd') {
+          return sum % 2 === 1;
+        }
+
+        if (selectedParity === 'even') {
+          return sum % 2 === 0;
+        }
+
+        return false;
+      }
+
+      if (item.betType === 'sb-triple-any') {
+        return isTriple;
+      }
+
+      if (item.betType !== 'sb-single-dice') {
+        return false;
+      }
+
+      const selectedDigits = item.selectionPayload?.digits;
+
+      if (!Array.isArray(selectedDigits) || selectedDigits.length !== 3) {
+        return false;
+      }
+
+      return selectedDigits.every(
+        (digit, index) => Number(digit) === drawDigits[index],
+      );
     }
 
     if (!EXACT_MATCH_STRATEGY_KEYS.has(order.betStrategyKey)) {

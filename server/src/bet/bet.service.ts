@@ -61,6 +61,9 @@ const EXACT_MATCH_GAME_CONFIGS = {
   },
 } as const;
 
+const SB_SIZE_OPTIONS = new Set(['big', 'small']);
+const SB_PARITY_OPTIONS = new Set(['odd', 'even']);
+
 @Injectable()
 export class BetService {
   constructor(
@@ -367,6 +370,10 @@ export class BetService {
       throw new BadRequestException(`第 ${index + 1} 条下注金额无效`);
     }
 
+    if (game.gameModelId === 'sb') {
+      return this.normalizeSbBetItem(game, item, index, amount);
+    }
+
     if (exactMatchConfig) {
       const digitsValue = item.selection?.digits;
 
@@ -467,6 +474,174 @@ export class BetService {
       estimatedPayout,
       estimatedProfit,
     };
+  }
+
+  private normalizeSbBetItem(
+    game: Game,
+    item: CreateMemberBetItemDto,
+    index: number,
+    amount: number,
+  ): NormalizedBetItem {
+    const rawBetType =
+      typeof item.betType === 'string' && item.betType.trim().length > 0
+        ? item.betType.trim().toLowerCase()
+        : 'sb-single-dice';
+
+    if (rawBetType === 'sb-single-dice') {
+      const digitsValue = item.selection?.digits;
+
+      if (!Array.isArray(digitsValue) || digitsValue.length !== 3) {
+        throw new BadRequestException('筛宝下注必须提供 3 个筛子点数');
+      }
+
+      const digits = digitsValue.map((digit) => Number(digit));
+
+      if (
+        digits.some(
+          (digit) => !Number.isInteger(digit) || digit < 1 || digit > 6,
+        )
+      ) {
+        throw new BadRequestException('筛宝下注号码仅支持 1-6 的三颗筛子点数');
+      }
+
+      const displayText = item.displayText?.trim() || digits.join(' ');
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'sb-single-dice',
+        displayText,
+        amount,
+        selection: {
+          ...item.selection,
+          digits,
+          source:
+            typeof item.selection?.source === 'string'
+              ? item.selection.source
+              : 'manual',
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'sb-sum') {
+      const sum = Number(item.selection?.sum);
+
+      if (!Number.isInteger(sum) || sum < 4 || sum > 17) {
+        throw new BadRequestException('筛宝和值下注仅支持 4-17');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'sb-sum',
+        displayText: item.displayText?.trim() || `和值 ${sum}`,
+        amount,
+        selection: {
+          sum,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'sb-big-small') {
+      const size =
+        typeof item.selection?.size === 'string'
+          ? item.selection.size.trim().toLowerCase()
+          : '';
+
+      if (!SB_SIZE_OPTIONS.has(size)) {
+        throw new BadRequestException('筛宝大小下注仅支持 big 或 small');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'sb-big-small',
+        displayText: item.displayText?.trim() || (size === 'big' ? '大' : '小'),
+        amount,
+        selection: {
+          size,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'sb-odd-even') {
+      const parity =
+        typeof item.selection?.parity === 'string'
+          ? item.selection.parity.trim().toLowerCase()
+          : '';
+
+      if (!SB_PARITY_OPTIONS.has(parity)) {
+        throw new BadRequestException('筛宝单双下注仅支持 odd 或 even');
+      }
+
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'sb-odd-even',
+        displayText:
+          item.displayText?.trim() || (parity === 'odd' ? '单' : '双'),
+        amount,
+        selection: {
+          parity,
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    if (rawBetType === 'sb-triple-any') {
+      const estimatedPayout = this.calculateEstimatedPayout(amount, game);
+      const estimatedProfit =
+        estimatedPayout === null
+          ? null
+          : this.roundCurrency(estimatedPayout - amount);
+
+      return {
+        itemIndex: index + 1,
+        betType: 'sb-triple-any',
+        displayText: item.displayText?.trim() || '任意豹子',
+        amount,
+        selection: {
+          triple: 'any',
+        },
+        extraPayload: item.extraPayload ?? null,
+        estimatedPayout,
+        estimatedProfit,
+      };
+    }
+
+    throw new BadRequestException(
+      '筛宝下注类型仅支持 sb-single-dice、sb-sum、sb-big-small、sb-odd-even、sb-triple-any',
+    );
   }
 
   private deductUserBalance(user: UserEntity, amount: number) {
