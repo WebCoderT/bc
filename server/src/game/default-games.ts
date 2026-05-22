@@ -71,4 +71,16 @@ export const DEFAULT_GAMES: DefaultGameSeed[] = [
     fixedOdds: 1.98,
     customPayoutConfig: null,
   },
+  {
+    label: '轮盘',
+    description: '轮盘每期开出 0 至 36 的 1 个号码，支持单号直选投注。',
+    iconUrl: '',
+    categoryPath: '/game/number-lottery#roulette',
+    gameModelId: 'roulette',
+    drawInterval: 60,
+    status: GameType.ONLINE,
+    oddsMode: GameOddsMode.FIXED,
+    fixedOdds: 35,
+    customPayoutConfig: null,
+  },
 ];

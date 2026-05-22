@@ -284,4 +284,62 @@ describe('BetSettlementService', () => {
     expect(winningItem.isWinning).toBe(false);
     expect(winningItem.payoutAmount).toBe(0);
   });
+
+  it('should settle roulette single-number orders', async () => {
+    const { service, orderRepository, itemRepository, userRepository } =
+      createService();
+
+    const winningUser = Object.assign(new UserEntity(), {
+      id: 28,
+      rechargeAmount: 40,
+      bonusAmount: 0,
+    });
+    const winningItem = Object.assign(new BetItemEntity(), {
+      id: 401,
+      itemIndex: 1,
+      betType: 'roulette-single-number',
+      displayText: '17',
+      amount: 10,
+      estimatedPayout: 350,
+      estimatedProfit: 340,
+      selectionPayload: { digits: [17] },
+      extraPayload: null,
+    });
+    const order = Object.assign(new BetOrderEntity(), {
+      id: 209,
+      betStrategyKey: 'roulette',
+      status: 'placed',
+      fixedOddsSnapshot: 35,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      user: winningUser,
+      items: [winningItem],
+    });
+
+    orderRepository.createQueryBuilder.mockReturnValue({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([order]),
+    });
+
+    const result = await service.settleOrdersForDraw({
+      gameId: 3,
+      issueNo: '2026052200004',
+      openCode: '17',
+      openCodeJson: [17],
+    });
+
+    expect(result.totalPayoutAmount).toBe(350);
+    expect(order.isWinning).toBe(true);
+    expect(winningItem.isWinning).toBe(true);
+    expect(winningItem.payoutAmount).toBe(350);
+    expect(winningUser.rechargeAmount).toBe(390);
+    expect(itemRepository.save).toHaveBeenCalledWith([winningItem]);
+    expect(userRepository.save).toHaveBeenCalledWith([winningUser]);
+  });
 });

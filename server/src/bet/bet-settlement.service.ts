@@ -19,7 +19,7 @@ type SettledBetItem = {
   payoutAmount: number;
 };
 
-const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3']);
+const EXACT_MATCH_STRATEGY_KEYS = new Set(['p5', 'p3', 'roulette']);
 
 @Injectable()
 export class BetSettlementService {
@@ -306,7 +306,7 @@ export class BetSettlementService {
 
     if (
       digits.length === 0 ||
-      digits.some((digit) => !Number.isInteger(digit) || digit < 0 || digit > 9)
+      digits.some((digit) => !Number.isInteger(digit) || digit < 0)
     ) {
       return [];
     }

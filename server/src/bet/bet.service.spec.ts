@@ -393,4 +393,123 @@ describe('BetService', () => {
       }),
     );
   });
+
+  it('should normalize roulette single-number selection', async () => {
+    const transactionalUserRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+      save: jest.fn(),
+    };
+    const transactionalOrderRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn((payload: Record<string, unknown>) =>
+        Promise.resolve({ ...payload, id: 15 }),
+      ),
+    };
+    const transactionalItemRepository = {
+      create: jest.fn((payload: Record<string, unknown>) => payload),
+      save: jest.fn(),
+    };
+    const dataSource = {
+      transaction: jest.fn(
+        (
+          handler: (manager: {
+            getRepository: (entity: unknown) => unknown;
+          }) => unknown,
+        ) =>
+          Promise.resolve(
+            handler({
+              getRepository: (entity: unknown) => {
+                if (entity === UserEntity) {
+                  return transactionalUserRepository;
+                }
+
+                if (entity === BetOrderEntity) {
+                  return transactionalOrderRepository;
+                }
+
+                if (entity === BetItemEntity) {
+                  return transactionalItemRepository;
+                }
+
+                return null;
+              },
+            }),
+          ),
+      ),
+    };
+    const gameRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 11,
+        label: '轮盘',
+        description: '轮盘游戏',
+        gameModelId: 'roulette',
+        status: GameType.ONLINE,
+        oddsMode: GameOddsMode.FIXED,
+        fixedOdds: 35,
+        gameModel: { id: 'roulette' },
+      }),
+    };
+    const userRepository = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 1,
+        rechargeAmount: 100,
+        bonusAmount: 0,
+      }),
+    };
+
+    const service = new BetService(
+      dataSource as never,
+      { emitWalletBalanceUpdated: jest.fn() } as never,
+      { emitBetPlaced: jest.fn() } as unknown as RealtimeEventsService,
+      {} as never,
+      gameRepository as never,
+      userRepository as never,
+    );
+
+    jest.spyOn(service as never, 'findOrderById' as never).mockResolvedValue({
+      id: 15,
+      gameId: 11,
+      gameLabelSnapshot: '轮盘',
+      betStrategyKey: 'roulette',
+      issueNo: '2026052200003',
+      status: 'placed',
+      totalAmount: 10,
+      itemCount: 1,
+      estimatedPayout: 350,
+      estimatedProfit: 340,
+      oddsSnapshotText: '固定赔率 35.00',
+      selectionSummary: '17',
+      isWinning: null,
+      payoutAmount: 0,
+      settlementOpenCode: null,
+      settledAt: null,
+      placedAt: new Date('2026-05-22T08:02:00.000Z'),
+      items: [],
+    } as never);
+
+    await service.createMemberBet(1, 11, {
+      issueNo: '2026052200003',
+      items: [
+        {
+          displayText: '17',
+          amount: 10,
+          selection: { digits: [17], source: 'manual' },
+        },
+      ],
+    });
+
+    expect(transactionalItemRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        betType: 'roulette-single-number',
+        displayText: '17',
+        selectionPayload: expect.objectContaining({
+          digits: [17],
+        }),
+      }),
+    );
+  });
 });

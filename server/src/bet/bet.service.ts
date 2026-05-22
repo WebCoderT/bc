@@ -59,6 +59,14 @@ const EXACT_MATCH_GAME_CONFIGS = {
     invalidLengthMessage: '筛宝下注必须提供 3 个筛子点数',
     invalidRangeMessage: '筛宝下注号码仅支持 1-6 的三颗筛子点数',
   },
+  roulette: {
+    digits: 1,
+    min: 0,
+    max: 36,
+    betType: 'roulette-single-number',
+    invalidLengthMessage: '轮盘下注必须提供 1 个号码',
+    invalidRangeMessage: '轮盘下注号码仅支持 0-36',
+  },
 } as const;
 
 const SB_SIZE_OPTIONS = new Set(['big', 'small']);

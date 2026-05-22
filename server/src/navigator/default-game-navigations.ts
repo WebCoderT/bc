@@ -80,4 +80,15 @@ export const DEFAULT_GAME_NAVIGATIONS: DefaultGameNavigationSeed[] = [
     sort: 14,
     parentKey: 'number-lottery',
   },
+  {
+    key: 'roulette-category',
+    name: '轮盘',
+    path: '/game/number-lottery#roulette',
+    description: '轮盘游戏分组，适配 0-36 单号开奖与投注。',
+    icon: '◎',
+    type: NavigationType.Side,
+    status: NavigationStatus.Visible,
+    sort: 15,
+    parentKey: 'number-lottery',
+  },
 ];

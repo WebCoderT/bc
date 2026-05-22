@@ -21,6 +21,13 @@ export const SB_DEFAULT_DRAW_CONFIG = {
   allowRepeat: true,
 } as const;
 
+export const ROULETTE_DEFAULT_DRAW_CONFIG = {
+  digits: 1,
+  min: 0,
+  max: 36,
+  allowRepeat: true,
+} as const;
+
 export const LHD_DEFAULT_DRAW_CONFIG = {
   digits: 2,
   min: 0,
@@ -33,6 +40,7 @@ export const DEFAULT_DRAW_CONFIGS: Record<string, Record<string, unknown>> = {
   p3: { ...P3_DEFAULT_DRAW_CONFIG },
   p5: { ...P5_DEFAULT_DRAW_CONFIG },
   sb: { ...SB_DEFAULT_DRAW_CONFIG },
+  roulette: { ...ROULETTE_DEFAULT_DRAW_CONFIG },
 };
 
 export const DEFAULT_GAME_MODELS = [
@@ -111,6 +119,22 @@ export const DEFAULT_GAME_MODELS = [
           second: 'number',
           third: 'number',
         },
+      },
+    },
+    status: GameModelStatus.ACTIVE,
+  },
+  {
+    id: 'roulette',
+    name: '轮盘',
+    description: '轮盘每期开出 0-36 中的 1 个号码，支持单号直选投注。',
+    version: '1.0.0',
+    drawConfigJson: { ...ROULETTE_DEFAULT_DRAW_CONFIG },
+    resultSchemaJson: {
+      openCode: 'string',
+      resultPayload: {
+        number: 'number',
+        color: 'red|black|green',
+        parity: 'odd|even|zero',
       },
     },
     status: GameModelStatus.ACTIVE,

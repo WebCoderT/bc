@@ -1,6 +1,6 @@
 import type { NumberGamePosition } from "./number-game.types";
 
-export type NumberGameModelKey = "p5" | "p3" | "sb";
+export type NumberGameModelKey = "p5" | "p3" | "sb" | "roulette";
 
 export type NumberGameModelConfig = {
   key: NumberGameModelKey;
@@ -34,6 +34,12 @@ const SB_POSITIONS: NumberGamePosition[] = [
   { key: "second", label: "第二筛" },
   { key: "third", label: "第三筛" },
 ];
+
+const ROULETTE_POSITIONS: NumberGamePosition[] = [
+  { key: "number", label: "轮盘号码" },
+];
+
+const ROULETTE_DIGIT_OPTIONS = Array.from({ length: 37 }, (_, index) => index);
 
 export const NUMBER_GAME_MODEL_CONFIGS: Record<
   NumberGameModelKey,
@@ -78,6 +84,19 @@ export const NUMBER_GAME_MODEL_CONFIGS: Record<
       "待下注列表中的每一组点数组合可独立选择金额，确认投注时按列表汇总提交。",
     ],
   },
+  roulette: {
+    key: "roulette",
+    displayName: "轮盘",
+    ballCount: 1,
+    betType: "roulette-single-number",
+    digitOptions: ROULETTE_DIGIT_OPTIONS,
+    positions: ROULETTE_POSITIONS,
+    playRules: [
+      "轮盘每期开出 0 至 36 的 1 个号码。",
+      "当前页面支持机选与自选单号，选中后可保存到待下注列表。",
+      "待下注列表中的每个号码可独立设置金额，确认时统一提交。",
+    ],
+  },
 };
 
 export function resolveModelKeyByGameModelId(
@@ -91,6 +110,14 @@ export function resolveModelKeyByGameModelId(
 
   if (normalized === "sb" || normalized.includes("sb")) {
     return "sb";
+  }
+
+  if (
+    normalized === "roulette" ||
+    normalized === "rl" ||
+    normalized.includes("roulette")
+  ) {
+    return "roulette";
   }
 
   return "p5";
